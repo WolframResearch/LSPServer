@@ -29,9 +29,9 @@ def main():
 	"""
 
 	parser = argparse.ArgumentParser()
-	parser.add_argument("wolframkernel", help="path to WolframKernel")
-	parser.add_argument("--debug", help="turn on debugging", action="store_true")
-	parser.add_argument("--logDir", help="directory for log files", type=str)
+	parser.add_argument('wolframkernel', help='path to WolframKernel')
+	parser.add_argument('--debug', help='turn on debugging', action='store_true')
+	parser.add_argument('--logDir', help='directory for log files', type=str)
 	args = parser.parse_args()
 
 	wolframkernel = args.wolframkernel
@@ -43,13 +43,13 @@ def main():
 			raise FileNotFoundError
 		if not os.path.isdir(logDir):
 			raise FileNotFoundError
-		logFileName = os.path.join(logDir, "logFile.txt")
+		logFileName = os.path.join(logDir, 'logFile.txt')
 
-		logFile = open(logFileName, 'w')
+		logFile = open(logFileName, 'w', encoding='utf-8')
 
-		kernelLogFile = os.path.join(logDir, "kernelLogFile.txt")
+		kernelLogFile = os.path.join(logDir, 'kernelLogFile.txt')
 	else:
-		kernelLogFile = ""
+		kernelLogFile = ''
 
 
 	kernelProc = subprocess.Popen(
@@ -85,7 +85,7 @@ def main():
 		contentString += '\n'
 
 		if debug:
-			logFile.write("P-->  " + contentString + "\n")
+			logFile.write('P-->  ' + contentString + '\n')
 
 		contentBytes = contentString.encode('utf-8')
 		kernelProc.stdin.write(contentBytes)
@@ -106,16 +106,16 @@ def main():
 		#
 		if len(contentBytes) <= 1:
 			if debug:
-				logFile.write("P<--  null\n")
+				logFile.write('P<--  null\n')
 			continue
 		
 		contentString = contentBytes.decode('utf-8')
 
 		if debug:
-			logFile.write("P<--  " + contentString + "\n")
+			logFile.write('P<--  ' + contentString + '\n')
 
-		sys.stdout.write("Content-Length: " + str(len(contentString)) + "\r\n")
-		sys.stdout.write("\r\n")
+		sys.stdout.write('Content-Length: ' + str(len(contentString)) + '\r\n')
+		sys.stdout.write('\r\n')
 		sys.stdout.write(contentString)
 		# always remember to flush!
 		sys.stdout.flush()
@@ -128,6 +128,6 @@ def main():
 
 
 
-if __name__== "__main__":
+if __name__== '__main__':
 	main()
 

@@ -75,7 +75,7 @@ Module[{},
 	If[$Debug,
 		$logFile = logFile;
 		
-		$logFileStream = OpenWrite[$logFile];
+		$logFileStream = OpenWrite[$logFile, CharacterEncoding -> "UTF8"];
 
 		WriteString[$logFileStream, "$CommandLine: ", $CommandLine, "\n"];
 	];
@@ -232,7 +232,8 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
 	locations = (<| "uri" -> uri,
 		             "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
-		             	             "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]]+1 |>
+		                                                                                  (* end is exclusive *)
+		             	            "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]]+1 |>
 		             	         |>&[#[[3]][Source] - 1] |>)& /@ cases;
 
 	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
@@ -340,6 +341,7 @@ Module[{diagnostics},
 			              "message" -> StringJoin[ToString /@ #2],
 			              "severity" -> lintSeverityToLSPSeverity[#3],
 			              "range" -> <|"start" -> <|"line" -> #4[[1, 1]], "character" -> #4[[1, 2]]|>,
+			                                                                                     (* end is exclusive *)
 			                           "end" -> <|"line" -> #4[[2, 1]], "character" -> #4[[2, 2]]+1|>|>,
 			              "source" -> "CodeTools Lint"
 			            |> &[#[[1]], #[[2]], #[[3]], #[[4]][Source] - 1])& /@ lints;
