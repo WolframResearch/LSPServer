@@ -1,12 +1,16 @@
 BeginPackage["LSPServer`"]
 
-StartServer::usage = "StartServer[debug, logFile] puts the kernel into a state ready for traffic from the wolfram_lsp_proxy script."
+StartServer::usage = "StartServer[] puts the kernel into a state ready for traffic from the wolfram_lsp_proxy script.\
+ StartServer[logFile] logs traffic to logFile."
 
 Begin["`Private`"]
 
 Needs["AST`"]
 Needs["AST`Utils`"]
 Needs["Lint`"]
+Needs["Lint`Report`"]
+
+
 
 
 
@@ -56,9 +60,6 @@ $TextDocumentSyncKind = <|
 
 
 
-
-$logFile
-
 $logFileStream
 
 $Debug
@@ -67,15 +68,14 @@ $Debug
 (*
 setup the REPL to handle traffic from wolfram_lsp_proxy script
 *)
-StartServer[debug_:False, logFile_:""] :=
+StartServer[logFile_String:""] :=
 Module[{},
 
-	$Debug = debug;
+	$Debug = (logFile != "");
 
 	If[$Debug,
-		$logFile = logFile;
 		
-		$logFileStream = OpenWrite[$logFile, CharacterEncoding -> "UTF8"];
+		$logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
 
 		WriteString[$logFileStream, "$CommandLine: ", $CommandLine, "\n"];
 	];
@@ -84,7 +84,7 @@ Module[{},
 	Convert the line of text from stdin into a String
 	*)
 	$PreRead = ToString[#, InputForm]&;
-
+	
 	$Pre = LSPEvaluate;
 	
 	(*
@@ -109,12 +109,12 @@ input string: RPC-JSON string on a single line
 
 returns: RPC-JSON string on a single line
 *)
-LSPEvaluate[string_] :=
+LSPEvaluate[string_String] :=
 Catch[
 Module[{content, json},
 
 	If[$Debug,
-		WriteString[$logFileStream, "-->K  ", string, "\n"];
+		WriteString[$logFileStream, "P-->K  ", string, "\n"];
 	];
 
 	content = ImportString[string, "RawJSON"];
@@ -149,7 +149,7 @@ Module[{content, json},
 	json = StringReplace[json, "\n" -> ""];
 
 	If[$Debug,
-		WriteString[$logFileStream, "<--K  ", json, "\n"];
+		WriteString[$logFileStream, "P<--K  ", json, "\n"];
 	];
 
 	json
@@ -163,12 +163,19 @@ content: JSON-RPC Association
 returns: JSON-RPC Association
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
-Module[{id},
+Module[{id, params, capabilities, textDocument, codeAction},
+
 	id = content["id"];
-	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
-	                                                                     "textDocumentSync" -> <| "openClose" -> True,
-	                                                                     								 "save" -> <| "includeText" -> False |>,
-	                                                                     								 "change" -> $TextDocumentSyncKind["None"] |> |> |> |>
+	params = content["params"];
+	capabilities = params["capabilities"];
+	textDocument = capabilities["textDocument"];
+	codeAction = textDocument["codeAction"];
+
+	<| "jsonrpc" -> "2.0", "id" -> id,
+	   "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
+	                                      "textDocumentSync" -> <| "openClose" -> True,
+	                                                               "save" -> <| "includeText" -> False |>,
+	                                                               "change" -> $TextDocumentSyncKind["None"] |> |> |> |>
 ]
 
 
@@ -211,14 +218,14 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 	line+=1;
 	char+=1;
 
-	file = StringReplace[uri, "file://" -> ""];
+	file = FileNameJoin[FileNameSplit[URL[uri]]];
 
 	cst = ConcreteParseFile[file];
 
 	(*
 	Find the name of the symbol at the position
 	*)
-	cases = Cases[cst, SymbolNode[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
+	cases = Cases[cst, SymbolNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
 	If[cases == {},
 		Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
@@ -226,9 +233,9 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
 	sym = cases[[1]];
 
-	name = sym[[1]];
+	name = sym["String"];
 
-	cases = Cases[cst, SymbolNode[name, _, _], Infinity];
+	cases = Cases[cst, SymbolNode[Symbol, name, _], Infinity];
 
 	locations = (<| "uri" -> uri,
 		             "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
@@ -301,10 +308,9 @@ Switch[severity,
 ]
 
 
-publishDiagnosticsNotification[uri_] :=
+publishDiagnosticsNotification[uri_String] :=
 Module[{file, lints},
-
-	file = StringReplace[uri, "file://" -> ""];
+	file = FileNameJoin[FileNameSplit[URL[uri]]];
 
 	lints = LintFile[file];
 
@@ -316,11 +322,12 @@ Module[{file, lints},
 		lints = {}
 	];
 
+
 	publishDiagnosticsNotification[uri, lints]
 ]
 
 
-publishDiagnosticsNotification[uri_, lints_List] :=
+publishDiagnosticsNotification[uri_String, lints_List] :=
 Module[{diagnostics},
 
 	(*
@@ -332,23 +339,38 @@ Module[{diagnostics},
 	];
 	*)
 
-	(*
-	$UseANSI = False to prevent LintBold et al. from formatting to ANSI characters when calling ToString
-	TODO: control this behavior better
-	*)
-	Block[{Lint`Format`Private`$UseANSI = False},
-		diagnostics = (<|"code" -> #1,
-			              "message" -> StringJoin[ToString /@ #2],
-			              "severity" -> lintSeverityToLSPSeverity[#3],
-			              "range" -> <|"start" -> <|"line" -> #4[[1, 1]], "character" -> #4[[1, 2]]|>,
-			                                                                                     (* end is exclusive *)
-			                           "end" -> <|"line" -> #4[[2, 1]], "character" -> #4[[2, 2]]+1|>|>,
-			              "source" -> "CodeTools Lint"
-			            |> &[#[[1]], #[[2]], #[[3]], #[[4]][Source] - 1])& /@ lints;
-	];
+	diagnostics = (<|"code" -> #1,
+		              "message" -> plainify[#2],
+		              "severity" -> lintSeverityToLSPSeverity[#3],
+		              "range" -> <|"start" -> <|"line" -> #4[[1, 1]], "character" -> #4[[1, 2]]|>,
+		                                                                                     (* end is exclusive *)
+		                           "end" -> <|"line" -> #4[[2, 1]], "character" -> #4[[2, 2]]+1|>|>,
+		              "source" -> "CodeTools Lint"
+		            |> &[#[[1]], #[[2]], #[[3]], #[[4]][Source] - 1])& /@ lints;
 
-	<| "jsonrpc" -> "2.0", "method" -> "textDocument/publishDiagnostics", "params" -> <| "uri" -> uri, "diagnostics" -> diagnostics |> |>
+	<| "jsonrpc" -> "2.0",
+		"method" -> "textDocument/publishDiagnostics",
+		"params" -> <| "uri" -> uri,
+							"diagnostics" -> diagnostics |> |>
 ]
+
+
+
+
+(*
+
+do not send `` markup
+do not send ** markup
+
+\n newlines are ok to send
+
+*)
+plainify[s_String] := StringReplace[s, {
+  RegularExpression["``(.*?)``"] :> "$1",
+  RegularExpression["\\*\\*(.*?)\\*\\*"] :> "$1" }]
+
+
+
 
 
 

@@ -4,6 +4,7 @@ import sys
 import re
 import subprocess
 import argparse
+import errno
 
 def main():
 	"""Wrap around a WolframKernel process and convert LSP traffic to a format that WolframKernel can handle.
@@ -26,70 +27,152 @@ def main():
 	For example, sending more than 1 notification at a time is not currently supported.
 
 	All data is assumed to be UTF-8.
+
+	Works with Python 2 and Python 3.
 	"""
 
 	parser = argparse.ArgumentParser()
 	parser.add_argument('wolframkernel', help='path to WolframKernel')
-	parser.add_argument('--debug', help='turn on debugging', action='store_true')
 	parser.add_argument('--logDir', help='directory for log files', type=str)
 	args = parser.parse_args()
 
-	wolframkernel = args.wolframkernel
-	debug = args.debug
 
-	if debug:
-		logDir = args.logDir
-		if not logDir:
-			raise FileNotFoundError
+	logDir = args.logDir
+
+	if logDir:
 		if not os.path.isdir(logDir):
-			raise FileNotFoundError
+			# try to create
+			os.makedirs(logDir)
+			if not os.path.isdir(logDir):
+				raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), logDir)
 		logFileName = os.path.join(logDir, 'logFile.txt')
 
-		logFile = open(logFileName, 'w', encoding='utf-8')
+		if sys.version_info[0] >= 3:
+			logFile = open(logFileName, 'w', encoding='utf-8')
+		else:
+			logFile = open(logFileName, 'w')
 
 		kernelLogFile = os.path.join(logDir, 'kernelLogFile.txt')
+
+		if os.path.exists(kernelLogFile):
+			os.remove(kernelLogFile)
+
+		# Assume LSPServer paclet is already installed
+		# python 3: f'(Needs["LSPServer`"];LSPServer`StartServer[{stringEscape(kernelLogFile)}])'
+		runString = '(Catch[ $Messages = Streams["stderr"]; Needs["LSPServer`"]; LSPServer`StartServer[' + stringEscape(kernelLogFile) + '], _, Exit[3]& ])'
+
+		debug = True
 	else:
-		kernelLogFile = ''
+		runString = '(Catch[ $Messages = Streams["stderr"]; Needs["LSPServer`"]; LSPServer`StartServer[], _, Exit[3]& ])'
+
+		debug = False
+
+
+	if debug:
+		logFile.write(str(sys.version_info) + '\n')
+		logFile.write(str(sys.argv) + '\n')
+		logFile.write('\n')
+		logFile.flush()
+
+
+	wolframkernel = args.wolframkernel
+	if sys.platform == "win32":
+		base = os.path.basename(wolframkernel)
+		if base.lower() == 'wolframkernel.exe' or base.lower() == 'wolframkernel':
+			dir = os.path.dirname(wolframkernel)
+			wolframkernel = os.path.join(dir, 'wolfram.exe')
+			logFile.write('Silently converting from using WolframKernel.exe to using wolfram.exe\n')
+			logFile.write('WolframKernel.exe cannot be used because it opens a separate window and hangs on stdin.\n')
+			logFile.flush()
+
+
+	if not os.path.isfile(wolframkernel):
+		raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), wolframkernel)
+
+	#
+	# this means that with Python 2, that stderr is never read from the kernel
+	#
+	if sys.version_info[0] >= 3:
+		stderr_strategy = subprocess.DEVNULL
+	else:
+		stderr_strategy = subprocess.PIPE
 
 
 	kernelProc = subprocess.Popen(
 	    [wolframkernel,
-	    		# -noinit to speed-up starting
-	    		'-noinit',
 	    		# -noprompt to prevent the standard banner and
 	    		# In[] / Out[] prompts interfering with protocol
 	    		'-noprompt',
 	    		# -rawterm is needed to enable $PreRead
 	    		# bug 337831
 	    		'-rawterm',
-	    		# Assume LSPServer paclet is already installed
-	    		'-run', f'(Needs["LSPServer`"];LSPServer`StartServer[{debug}, "{kernelLogFile}"])'],
+	    		'-run', runString],
 	    stdin=subprocess.PIPE,
 	    stdout=subprocess.PIPE,
-	    stderr=subprocess.PIPE,
+	    stderr=stderr_strategy
 	)
+
+
+	#
+	# Setup stdin and stdout to correctly handle \r\n
+	# https://stackoverflow.com/a/38939320
+	#
+	if sys.version_info[0] >= 3:
+		proxy_stdin = sys.stdin.buffer
+		proxy_stdout = sys.stdout.buffer
+	else:
+		# Python 2 on Windows opens sys.stdin in text mode, and
+		# binary data that read from it becomes corrupted on \r\n
+		if sys.platform == "win32":
+			# set sys.stdin to binary mode
+			import msvcrt
+			msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
+			msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
+		proxy_stdin = sys.stdin
+		proxy_stdout = sys.stdout
+
 
 	# Start the stdio loop with parent client and child kernel
 	while True:
 
-		header = sys.stdin.readline()
-		m = re.search('Content-Length: (\d+)', header);
+		headerBytes = proxy_stdin.readline()
+		if sys.version_info[0] >= 3:
+			headerString = headerBytes.decode('utf-8')
+		else:
+			headerString = headerBytes
+
+		m = re.search('Content-Length: (\d+)', headerString);
 		if not m:
 			break
 		contentLength = int(m.group(1))
 
 		# read the \r\n
-		sys.stdin.read(2)
-
-		contentString = sys.stdin.read(contentLength)
-		contentString += '\n'
+		proxy_stdin.read(2)
 
 		if debug:
-			logFile.write('P-->  ' + contentString + '\n')
+			logFile.write('C-->P  ' + str(contentLength) + '\n')
+			logFile.flush()
+
+		contentBytes = proxy_stdin.read(contentLength)
+		if sys.version_info[0] >= 3:
+			contentString = contentBytes.decode('utf-8')
+		else:
+			contentString = contentBytes
+
+		if debug:
+			logFile.write('C-->P  ' + contentString + '\n')
+			logFile.flush()
+
+		if len(contentString) != contentLength:
+			if debug:
+				logFile.write('C-->P  actual content length: ' + str(len(contentString)) + '\n')
+				logFile.flush()
+			break
+
+		contentString+='\n'
 
 		contentBytes = contentString.encode('utf-8')
 		kernelProc.stdin.write(contentBytes)
-		# always remember to flush!
 		kernelProc.stdin.flush()
 		contentBytes = kernelProc.stdout.readline()
 
@@ -106,26 +189,38 @@ def main():
 		#
 		if len(contentBytes) <= 1:
 			if debug:
-				logFile.write('P<--  null\n')
+				logFile.write('P<--K  null\n')
+				logFile.flush()
 			continue
-		
-		contentString = contentBytes.decode('utf-8')
 
 		if debug:
-			logFile.write('P<--  ' + contentString + '\n')
+			contentString = contentBytes.decode('utf-8')
+			logFile.write('P<--K  ' + contentString + '\n')
+			logFile.flush()
 
-		sys.stdout.write('Content-Length: ' + str(len(contentString)) + '\r\n')
-		sys.stdout.write('\r\n')
-		sys.stdout.write(contentString)
-		# always remember to flush!
-		sys.stdout.flush()
+		proxy_stdout.write(('Content-Length: ' + str(len(contentBytes)) + '\r\n').encode('utf-8'))
+		proxy_stdout.write('\r\n'.encode('utf-8'))
+		proxy_stdout.write(contentBytes)
+		proxy_stdout.flush()
+
+		if debug:
+			logFile.write('loop\n\n')
+			logFile.flush()
 
 	# Make sure that child kernel is killed before exiting
-	kernelProc.kill()
+	try:
+		kernelProc.kill()
+	except OSError:
+		pass
 	kernelProc.wait()
 	if debug:
 		logFile.write('kernel exit code: ' + str(kernelProc.returncode) + '\n')
+		logFile.flush()
 
+
+def stringEscape(s):
+	"""Return a string appropriate for passing into WolframKernel."""
+	return '"' + s.replace('\\', '\\\\') + '"'
 
 
 if __name__== '__main__':
