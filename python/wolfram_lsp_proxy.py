@@ -181,15 +181,17 @@ def main():
 			break
 
 		#
-		# contentBytes is b'' or b'\x0a'
+		# contentBytes is b'\x0a' , which is \n
+		# or contentBytes is b'\x0d\x0a', which is \r\n
 		#
 		# Null response from kernel
 		#
 		# Something like a notification was sent to the kernel, and we do not need to send a response back to the client
 		#
-		if len(contentBytes) <= 1:
+		if len(contentBytes) <= 2:
 			if debug:
 				logFile.write('P<--K  null\n')
+				logFile.write('loop\n\n')
 				logFile.flush()
 			continue
 
