@@ -17,6 +17,10 @@ set(WL_SOURCES
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 )
 
+set(PYTHON_SOURCE
+	${CMAKE_SOURCE_DIR}/LSPServer/Python/wolfram_lsp_proxy.py
+)
+
 set(PACLETINFO_SOURCE
 	${CMAKE_SOURCE_DIR}/LSPServer/PacletInfo.m
 )
@@ -68,9 +72,15 @@ foreach(SRC ${WL_SOURCES})
 	)
 	list(APPEND CONFIGURED_WL_SOURCES ${CONFIGURED_SRC})
 endforeach()
+set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py)
+configure_file(${PYTHON_SOURCE}
+	${CONFIGURED_SRC}
+)
+list(APPEND CONFIGURED_PYTHON_SOURCES ${CONFIGURED_SRC})
 
 set(PACLET_SOURCES
 	${CONFIGURED_WL_SOURCES}
+	${CONFIGURED_PYTHON_SOURCES}
 )
 
 if(BUILD_DOCS)
