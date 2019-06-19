@@ -2,7 +2,7 @@
 
 # Setup
 
-`LSPServer` depends the `AST` paclet and the `Lint` paclet. Make sure that both `Needs["AST``"]` and `Needs["Lint``"]` succeed on your system.
+`LSPServer` depends on the `AST` paclet and the `Lint` paclet. Make sure that both `Needs["AST``"]` and `Needs["Lint``"]` succeed on your system.
 
 
 

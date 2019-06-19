@@ -107,7 +107,7 @@ Module[{},
 (*
 input string: RPC-JSON string on a single line
 
-returns: RPC-JSON string on a single line
+returns: RPC-JSON string
 *)
 LSPEvaluate[string_String] :=
 Catch[
@@ -175,7 +175,11 @@ Module[{id, params, capabilities, textDocument, codeAction},
 	   "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
 	                                      "textDocumentSync" -> <| "openClose" -> True,
 	                                                               "save" -> <| "includeText" -> False |>,
-	                                                               "change" -> $TextDocumentSyncKind["None"] |> |> |> |>
+	                                                               "change" -> $TextDocumentSyncKind["None"]
+	                                                            |>
+	                                   |>
+	               |>
+	|>
 ]
 
 
@@ -225,7 +229,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 	(*
 	Find the name of the symbol at the position
 	*)
-	cases = Cases[cst, SymbolNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
+	cases = Cases[cst, LeafNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
 	If[cases == {},
 		Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
@@ -235,13 +239,13 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
 	name = sym["String"];
 
-	cases = Cases[cst, SymbolNode[Symbol, name, _], Infinity];
+	cases = Cases[cst, LeafNode[Symbol, name, _], Infinity];
 
 	locations = (<| "uri" -> uri,
 		             "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
 		                                                                                  (* end is exclusive *)
 		             	            "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]]+1 |>
-		             	         |>&[#[[3]][Source] - 1] |>)& /@ cases;
+		             	         |> |>&[#[[3]][Source] - 1])& /@ cases;
 
 	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
 ]]

@@ -31,20 +31,35 @@ def main():
 	Works with Python 2 and Python 3.
 	"""
 
+	# 
+	# parse command-line arguments
+	#
 	parser = argparse.ArgumentParser()
-	parser.add_argument('wolframkernel', help='path to WolframKernel')
 	parser.add_argument('--logDir', help='directory for log files', type=str)
+	parser.add_argument('--extra', help='extra arguments for WolframKernel', type=str, action='append', default=[])
+	parser.add_argument('wolframkernel', help='path to WolframKernel')
 	args = parser.parse_args()
 
-
 	logDir = args.logDir
+	extra = args.extra
 
+	#
+	# Setup log files and runString
+	#
 	if logDir:
 		if not os.path.isdir(logDir):
+			if os.path.isfile(logDir):
+				if sys.version_info[0] >= 3:
+					raise FileExistsError('logDir ' + logDir + ' is a file and already exists')
+				else:
+					raise OSError('logDir ' + logDir + ' is a file and already exists')
 			# try to create
 			os.makedirs(logDir)
 			if not os.path.isdir(logDir):
-				raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), logDir)
+				if sys.version_info[0] >= 3:
+					raise FileNotFoundError('Could not create logDir ' + logDir)
+				else:
+					raise OSError('Could not create logDir ' + logDir)
 		logFileName = os.path.join(logDir, 'logFile.txt')
 
 		if sys.version_info[0] >= 3:
@@ -58,12 +73,11 @@ def main():
 			os.remove(kernelLogFile)
 
 		# Assume LSPServer paclet is already installed
-		# python 3: f'(Needs["LSPServer`"];LSPServer`StartServer[{stringEscape(kernelLogFile)}])'
-		runString = '(Catch[ $Messages = Streams["stderr"]; Needs["LSPServer`"]; LSPServer`StartServer[' + stringEscape(kernelLogFile) + '], _, Exit[3]& ])'
+		runString = 'Needs["LSPServer`"];LSPServer`StartServer[' + stringEscape(kernelLogFile) + ']'
 
 		debug = True
 	else:
-		runString = '(Catch[ $Messages = Streams["stderr"]; Needs["LSPServer`"]; LSPServer`StartServer[], _, Exit[3]& ])'
+		runString = 'Needs["LSPServer`"];LSPServer`StartServer[]'
 
 		debug = False
 
@@ -75,6 +89,10 @@ def main():
 		logFile.flush()
 
 
+
+	#
+	# Setup wolframkernel
+	#
 	wolframkernel = args.wolframkernel
 	if sys.platform == "win32":
 		base = os.path.basename(wolframkernel)
@@ -87,7 +105,10 @@ def main():
 
 
 	if not os.path.isfile(wolframkernel):
-		raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), wolframkernel)
+		if sys.version_info[0] >= 3:
+			raise FileNotFoundError('wolframkernel ' + wolframkernel + ' does not exist')
+		else:
+			raise OSError('wolframkernel ' + wolframkernel + ' does not exist')
 
 	#
 	# this means that with Python 2, that stderr is never read from the kernel
@@ -97,20 +118,24 @@ def main():
 	else:
 		stderr_strategy = subprocess.PIPE
 
+	kernelArgs = [wolframkernel]
+	# -noprompt to prevent the standard banner and
+	# In[] / Out[] prompts interfering with protocol
+	kernelArgs.append('-noprompt')
+	# -rawterm is needed to enable $PreRead
+	# bug 337831
+	kernelArgs.append('-rawterm')
+	for e in extra:
+		kernelArgs.append(e)
+	kernelArgs.append('-run')
+	kernelArgs.append(runString)
 
-	kernelProc = subprocess.Popen(
-	    [wolframkernel,
-	    		# -noprompt to prevent the standard banner and
-	    		# In[] / Out[] prompts interfering with protocol
-	    		'-noprompt',
-	    		# -rawterm is needed to enable $PreRead
-	    		# bug 337831
-	    		'-rawterm',
-	    		'-run', runString],
+	kernelProc = subprocess.Popen(kernelArgs,
 	    stdin=subprocess.PIPE,
 	    stdout=subprocess.PIPE,
 	    stderr=stderr_strategy
 	)
+
 
 
 	#
