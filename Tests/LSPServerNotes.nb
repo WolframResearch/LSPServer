@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     15520,        276]
-NotebookOptionsPosition[     14505,        252]
-NotebookOutlinePosition[     14842,        267]
-CellTagsIndexPosition[     14799,        264]
+NotebookDataLength[     17675,        330]
+NotebookOptionsPosition[     16309,        299]
+NotebookOutlinePosition[     16647,        314]
+CellTagsIndexPosition[     16604,        311]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -72,7 +72,7 @@ Cell[BoxData[
  CellChangeTimes->{{3.751270843570036*^9, 3.751270847127513*^9}, {
   3.7532827951227083`*^9, 3.7532827955772552`*^9}, {3.7657447938751*^9, 
   3.765744795240271*^9}},
- CellLabel->"In[19]:=",ExpressionUUID->"268ae8e4-ee6b-4a9e-91d6-c6fde637beb2"],
+ CellLabel->"In[28]:=",ExpressionUUID->"268ae8e4-ee6b-4a9e-91d6-c6fde637beb2"],
 
 Cell[CellGroupData[{
 
@@ -240,10 +240,57 @@ Cell[BoxData[
  CellLabel->"Out[20]=",ExpressionUUID->"81fa31a6-01ea-4e55-9aa8-f18b76c98259"]
 }, Open  ]],
 
+Cell[CellGroupData[{
+
 Cell["update", "Section",
  CellChangeTimes->{{3.765814857540985*^9, 
   3.7658148582372007`*^9}},ExpressionUUID->"7e82a484-92c7-4d31-9017-\
 c05e8e5cf803"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+  "PacletDirectoryAdd", "[", 
+   "\"\</Users/brenton/development/codetools/lspserver/build/paclet/AST\>\"", 
+   "]"}], ";"}]], "Input",
+ CellChangeTimes->{{3.7602625740810957`*^9, 3.760262592769438*^9}, {
+  3.774100398834875*^9, 
+  3.77410040025041*^9}},ExpressionUUID->"b6274761-63db-43bf-ae5f-\
+b98aef5727a9"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"PacletUpdate", "[", 
+  RowBox[{"\"\<LSPServer\>\"", ",", 
+   RowBox[{
+   "\"\<Site\>\"", "\[Rule]", "\"\<http://pacletserver.wolfram.com\>\""}], 
+   ",", 
+   RowBox[{"\"\<UpdateSites\>\"", "\[Rule]", "True"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.763134475949272*^9, 3.763134481109627*^9}, 
+   3.774099478984682*^9, {3.774100402610536*^9, 3.774100404002653*^9}},
+ CellLabel->"In[29]:=",ExpressionUUID->"9bf93bf9-94c7-4564-949d-ef690f151469"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+  "Paclet", "[", "\<\"LSPServer\"\>", ",", "\<\"0.12\"\>", ",", "<>", "]"}],
+  PacletManager`Paclet[
+  "Name" -> "LSPServer", "Version" -> "0.12", "WolframVersion" -> "11.0+", 
+   "Extensions" -> {{
+     "Kernel", "Root" -> "Kernel", "Context" -> "LSPServer`"}, {
+     "Documentation", "Language" -> "English"}}, "Location" -> 
+   "/Users/brenton/Library/Mathematica/Paclets/Repository/LSPServer-0.12"]]], \
+"Output",
+ CellChangeTimes->{3.763134500370145*^9, 3.7631350681800623`*^9, 
+  3.763195296463201*^9, 3.763214511112796*^9, 3.7661468491749163`*^9, 
+  3.766148699325358*^9, 3.76616041411701*^9, 3.767459317405777*^9, 
+  3.7681279639706097`*^9, 3.76839369715417*^9, 3.774094430462878*^9, 
+  3.774096096586603*^9, 3.774097479094408*^9, 3.7740994889862823`*^9, 
+  3.774100408452783*^9},
+ CellLabel->"Out[29]=",ExpressionUUID->"3772eef9-fec6-4219-86cb-710976f52c24"]
+}, Open  ]]
+}, Open  ]],
 
 Cell["init", "Section",
  CellChangeTimes->{{3.765814859933321*^9, 
@@ -252,7 +299,7 @@ db9d148537b7"]
 },
 WindowSize->{808, 751},
 WindowMargins->{{28, Automatic}, {36, Automatic}},
-FrontEndVersion->"12.1 for Mac OS X x86 (64-bit) (July 27, 2019)",
+FrontEndVersion->"12.1 for Mac OS X x86 (64-bit) (August 3, 2019)",
 StyleDefinitions->"Default.nb"
 ]
 (* End of Notebook Content *)
@@ -276,8 +323,15 @@ Cell[CellGroupData[{
 Cell[3181, 78, 893, 13, 50, "Input",ExpressionUUID->"990d3076-7319-4929-9a58-dceb1ff3a49a"],
 Cell[4077, 93, 10105, 146, 33, "Output",ExpressionUUID->"81fa31a6-01ea-4e55-9aa8-f18b76c98259"]
 }, Open  ]],
-Cell[14197, 242, 153, 3, 67, "Section",ExpressionUUID->"7e82a484-92c7-4d31-9017-c05e8e5cf803"],
-Cell[14353, 247, 148, 3, 53, "Section",ExpressionUUID->"ba1b8543-3111-433d-a37b-db9d148537b7"]
+Cell[CellGroupData[{
+Cell[14219, 244, 153, 3, 67, "Section",ExpressionUUID->"7e82a484-92c7-4d31-9017-c05e8e5cf803"],
+Cell[14375, 249, 346, 9, 29, "Input",ExpressionUUID->"b6274761-63db-43bf-ae5f-b98aef5727a9"],
+Cell[CellGroupData[{
+Cell[14746, 262, 469, 9, 50, "Input",ExpressionUUID->"9bf93bf9-94c7-4564-949d-ef690f151469"],
+Cell[15218, 273, 912, 17, 33, "Output",ExpressionUUID->"3772eef9-fec6-4219-86cb-710976f52c24"]
+}, Open  ]]
+}, Open  ]],
+Cell[16157, 294, 148, 3, 67, "Section",ExpressionUUID->"ba1b8543-3111-433d-a37b-db9d148537b7"]
 }
 ]
 *)

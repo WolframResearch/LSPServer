@@ -13,7 +13,7 @@ message(STATUS "PACLET: ${PACLET}")
 message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 
-set(WL_SOURCES
+set(WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 )
 
@@ -55,33 +55,38 @@ file(MAKE_DIRECTORY
 
 
 #
-# Configure WL source files
+# Copy WL source files
 #
-# Use configure_file to create a file-level dependency between input and output
-#
-set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
-configure_file(${PACLETINFO_SOURCE}
-	${CONFIGURED_SRC}
-)
-list(APPEND CONFIGURED_WL_SOURCES ${CONFIGURED_SRC})
-foreach(SRC ${WL_SOURCES})
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m
+    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m)
+list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
+
+foreach(SRC ${WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
-	set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
-	configure_file(${SRC}
-		${CONFIGURED_SRC}
-	)
-	list(APPEND CONFIGURED_WL_SOURCES ${CONFIGURED_SRC})
+	add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+    COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+    MAIN_DEPENDENCY ${SRC})
+	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
-set(CONFIGURED_SRC ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py)
-configure_file(${PYTHON_SOURCE}
-	${CONFIGURED_SRC}
-)
-list(APPEND CONFIGURED_PYTHON_SOURCES ${CONFIGURED_SRC})
+
+add_custom_command(
+    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py
+    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py
+    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py)
+list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py)
 
 set(PACLET_SOURCES
-	${CONFIGURED_WL_SOURCES}
-	${CONFIGURED_PYTHON_SOURCES}
+	${COPIED_WL_PACLET_SOURCES}
+	${COPIED_PYTHON_SOURCES}
 )
+
+
+
+
+
 
 if(BUILD_DOCS)
 
