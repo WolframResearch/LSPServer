@@ -326,7 +326,6 @@ Module[{file, lints},
 		lints = {}
 	];
 
-
 	publishDiagnosticsNotification[uri, lints]
 ]
 
@@ -343,14 +342,20 @@ Module[{diagnostics},
 	];
 	*)
 
-	diagnostics = (<|"code" -> #1,
-		              "message" -> plainify[#2],
-		              "severity" -> lintSeverityToLSPSeverity[#3],
-		              "range" -> <|"start" -> <|"line" -> #4[[1, 1]], "character" -> #4[[1, 2]]|>,
-		                                                                                     (* end is exclusive *)
-		                           "end" -> <|"line" -> #4[[2, 1]], "character" -> #4[[2, 2]]+1|>|>,
-		              "source" -> "CodeTools Lint"
-		            |> &[#[[1]], #[[2]], #[[3]], #[[4]][Source] - 1])& /@ lints;
+	diagnostics = Function[{tag, message, severity, data},
+						Module[{srcs},
+							srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
+							Function[{src},
+								<|"code" -> tag,
+				              "message" -> plainify[message],
+				              "severity" -> lintSeverityToLSPSeverity[severity],
+				              "range" -> <|"start" -> <|"line" -> (src-1)[[1, 1]], "character" -> (src-1)[[1, 2]]|>,
+				                                                                                     (* end is exclusive *)
+				                           "end" -> <|"line" -> (src-1)[[2, 1]], "character" -> (src-1)[[2, 2]]+1|>|>,
+				              "source" -> "CodeTools Lint"
+				            |>] /@ srcs]] @@@ lints;
+
+	diagnostics = Flatten[diagnostics];
 
 	<| "jsonrpc" -> "2.0",
 		"method" -> "textDocument/publishDiagnostics",
@@ -365,13 +370,16 @@ Module[{diagnostics},
 
 do not send `` markup
 do not send ** markup
+do not send ?? markup
+FIXME: what to do about ?? contents?
 
 \n newlines are ok to send
 
 *)
 plainify[s_String] := StringReplace[s, {
   RegularExpression["``(.*?)``"] :> "$1",
-  RegularExpression["\\*\\*(.*?)\\*\\*"] :> "$1" }]
+  RegularExpression["\\*\\*(.*?)\\*\\*"] :> "$1",
+  RegularExpression["\\?\\?(.*?)\\?\\?"] :> "$1" }]
 
 
 
