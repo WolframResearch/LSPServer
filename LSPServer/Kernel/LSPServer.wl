@@ -216,10 +216,12 @@ notification.
 If a server or client receives a requests starting with ‘$/’ it must error the request with
 error code MethodNotFound (e.g. -32601).
 *)
-handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] := (
+handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
+Module[{id},
+	id = content["id"];
 	<| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
 	                                                 "message"->"Method Not Found" |> |>
-)
+]
 
 
 
