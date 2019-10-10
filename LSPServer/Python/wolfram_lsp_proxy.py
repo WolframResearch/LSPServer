@@ -179,6 +179,13 @@ def main():
 			logFile.flush()
 
 		contentBytes = proxy_stdin.read(contentLength)
+
+		if len(contentBytes) != contentLength:
+			if debug:
+				logFile.write('C-->P  actual content length: ' + str(len(contentBytes)) + '\n')
+				logFile.flush()
+			break
+		
 		if sys.version_info[0] >= 3:
 			contentString = contentBytes.decode('utf-8')
 		else:
@@ -188,15 +195,13 @@ def main():
 			logFile.write('C-->P  ' + contentString + '\n')
 			logFile.flush()
 
-		if len(contentString) != contentLength:
-			if debug:
-				logFile.write('C-->P  actual content length: ' + str(len(contentString)) + '\n')
-				logFile.flush()
-			break
-
 		contentString+='\n'
 
-		contentBytes = contentString.encode('utf-8')
+		if sys.version_info[0] >= 3:
+			contentBytes = contentString.encode('utf-8')
+		else:
+			contentBytes = contentString
+
 		kernelProc.stdin.write(contentBytes)
 		kernelProc.stdin.flush()
 		contentBytes = kernelProc.stdout.readline()
@@ -220,8 +225,12 @@ def main():
 				logFile.flush()
 			continue
 
-		if debug:
+		if sys.version_info[0] >= 3:
 			contentString = contentBytes.decode('utf-8')
+		else:
+			contentString = contentBytes
+		
+		if debug:
 			logFile.write('P<--K  ' + contentString + '\n')
 			logFile.flush()
 

@@ -121,7 +121,19 @@ Module[{content, json},
 		WriteString[$logFileStream, "P-->K  ", string, "\n"];
 	];
 
-	content = ImportString[string, "RawJSON"];
+	content = string;
+
+	(*
+	RawJSON assumes UTF8-encoded strings and cannot handle non-ASCII characters
+
+	e.g., the single \[Alpha] character needs to be in the string as \[CapitalIHat]\[PlusMinus]
+
+	This is all a little mixed up
+
+	*)
+	content = ToString[content, CharacterEncoding -> "UTF8"];
+
+	content = ImportString[content, "RawJSON"];
 
 	content = handleContent[content];
 
@@ -168,10 +180,20 @@ returns: JSON-RPC Association
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
-	codeActionProviderValue},
+	codeActionProviderValue, initializationOptions, confidenceLevel},
 
 	id = content["id"];
 	params = content["params"];
+
+	If[KeyExistsQ[params, "initializationOptions"],
+		initializationOptions = params["initializationOptions"];
+		If[KeyExistsQ[initializationOptions, "confidenceLevel"],
+			confidenceLevel = initializationOptions["confidenceLevel"];
+
+			$ConfidenceLevel = confidenceLevel;
+		];
+	];
+
 	capabilities = params["capabilities"];
 	textDocument = capabilities["textDocument"];
 	codeAction = textDocument["codeAction"];
@@ -226,13 +248,13 @@ handleContent[content:KeyValuePattern["method" -> "exit"]] := (
 (*
 $ Notifications and Requests
 
-Notification and requests whose methods start with ‘$/’ are messages which are protocol
+Notification and requests whose methods start with "$/" are messages which are protocol
 implementation dependent and might not be implementable in all clients or servers.
 For example if the server implementation uses a single threaded synchronous programming
-language then there is little a server can do to react to a ‘$/cancelRequest’ notification.
-If a server or client receives notifications starting with ‘$/’ it is free to ignore the
+language then there is little a server can do to react to a "$/cancelRequest" notification.
+If a server or client receives notifications starting with "$/" it is free to ignore the
 notification.
-If a server or client receives a requests starting with ‘$/’ it must error the request with
+If a server or client receives a requests starting with "$/" it must error the request with
 error code MethodNotFound (e.g. -32601).
 *)
 handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
