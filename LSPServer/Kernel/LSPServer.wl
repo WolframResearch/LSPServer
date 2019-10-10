@@ -9,7 +9,7 @@ Needs["AST`"]
 Needs["AST`Utils`"]
 Needs["Lint`"]
 Needs["Lint`Report`"]
-
+Needs["Lint`Utils`"]
 
 
 
@@ -17,6 +17,10 @@ Needs["Lint`Report`"]
 LSPEvaluate
 
 handleContent
+
+
+
+$ConfidenceLevel = 0.95
 
 
 
@@ -163,7 +167,8 @@ content: JSON-RPC Association
 returns: JSON-RPC Association
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
-Module[{id, params, capabilities, textDocument, codeAction},
+Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
+	codeActionProviderValue},
 
 	id = content["id"];
 	params = content["params"];
@@ -171,12 +176,26 @@ Module[{id, params, capabilities, textDocument, codeAction},
 	textDocument = capabilities["textDocument"];
 	codeAction = textDocument["codeAction"];
 
+	If[KeyExistsQ[codeAction, "codeActionLiteralSupport"],
+		$CodeActionLiteralSupport = True;
+		codeActionLiteralSupport = codeAction["codeActionLiteralSupport"];
+		codeActionKind = codeActionLiteralSupport["codeActionKind"];
+		valueSet = codeActionKind["valueSet"];
+	];
+
+	If[$CodeActionLiteralSupport,
+		codeActionProviderValue = <| "codeActionKinds" -> {"quickfix"} |>
+		,
+		codeActionProviderValue = True
+	];
+
 	<| "jsonrpc" -> "2.0", "id" -> id,
 	   "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
 	                                      "textDocumentSync" -> <| "openClose" -> True,
 	                                                               "save" -> <| "includeText" -> False |>,
 	                                                               "change" -> $TextDocumentSyncKind["None"]
-	                                                            |>
+	                                                            |>,
+	                                       "codeActionProvider" -> codeActionProviderValue
 	                                   |>
 	               |>
 	|>
@@ -334,7 +353,7 @@ Switch[severity,
 
 
 publishDiagnosticsNotification[uri_String] :=
-Module[{file, lints},
+Module[{file, lints, lintsWithConfidence},
 	file = FileNameJoin[FileNameSplit[URL[uri]]];
 
 	lints = LintFile[file];
@@ -346,6 +365,10 @@ Module[{file, lints},
 	If[FailureQ[lints],
 		lints = {}
 	];
+
+	lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
+
+	lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
 	publishDiagnosticsNotification[uri, lints]
 ]
@@ -363,18 +386,7 @@ Module[{diagnostics},
 	];
 	*)
 
-	diagnostics = Function[{tag, message, severity, data},
-						Module[{srcs},
-							srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
-							Function[{src},
-								<|"code" -> tag,
-				              "message" -> plainify[message],
-				              "severity" -> lintSeverityToLSPSeverity[severity],
-				              "range" -> <|"start" -> <|"line" -> (src-1)[[1, 1]], "character" -> (src-1)[[1, 2]]|>,
-				                                                                                     (* end is exclusive *)
-				                           "end" -> <|"line" -> (src-1)[[2, 1]], "character" -> (src-1)[[2, 2]]+1|>|>,
-				              "source" -> "CodeTools Lint"
-				            |>] /@ srcs]] @@@ lints;
+	diagnostics = lintToDiagnostics /@ lints;
 
 	diagnostics = Flatten[diagnostics];
 
@@ -386,26 +398,127 @@ Module[{diagnostics},
 
 
 
-
-(*
-
-do not send `` markup
-do not send ** markup
-do not send ?? markup
-FIXME: what to do about ?? contents?
-
-\n newlines are ok to send
-
-*)
-plainify[s_String] := StringReplace[s, {
-  RegularExpression["``(.*?)``"] :> "$1",
-  RegularExpression["\\*\\*(.*?)\\*\\*"] :> "$1",
-  RegularExpression["\\?\\?(.*?)\\?\\?"] :> "$1" }]
+lintToDiagnostics[Lint[tag_, message_, severity_, data_]] := 
+Module[{srcs},
+	srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
+	Function[{src},
+		<|"code" -> tag,
+        "message" -> plainify[message],
+        "severity" -> lintSeverityToLSPSeverity[severity],
+        "range" -> <|"start" -> <|"line" -> (src-1)[[1, 1]], "character" -> (src-1)[[1, 2]]|>,
+                                                                               (* end is exclusive *)
+                     "end" -> <|"line" -> (src-1)[[2, 1]], "character" -> (src-1)[[2, 2]]+1|>|>,
+        "source" -> "CodeTools Lint"
+      |>] /@ srcs
+]
 
 
 
+handleContent[content:KeyValuePattern["method" -> "textDocument/codeAction"]] :=
+Catch[
+Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lspAction, lspActions, edit, diagnostics,
+	command, label, actionData, actionSrc, replacementNode},
+	
+	id = content["id"];
+	params = content["params"];
+	doc = params["textDocument"];
+	uri = doc["uri"];
+	range = params["range"];
 
+	cursorStart = { range["start"]["line"]+1, range["start"]["character"]+1 };
+	cursorEnd = { range["end"]["line"]+1, range["end"]["character"] }; (*exclusive*)
+	If[cursorStart[[1]] == cursorEnd[[1]] && cursorStart[[2]] > cursorEnd[[2]],
+		(*
+		This is just a cursor, nothing is selected
+		Fudge this here and make this equivalent to a single character being selected
+		*)
+		cursorEnd[[2]] = cursorStart[[2]]
+	];
 
+	If[$Debug,
+		WriteString[$logFileStream, "cursor: ", ToString[{cursorStart, cursorEnd}], "\n"];
+	];
+
+	file = FileNameJoin[FileNameSplit[URL[uri]]];
+
+	lints = LintFile[file];
+
+	If[$Debug,
+		WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];
+	];
+
+	(*
+	Might get something like FileTooLarge
+	*)
+	If[FailureQ[lints],
+		Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
+	];
+
+	lspActions = {};
+
+	Do[
+
+		diagnostics = lintToDiagnostics[lint];
+
+		If[$Debug,
+			WriteString[$logFileStream, "diagnostics: ", ToString[diagnostics], "\n"];
+		];
+
+		actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {cursorStart, cursorEnd}]]], Infinity];
+
+		If[$Debug,
+			WriteString[$logFileStream, "actions: ", ToString[actions], "\n"];
+		];
+
+		Do[
+
+			label = action[[1]];
+
+			label = plainify[label];
+
+			command = action[[2]];
+			actionData = action[[3]];
+
+			actionSrc = actionData[Source];
+
+			Switch[command,
+
+				ReplaceNode,
+
+				replacementNode = actionData["ReplacementNode"];
+
+				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
+														"newText"->ToSourceCharacterString[replacementNode]|> } |> |>;
+
+				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+
+				AppendTo[lspActions, lspAction];
+
+				,
+
+				DeleteNode,
+
+				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
+														"newText"->""|> } |> |>;
+
+				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+
+				AppendTo[lspActions, lspAction];
+
+			]
+
+			,
+			{action, actions}
+		]
+
+		,
+		{lint, lints}
+	];
+
+	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>
+]]
 
 
 

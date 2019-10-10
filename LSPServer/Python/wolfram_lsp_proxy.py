@@ -147,7 +147,7 @@ def main():
 		proxy_stdout = sys.stdout.buffer
 	else:
 		# Python 2 on Windows opens sys.stdin in text mode, and
-		# binary data that read from it becomes corrupted on \r\n
+		# binary data that is read from it becomes corrupted on \r\n
 		if sys.platform == "win32":
 			# set sys.stdin to binary mode
 			import msvcrt
