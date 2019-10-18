@@ -375,7 +375,7 @@ Switch[severity,
 
 
 publishDiagnosticsNotification[uri_String] :=
-Module[{file, lints, lintsWithConfidence},
+Module[{file, lints, lintsWithConfidence, shadowing},
 	file = FileNameJoin[FileNameSplit[URL[uri]]];
 
 	lints = LintFile[file];
@@ -391,6 +391,14 @@ Module[{file, lints, lintsWithConfidence},
 	lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
 
 	lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
+
+	shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
+
+	If[$Debug,
+	 WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
+	];
+
+	lints = Complement[lints, shadowing];
 
 	publishDiagnosticsNotification[uri, lints]
 ]
@@ -430,7 +438,7 @@ Module[{srcs},
         "range" -> <|"start" -> <|"line" -> (src-1)[[1, 1]], "character" -> (src-1)[[1, 2]]|>,
                                                                                (* end is exclusive *)
                      "end" -> <|"line" -> (src-1)[[2, 1]], "character" -> (src-1)[[2, 2]]+1|>|>,
-        "source" -> "CodeTools Lint"
+        "source" -> "wolfram"
       |>] /@ srcs
 ]
 
@@ -439,7 +447,8 @@ Module[{srcs},
 handleContent[content:KeyValuePattern["method" -> "textDocument/codeAction"]] :=
 Catch[
 Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lspAction, lspActions, edit, diagnostics,
-	command, label, actionData, actionSrc, replacementNode},
+	command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
+	shadowing, insertionText},
 	
 	id = content["id"];
 	params = content["params"];
@@ -476,6 +485,18 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 		Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
 	];
 
+	lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
+
+	lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
+
+	shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
+
+	If[$Debug,
+	 WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
+	];
+
+	lints = Complement[lints, shadowing];
+
 	lspActions = {};
 
 	Do[
@@ -505,6 +526,52 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 
 			Switch[command,
 
+				InsertNode,
+
+				insertionNode = actionData["InsertionNode"];
+
+				(*
+				For inserting, don't use the [start, end) range, only use [start, start)
+				*)
+				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+																					"end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
+														"newText"->ToSourceCharacterString[insertionNode]|> } |> |>;
+
+				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+
+				AppendTo[lspActions, lspAction];
+
+				,
+
+				InsertText,
+
+				insertionText = actionData["InsertionText"];
+
+				(*
+				For inserting, don't use the [start, end) range, only use [start, start)
+				*)
+				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+																					"end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
+														"newText"->insertionText|> } |> |>;
+
+				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+
+				AppendTo[lspActions, lspAction];
+
+				,
+
+				DeleteNode,
+
+				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
+														"newText"->""|> } |> |>;
+
+				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+
+				AppendTo[lspActions, lspAction];
+
+				,
+
 				ReplaceNode,
 
 				replacementNode = actionData["ReplacementNode"];
@@ -519,11 +586,13 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 
 				,
 
-				DeleteNode,
+				ReplaceText,
+
+				replacementText = actionData["ReplacementText"];
 
 				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
 																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
-														"newText"->""|> } |> |>;
+														"newText"->replacementText|> } |> |>;
 
 				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
 
