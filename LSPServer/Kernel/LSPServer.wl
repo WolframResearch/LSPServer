@@ -258,8 +258,9 @@ If a server or client receives a requests starting with "$/" it must error the r
 error code MethodNotFound (e.g. -32601).
 *)
 handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
-Module[{id},
-	id = content["id"];
+Module[{params, id},
+	params = content["params"];
+	id = params["id"];
 	<| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
 	                                                 "message"->"Method Not Found" |> |>
 ]
