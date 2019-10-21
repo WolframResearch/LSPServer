@@ -74,11 +74,9 @@ def main():
 
 		# Assume LSPServer paclet is already installed
 		runString = 'Needs["LSPServer`"];LSPServer`StartServer[' + stringEscape(kernelLogFile) + ']'
-
 		debug = True
 	else:
 		runString = 'Needs["LSPServer`"];LSPServer`StartServer[]'
-
 		debug = False
 
 
@@ -87,8 +85,6 @@ def main():
 		logFile.write(str(sys.argv) + '\n')
 		logFile.write('\n')
 		logFile.flush()
-
-
 
 	#
 	# Setup wolframkernel
@@ -99,9 +95,10 @@ def main():
 		if base.lower() == 'wolframkernel.exe' or base.lower() == 'wolframkernel':
 			dir = os.path.dirname(wolframkernel)
 			wolframkernel = os.path.join(dir, 'wolfram.exe')
-			logFile.write('Silently converting from using WolframKernel.exe to using wolfram.exe\n')
-			logFile.write('WolframKernel.exe cannot be used because it opens a separate window and hangs on stdin.\n')
-			logFile.flush()
+			if debug:
+				logFile.write('Silently converting from using WolframKernel.exe to using wolfram.exe\n')
+				logFile.write('WolframKernel.exe cannot be used because it opens a separate window and hangs on stdin.\n')
+				logFile.flush()
 
 
 	if not os.path.isfile(wolframkernel):
@@ -185,22 +182,20 @@ def main():
 				logFile.write('C-->P  actual content length: ' + str(len(contentBytes)) + '\n')
 				logFile.flush()
 			break
-		
-		if sys.version_info[0] >= 3:
-			contentString = contentBytes.decode('utf-8')
-		else:
-			contentString = contentBytes
 
 		if debug:
+			if sys.version_info[0] >= 3:
+				contentString = contentBytes.decode('utf-8')
+			else:
+				contentString = contentBytes
 			logFile.write('C-->P  ' + contentString + '\n')
 			logFile.flush()
 
-		contentString+='\n'
-
+		# add \n
 		if sys.version_info[0] >= 3:
-			contentBytes = contentString.encode('utf-8')
+			contentBytes += b'\n'
 		else:
-			contentBytes = contentString
+			contentBytes += '\n'
 
 		kernelProc.stdin.write(contentBytes)
 		kernelProc.stdin.flush()
@@ -224,17 +219,18 @@ def main():
 				logFile.write('loop\n\n')
 				logFile.flush()
 			continue
-
-		if sys.version_info[0] >= 3:
-			contentString = contentBytes.decode('utf-8')
-		else:
-			contentString = contentBytes
 		
 		if debug:
+			if sys.version_info[0] >= 3:
+				contentString = contentBytes.decode('utf-8')
+			else:
+				contentString = contentBytes
 			logFile.write('P<--K  ' + contentString + '\n')
 			logFile.flush()
 
-		proxy_stdout.write(('Content-Length: ' + str(len(contentBytes)) + '\r\n').encode('utf-8'))
+		contentLength = len(contentBytes)
+
+		proxy_stdout.write(('Content-Length: ' + str(contentLength) + '\r\n').encode('utf-8'))
 		proxy_stdout.write('\r\n'.encode('utf-8'))
 		proxy_stdout.write(contentBytes)
 		proxy_stdout.flush()
