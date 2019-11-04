@@ -102,6 +102,9 @@ def main():
 
 
 	if not os.path.isfile(wolframkernel):
+		if debug:
+            logFile.write('wolframkernel ' + wolframkernel + ' does not exist.\n')
+            logFile.flush()
 		if sys.version_info[0] >= 3:
 			raise FileNotFoundError('wolframkernel ' + wolframkernel + ' does not exist')
 		else:
@@ -165,6 +168,9 @@ def main():
 
 		m = re.search('Content-Length: (\d+)', headerString);
 		if not m:
+			if debug:
+				logFile.write('Could not parse headerString: ' + headerString + '\n')
+				logFile.flush()
 			break
 		contentLength = int(m.group(1))
 
@@ -203,6 +209,9 @@ def main():
 
 		# Did the kernel die?
 		if kernelProc.poll():
+			if debug:
+				logFile.write('The kernel died.\n')
+				logFile.flush()
 			break
 
 		#

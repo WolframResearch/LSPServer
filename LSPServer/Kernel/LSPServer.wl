@@ -531,6 +531,10 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 
 				insertionNode = actionData["InsertionNode"];
 
+				If[$Debug,
+					WriteString[$logFileStream, "insertionNode: ", ToString[insertionNode], "\n"];
+				];
+
 				(*
 				For inserting, don't use the [start, end) range, only use [start, start)
 				*)
@@ -547,6 +551,10 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 				InsertText,
 
 				insertionText = actionData["InsertionText"];
+
+				If[$Debug,
+					WriteString[$logFileStream, "insertionText: ", ToString[insertionText], "\n"];
+				];
 
 				(*
 				For inserting, don't use the [start, end) range, only use [start, start)
@@ -577,6 +585,10 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 
 				replacementNode = actionData["ReplacementNode"];
 
+				If[$Debug,
+					WriteString[$logFileStream, "replacementNode: ", ToString[replacementNode], "\n"];
+				];
+
 				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
 																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
 														"newText"->ToSourceCharacterString[replacementNode]|> } |> |>;
@@ -590,6 +602,10 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 				ReplaceText,
 
 				replacementText = actionData["ReplacementText"];
+
+				If[$Debug,
+					WriteString[$logFileStream, "replacementText: ", ToString[replacementText], "\n"];
+				];
 
 				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
 																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
