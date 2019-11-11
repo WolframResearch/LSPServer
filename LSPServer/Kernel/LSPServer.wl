@@ -429,8 +429,23 @@ Module[{diagnostics},
 
 
 
-lintToDiagnostics[Lint[tag_, message_, severity_, data_]] := 
+lintToDiagnostics[Lint[tag_, message_, severity_, data_]] :=
+Catch[
 Module[{srcs},
+
+	If[!KeyExistsQ[data, Source],
+		(*
+		It is possible that abstracted problems may not have Source
+
+		An example would be  a < b > c  being abstracted as an Inequality expression
+
+		Inequality is an undocumented symbol, but it does actually show up in the source code
+
+		So it would be wrong to report "Inequality is an undocumented symbol" for  a < b > c
+		*)
+		Throw[{}]
+	];
+
 	srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
 	Function[{src},
 		<|"code" -> tag,
@@ -441,7 +456,7 @@ Module[{srcs},
                      "end" -> <|"line" -> (src-1)[[2, 1]], "character" -> (src-1)[[2, 2]]+1|>|>,
         "source" -> "wolfram"
       |>] /@ srcs
-]
+]]
 
 
 
