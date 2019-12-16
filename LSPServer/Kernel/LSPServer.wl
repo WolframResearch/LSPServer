@@ -306,8 +306,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
 	locations = (<| "uri" -> uri,
 		             "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
-		                                                                                  (* end is exclusive *)
-		             	            "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]]+1 |>
+		             	            "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]] |>
 		             	         |> |>&[#[[3]][Source] - 1])& /@ cases;
 
 	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
@@ -447,15 +446,14 @@ Module[{srcs},
 	];
 
 	srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
-	Function[{src},
+	(Function[{src},
 		<|"code" -> tag,
         "message" -> plainify[message],
         "severity" -> lintSeverityToLSPSeverity[severity],
-        "range" -> <|"start" -> <|"line" -> (src-1)[[1, 1]], "character" -> (src-1)[[1, 2]]|>,
-                                                                               (* end is exclusive *)
-                     "end" -> <|"line" -> (src-1)[[2, 1]], "character" -> (src-1)[[2, 2]]+1|>|>,
-        "source" -> "wolfram"
-      |>] /@ srcs
+        "range" -> <|"start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+                     "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+        "source" -> "wolfram lint"
+      |>][#-1])& /@ srcs
 ]]
 
 
@@ -464,7 +462,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/codeAction"]] :=
 Catch[
 Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lspAction, lspActions, edit, diagnostics,
 	command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
-	shadowing, insertionText},
+	shadowing, insertionText, cursor},
 	
 	id = content["id"];
 	params = content["params"];
@@ -472,18 +470,14 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 	uri = doc["uri"];
 	range = params["range"];
 
-	cursorStart = { range["start"]["line"]+1, range["start"]["character"]+1 };
-	cursorEnd = { range["end"]["line"]+1, range["end"]["character"] }; (*exclusive*)
-	If[cursorStart[[1]] == cursorEnd[[1]] && cursorStart[[2]] > cursorEnd[[2]],
-		(*
-		This is just a cursor, nothing is selected
-		Fudge this here and make this equivalent to a single character being selected
-		*)
-		cursorEnd[[2]] = cursorStart[[2]]
-	];
+	cursor = { { range["start"]["line"], range["start"]["character"] },
+					{ range["end"]["line"], range["end"]["character"] } };
+
+	(* convert to 1-based *)
+	cursor+=1;
 
 	If[$Debug,
-		WriteString[$logFileStream, "cursor: ", ToString[{cursorStart, cursorEnd}], "\n"];
+		WriteString[$logFileStream, "cursor: ", ToString[cursor], "\n"];
 	];
 
 	file = FileNameJoin[FileNameSplit[URL[uri]]];
@@ -523,7 +517,7 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 			WriteString[$logFileStream, "diagnostics: ", ToString[diagnostics], "\n"];
 		];
 
-		actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {cursorStart, cursorEnd}]]], Infinity];
+		actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, cursor]]], Infinity];
 
 		If[$Debug,
 			WriteString[$logFileStream, "actions: ", ToString[actions], "\n"];
@@ -587,7 +581,7 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 				DeleteNode,
 
 				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
+																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
 														"newText"->""|> } |> |>;
 
 				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
@@ -605,7 +599,7 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 				];
 
 				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
+																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
 														"newText"->ToSourceCharacterString[replacementNode]|> } |> |>;
 
 				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
@@ -623,7 +617,7 @@ Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lsp
 				];
 
 				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]|> |>,
+																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
 														"newText"->replacementText|> } |> |>;
 
 				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
