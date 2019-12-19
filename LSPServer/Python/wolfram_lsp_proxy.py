@@ -10,8 +10,9 @@ def main():
 	"""Wrap around a WolframKernel process and convert LSP traffic to a format that WolframKernel can handle.
 	
 	WolframKernel is used as a LSP Server, but WolframKernel cannot read arbitrary data from stdin.
-	bug 11114
-	so this thin Python script is used to marshall stdio data between an LSP client and the WolframKernel,
+	Related bug reports: 11114
+
+	So this thin Python script is used to marshall stdio data between an LSP client and the WolframKernel,
 	which is an LSP server.
 
 	The LSP client starts this Python script with the appropriate arguments.
@@ -73,10 +74,11 @@ def main():
 			os.remove(kernelLogFile)
 
 		# Assume LSPServer paclet is already installed
-		runString = 'Needs["LSPServer`"];LSPServer`StartServer[' + stringEscape(kernelLogFile) + ']'
+		# Any messages will cause the kernel to quit
+		runString = 'Check[Needs["LSPServer`"];LSPServer`StartServer[' + stringEscape(kernelLogFile) + '],Quit[3]]'
 		debug = True
 	else:
-		runString = 'Needs["LSPServer`"];LSPServer`StartServer[]'
+		runString = 'Check[Needs["LSPServer`"];LSPServer`StartServer[],Quit[3]]'
 		debug = False
 
 
@@ -123,7 +125,7 @@ def main():
 	# In[] / Out[] prompts interfering with protocol
 	kernelArgs.append('-noprompt')
 	# -rawterm is needed to enable $PreRead
-	# bug 337831
+	# Related bug reports: 337831
 	kernelArgs.append('-rawterm')
 	for e in extra:
 		kernelArgs.append(e)
