@@ -14,7 +14,9 @@ message(STATUS "WOLFRAMKERNEL: ${WOLFRAMKERNEL}")
 message(STATUS "BUILD_DOCS: ${BUILD_DOCS}")
 
 set(WL_PACLET_SOURCES
+	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Color.wl
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
+	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
 )
 
 set(PYTHON_SOURCE

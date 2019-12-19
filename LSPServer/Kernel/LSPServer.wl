@@ -3,60 +3,65 @@ BeginPackage["LSPServer`"]
 StartServer::usage = "StartServer[] puts the kernel into a state ready for traffic from the wolfram_lsp_proxy script.\
  StartServer[logFile] logs traffic to logFile."
 
+
+
+handleContent
+
 Begin["`Private`"]
 
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["LSPServer`Color`"]
+Needs["LSPServer`Utils`"]
 Needs["Lint`"]
 Needs["Lint`Report`"]
 Needs["Lint`Utils`"]
+Needs["AST`"]
+Needs["AST`Utils`"]
 
 
 
 
 LSPEvaluate
 
-handleContent
-
 
 
 $ConfidenceLevel = 0.95
 
+$ColorProvider = False
 
 
 $ErrorCodes = <|
-	(*
-	Defined by JSON RPC
-	*)
-	"ParseError" -> -32700,
-	"InvalidRequest" -> -32600,
-	"MethodNotFound" -> -32601,
-	"InvalidParams" -> -32602,
-	"InternalError" -> -32603,
-	"serverErrorStart" -> -32099,
-	"serverErrorEnd" -> -32000,
-	"ServerNotInitialized" -> -32002,
-	"UnknownErrorCode" -> -32001,
+  (*
+  Defined by JSON RPC
+  *)
+  "ParseError" -> -32700,
+  "InvalidRequest" -> -32600,
+  "MethodNotFound" -> -32601,
+  "InvalidParams" -> -32602,
+  "InternalError" -> -32603,
+  "serverErrorStart" -> -32099,
+  "serverErrorEnd" -> -32000,
+  "ServerNotInitialized" -> -32002,
+  "UnknownErrorCode" -> -32001,
 
-	(*
-	Defined by the protocol.
-	*)
-	"RequestCancelled" -> -32800,
-	"ContentModified" -> -32801
+  (*
+  Defined by the protocol.
+  *)
+  "RequestCancelled" -> -32800,
+  "ContentModified" -> -32801
 |>
 
 $DiagnosticSeverity = <|
-	"Error" -> 1,
-	"Warning" -> 2,
-	"Information" -> 3,
-	"Hint" -> 4
+  "Error" -> 1,
+  "Warning" -> 2,
+  "Information" -> 3,
+  "Hint" -> 4
 |>
 
 
 $TextDocumentSyncKind = <|
-	"None" -> 0,
-	"Full" -> 1,
-	"Incremental" -> 2
+  "None" -> 0,
+  "Full" -> 1,
+  "Incremental" -> 2
 |>
 
 
@@ -75,36 +80,36 @@ setup the REPL to handle traffic from wolfram_lsp_proxy script
 StartServer[logFile_String:""] :=
 Module[{},
 
-	$Debug = (logFile != "");
+  $Debug = (logFile != "");
 
-	If[$Debug,
-		
-		$logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
+  If[$Debug,
+    
+    $logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
 
-		WriteString[$logFileStream, "$CommandLine: ", $CommandLine, "\n"];
-	];
+    WriteString[$logFileStream, "$CommandLine: ", $CommandLine, "\n"];
+  ];
 
-	(*
-	Convert the line of text from stdin into a String
-	*)
-	$PreRead = ToString[#, InputForm]&;
-	
-	$Pre = LSPEvaluate;
-	
-	(*
-	Some mode is turned on where everything is printed as InputForm.
-	Control by wrapping in OutputForm, and make sure to return Null.
-	*)
-	$Post = Print[OutputForm[#]]&;
-	
-	(*
-	Ensure that no messages are printed to stdout
-	*)
-	If[$Debug,
-		$Messages = { $logFileStream }
-		,
-		$Messages = {}
-	];
+  (*
+  Convert the line of text from stdin into a String
+  *)
+  $PreRead = ToString[#, InputForm]&;
+  
+  $Pre = LSPEvaluate;
+  
+  (*
+  Some mode is turned on where everything is printed as InputForm.
+  Control by wrapping in OutputForm, and make sure to return Null.
+  *)
+  $Post = Print[OutputForm[#]]&;
+  
+  (*
+  Ensure that no messages are printed to stdout
+  *)
+  If[$Debug,
+    $Messages = { $logFileStream }
+    ,
+    $Messages = {}
+  ];
 ]
 
 
@@ -117,58 +122,58 @@ LSPEvaluate[string_String] :=
 Catch[
 Module[{content, json},
 
-	If[$Debug,
-		WriteString[$logFileStream, "P-->K  ", string, "\n"];
-	];
+  If[$Debug,
+    WriteString[$logFileStream, "P-->K  ", string, "\n"];
+  ];
 
-	content = string;
+  content = string;
 
-	(*
-	RawJSON assumes UTF8-encoded strings and cannot handle non-ASCII characters
+  (*
+  RawJSON assumes UTF8-encoded strings and cannot handle non-ASCII characters
 
-	e.g., the single \[Alpha] character needs to be in the string as \[CapitalIHat]\[PlusMinus]
+  e.g., the single \[Alpha] character needs to be in the string as \[CapitalIHat]\[PlusMinus]
 
-	This is all a little mixed up
+  This is all a little mixed up
 
-	*)
-	content = ToString[content, CharacterEncoding -> "UTF8"];
+  *)
+  content = ToString[content, CharacterEncoding -> "UTF8"];
 
-	content = ImportString[content, "RawJSON"];
+  content = ImportString[content, "RawJSON"];
 
-	content = handleContent[content];
+  content = handleContent[content];
 
-	If[content === Null,
-		Throw[""]
-	];
-	If[!AssociationQ[content],
+  If[content === Null,
+    Throw[""]
+  ];
+  If[!AssociationQ[content],
 
-		If[$Debug,
-			WriteString[$logFileStream, "ERROR\n"];
-			WriteString[$logFileStream, content, "\n"];
-		];
+    If[$Debug,
+      WriteString[$logFileStream, "ERROR\n"];
+      WriteString[$logFileStream, content, "\n"];
+    ];
 
-		Exit[1]
-	];
+    Exit[1]
+  ];
 
-	json = ExportString[content, "JSON"];
+  json = ExportString[content, "JSON"];
 
-	If[!StringQ[json],
+  If[!StringQ[json],
 
-		If[$Debug,
-			WriteString[$logFileStream, "ERROR\n"];
-			WriteString[$logFileStream, content, "\n"];
-		];
+    If[$Debug,
+      WriteString[$logFileStream, "ERROR\n"];
+      WriteString[$logFileStream, content, "\n"];
+    ];
 
-		Exit[2]
-	];
+    Exit[2]
+  ];
 
-	json = StringReplace[json, "\n" -> ""];
+  json = StringReplace[json, "\n" -> ""];
 
-	If[$Debug,
-		WriteString[$logFileStream, "P<--K  ", json, "\n"];
-	];
+  If[$Debug,
+    WriteString[$logFileStream, "P<--K  ", json, "\n"];
+  ];
 
-	json
+  json
 ]]
 
 
@@ -180,47 +185,53 @@ returns: JSON-RPC Association
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
-	codeActionProviderValue, initializationOptions, confidenceLevel},
+  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider},
 
-	id = content["id"];
-	params = content["params"];
+  id = content["id"];
+  params = content["params"];
 
-	If[KeyExistsQ[params, "initializationOptions"],
-		initializationOptions = params["initializationOptions"];
-		If[KeyExistsQ[initializationOptions, "confidenceLevel"],
-			confidenceLevel = initializationOptions["confidenceLevel"];
+  If[KeyExistsQ[params, "initializationOptions"],
+    initializationOptions = params["initializationOptions"];
+    If[KeyExistsQ[initializationOptions, "confidenceLevel"],
+      confidenceLevel = initializationOptions["confidenceLevel"];
 
-			$ConfidenceLevel = confidenceLevel;
-		];
-	];
+      $ConfidenceLevel = confidenceLevel;
+    ];
+    If[KeyExistsQ[initializationOptions, "colorProvider"],
+      colorProvider = initializationOptions["colorProvider"];
 
-	capabilities = params["capabilities"];
-	textDocument = capabilities["textDocument"];
-	codeAction = textDocument["codeAction"];
+      $ColorProvider = colorProvider;
+    ];
+  ];
 
-	If[KeyExistsQ[codeAction, "codeActionLiteralSupport"],
-		$CodeActionLiteralSupport = True;
-		codeActionLiteralSupport = codeAction["codeActionLiteralSupport"];
-		codeActionKind = codeActionLiteralSupport["codeActionKind"];
-		valueSet = codeActionKind["valueSet"];
-	];
+  capabilities = params["capabilities"];
+  textDocument = capabilities["textDocument"];
+  codeAction = textDocument["codeAction"];
 
-	If[$CodeActionLiteralSupport,
-		codeActionProviderValue = <| "codeActionKinds" -> {"quickfix"} |>
-		,
-		codeActionProviderValue = True
-	];
+  If[KeyExistsQ[codeAction, "codeActionLiteralSupport"],
+    $CodeActionLiteralSupport = True;
+    codeActionLiteralSupport = codeAction["codeActionLiteralSupport"];
+    codeActionKind = codeActionLiteralSupport["codeActionKind"];
+    valueSet = codeActionKind["valueSet"];
+  ];
 
-	<| "jsonrpc" -> "2.0", "id" -> id,
-	   "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
-	                                      "textDocumentSync" -> <| "openClose" -> True,
-	                                                               "save" -> <| "includeText" -> False |>,
-	                                                               "change" -> $TextDocumentSyncKind["None"]
-	                                                            |>,
-	                                       "codeActionProvider" -> codeActionProviderValue
-	                                   |>
-	               |>
-	|>
+  If[$CodeActionLiteralSupport,
+    codeActionProviderValue = <| "codeActionKinds" -> {"quickfix"} |>
+    ,
+    codeActionProviderValue = True
+  ];
+
+  <| "jsonrpc" -> "2.0", "id" -> id,
+     "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
+                                        "textDocumentSync" -> <| "openClose" -> True,
+                                                                 "save" -> <| "includeText" -> False |>,
+                                                                 "change" -> $TextDocumentSyncKind["None"]
+                                                              |>,
+                                         "codeActionProvider" -> codeActionProviderValue,
+                                         "colorProvider" -> $ColorProvider
+                                     |>
+                 |>
+  |>
 ]
 
 
@@ -228,20 +239,20 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 Do not send a response back
 *)
 handleContent[content:KeyValuePattern["method" -> "initialized"]] := (
-	Null
+  Null
 )
 
 
 
 handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
 Module[{id},
-	id = content["id"];
-	<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>
+  id = content["id"];
+  <| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>
 ]
 
 
 handleContent[content:KeyValuePattern["method" -> "exit"]] := (
-	Exit[0]
+  Exit[0]
 )
 
 
@@ -259,10 +270,10 @@ error code MethodNotFound (e.g. -32601).
 *)
 handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
 Module[{params, id},
-	params = content["params"];
-	id = params["id"];
-	<| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
-	                                                 "message"->"Method Not Found" |> |>
+  params = content["params"];
+  id = params["id"];
+  <| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
+                                                   "message"->"Method Not Found" |> |>
 ]
 
 
@@ -271,45 +282,45 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/references"]] :=
 Catch[
 Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
-	id = content["id"];
-	params = content["params"];
-	doc = params["textDocument"];
-	uri = doc["uri"];
-	pos = params["position"];
-	line = pos["line"];
-	char = pos["character"];
+  id = content["id"];
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  pos = params["position"];
+  line = pos["line"];
+  char = pos["character"];
 
-	(*
-	convert from 0-based to 1-based
-	*)
-	line+=1;
-	char+=1;
+  (*
+  convert from 0-based to 1-based
+  *)
+  line+=1;
+  char+=1;
 
-	file = FileNameJoin[FileNameSplit[URL[uri]]];
+  file = normalizeURI[uri];
 
-	cst = ConcreteParseFile[file];
+  cst = ConcreteParseFile[file];
 
-	(*
-	Find the name of the symbol at the position
-	*)
-	cases = Cases[cst, LeafNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
+  (*
+  Find the name of the symbol at the position
+  *)
+  cases = Cases[cst, LeafNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
-	If[cases == {},
-		Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
-	];
+  If[cases == {},
+    Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
+  ];
 
-	sym = cases[[1]];
+  sym = cases[[1]];
 
-	name = sym["String"];
+  name = sym["String"];
 
-	cases = Cases[cst, LeafNode[Symbol, name, _], Infinity];
+  cases = Cases[cst, LeafNode[Symbol, name, _], Infinity];
 
-	locations = (<| "uri" -> uri,
-		             "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
-		             	            "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]] |>
-		             	         |> |>&[#[[3]][Source] - 1])& /@ cases;
+  locations = (<| "uri" -> uri,
+                 "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
+                              "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]] |>
+                           |> |>&[#[[3]][Source] - 1])& /@ cases;
 
-	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
+  <|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
 ]]
 
 
@@ -324,40 +335,40 @@ textDocument/didOpen is a notification (so no response), but take this chance to
 handleContent[content:KeyValuePattern["method" -> "textDocument/didOpen"]] :=
 Module[{params, doc, uri},
 
-	params = content["params"];
-	doc = params["textDocument"];
-	uri = doc["uri"];
-	
-	publishDiagnosticsNotification[uri]
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  
+  publishDiagnosticsNotification[uri]
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
 Module[{params, doc, uri},
 
-	params = content["params"];
-	doc = params["textDocument"];
-	uri = doc["uri"];
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-	(*
-	clear lints on file close
+  (*
+  clear lints on file close
 
-	NOTE: may want to be able to control this behavior
-	*)
-	publishDiagnosticsNotification[uri, {}]
+  NOTE: may want to be able to control this behavior
+  *)
+  publishDiagnosticsNotification[uri, {}]
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSave"]] :=
 Module[{params, doc, uri},
-	
-	params = content["params"];
-	doc = params["textDocument"];
-	uri = doc["uri"];
-	
-	publishDiagnosticsNotification[uri]
+  
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  
+  publishDiagnosticsNotification[uri]
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] := (
-	Null
+  Null
 )
 
 
@@ -367,63 +378,64 @@ convert from CodeTools Lint severities to LSP severities
 *)
 lintSeverityToLSPSeverity[severity_String] :=
 Switch[severity,
-	"Formatting" | "ImplicitTimes", $DiagnosticSeverity["Hint"],
-	"Remark", $DiagnosticSeverity["Information"],
-	"Warning", $DiagnosticSeverity["Warning"],
-	"Error" | "Fatal", $DiagnosticSeverity["Error"]
+  "Formatting" | "ImplicitTimes", $DiagnosticSeverity["Hint"],
+  "Remark", $DiagnosticSeverity["Information"],
+  "Warning", $DiagnosticSeverity["Warning"],
+  "Error" | "Fatal", $DiagnosticSeverity["Error"]
 ]
 
 
 publishDiagnosticsNotification[uri_String] :=
 Module[{file, lints, lintsWithConfidence, shadowing},
-	file = FileNameJoin[FileNameSplit[URL[uri]]];
 
-	lints = LintFile[file];
+  file = normalizeURI[uri];
 
-	(*
-	Might get something like FileTooLarge
-	Still want to update
-	*)
-	If[FailureQ[lints],
-		lints = {}
-	];
+  lints = LintFile[file];
 
-	lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
+  (*
+  Might get something like FileTooLarge
+  Still want to update
+  *)
+  If[FailureQ[lints],
+    lints = {}
+  ];
 
-	lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
+  lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
 
-	shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
+  lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
-	If[$Debug,
-	 WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
-	];
+  shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
-	lints = Complement[lints, shadowing];
+  If[$Debug,
+   WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
+  ];
 
-	publishDiagnosticsNotification[uri, lints]
+  lints = Complement[lints, shadowing];
+
+  publishDiagnosticsNotification[uri, lints]
 ]
 
 
 publishDiagnosticsNotification[uri_String, lints_List] :=
 Module[{diagnostics},
 
-	(*
-	
-	if no lints, must still publish in order to update client
+  (*
+  
+  if no lints, must still publish in order to update client
 
-	If[lints == {},
-		Throw[Null]
-	];
-	*)
+  If[lints == {},
+    Throw[Null]
+  ];
+  *)
 
-	diagnostics = lintToDiagnostics /@ lints;
+  diagnostics = lintToDiagnostics /@ lints;
 
-	diagnostics = Flatten[diagnostics];
+  diagnostics = Flatten[diagnostics];
 
-	<| "jsonrpc" -> "2.0",
-		"method" -> "textDocument/publishDiagnostics",
-		"params" -> <| "uri" -> uri,
-							"diagnostics" -> diagnostics |> |>
+  <| "jsonrpc" -> "2.0",
+    "method" -> "textDocument/publishDiagnostics",
+    "params" -> <| "uri" -> uri,
+              "diagnostics" -> diagnostics |> |>
 ]
 
 
@@ -432,22 +444,22 @@ lintToDiagnostics[Lint[tag_, message_, severity_, data_]] :=
 Catch[
 Module[{srcs},
 
-	If[!KeyExistsQ[data, Source],
-		(*
-		It is possible that abstracted problems may not have Source
+  If[!KeyExistsQ[data, Source],
+    (*
+    It is possible that abstracted problems may not have Source
 
-		An example would be  a < b > c  being abstracted as an Inequality expression
+    An example would be  a < b > c  being abstracted as an Inequality expression
 
-		Inequality is an undocumented symbol, but it does actually show up in the source code
+    Inequality is an undocumented symbol, but it does actually show up in the source code
 
-		So it would be wrong to report "Inequality is an undocumented symbol" for  a < b > c
-		*)
-		Throw[{}]
-	];
+    So it would be wrong to report "Inequality is an undocumented symbol" for  a < b > c
+    *)
+    Throw[{}]
+  ];
 
-	srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
-	(Function[{src},
-		<|"code" -> tag,
+  srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
+  (Function[{src},
+    <|"code" -> tag,
         "message" -> plainify[message],
         "severity" -> lintSeverityToLSPSeverity[severity],
         "range" -> <|"start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
@@ -460,184 +472,182 @@ Module[{srcs},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/codeAction"]] :=
 Catch[
-Module[{id, params, doc, uri, actions, range, lints, cursorStart, cursorEnd, lspAction, lspActions, edit, diagnostics,
-	command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
-	shadowing, insertionText, cursor},
-	
-	id = content["id"];
-	params = content["params"];
-	doc = params["textDocument"];
-	uri = doc["uri"];
-	range = params["range"];
+Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit, diagnostics,
+  command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
+  shadowing, insertionText, cursor},
+  
+  id = content["id"];
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  range = params["range"];
 
-	cursor = { { range["start"]["line"], range["start"]["character"] },
-					{ range["end"]["line"], range["end"]["character"] } };
+  cursor = { { range["start"]["line"], range["start"]["character"] },
+          { range["end"]["line"], range["end"]["character"] } };
 
-	(* convert to 1-based *)
-	cursor+=1;
+  (* convert to 1-based *)
+  cursor+=1;
 
-	If[$Debug,
-		WriteString[$logFileStream, "cursor: ", ToString[cursor], "\n"];
-	];
+  If[$Debug,
+    WriteString[$logFileStream, "cursor: ", ToString[cursor], "\n"];
+  ];
 
-	file = FileNameJoin[FileNameSplit[URL[uri]]];
+  file = normalizeURI[uri];
 
-	lints = LintFile[file];
+  lints = LintFile[file];
 
-	If[$Debug,
-		WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];
-	];
+  If[$Debug,
+    WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];
+  ];
 
-	(*
-	Might get something like FileTooLarge
-	*)
-	If[FailureQ[lints],
-		Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
-	];
+  (*
+  Might get something like FileTooLarge
+  *)
+  If[FailureQ[lints],
+    Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
+  ];
 
-	lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
+  lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
 
-	lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
+  lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
-	shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
+  shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
-	If[$Debug,
-	 WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
-	];
+  If[$Debug,
+   WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
+  ];
 
-	lints = Complement[lints, shadowing];
+  lints = Complement[lints, shadowing];
 
-	lspActions = {};
+  lspActions = {};
 
-	Do[
+  Do[
 
-		diagnostics = lintToDiagnostics[lint];
+    diagnostics = lintToDiagnostics[lint];
 
-		If[$Debug,
-			WriteString[$logFileStream, "diagnostics: ", ToString[diagnostics], "\n"];
-		];
+    If[$Debug,
+      WriteString[$logFileStream, "diagnostics: ", ToString[diagnostics], "\n"];
+    ];
 
-		actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, cursor]]], Infinity];
+    actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, cursor]]], Infinity];
 
-		If[$Debug,
-			WriteString[$logFileStream, "actions: ", ToString[actions], "\n"];
-		];
+    If[$Debug,
+      WriteString[$logFileStream, "actions: ", ToString[actions], "\n"];
+    ];
 
-		Do[
+    Do[
 
-			label = action[[1]];
+      label = action[[1]];
 
-			label = plainify[label];
+      label = plainify[label];
 
-			command = action[[2]];
-			actionData = action[[3]];
+      command = action[[2]];
+      actionData = action[[3]];
 
-			actionSrc = actionData[Source];
+      actionSrc = actionData[Source];
 
-			Switch[command,
+      Switch[command,
 
-				InsertNode,
+        InsertNode,
 
-				insertionNode = actionData["InsertionNode"];
+        insertionNode = actionData["InsertionNode"];
 
-				If[$Debug,
-					WriteString[$logFileStream, "insertionNode: ", ToString[insertionNode], "\n"];
-				];
+        If[$Debug,
+          WriteString[$logFileStream, "insertionNode: ", ToString[insertionNode], "\n"];
+        ];
 
-				(*
-				For inserting, don't use the [start, end) range, only use [start, start)
-				*)
-				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
-														"newText"->ToSourceCharacterString[insertionNode]|> } |> |>;
+        (*
+        For inserting, don't use the [start, end) range, only use [start, start)
+        *)
+        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+                                          "end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
+                            "newText"->ToSourceCharacterString[insertionNode]|> } |> |>;
 
-				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
 
-				AppendTo[lspActions, lspAction];
+        AppendTo[lspActions, lspAction];
 
-				,
+        ,
 
-				InsertText,
+        InsertText,
 
-				insertionText = actionData["InsertionText"];
+        insertionText = actionData["InsertionText"];
 
-				If[$Debug,
-					WriteString[$logFileStream, "insertionText: ", ToString[insertionText], "\n"];
-				];
+        If[$Debug,
+          WriteString[$logFileStream, "insertionText: ", ToString[insertionText], "\n"];
+        ];
 
-				(*
-				For inserting, don't use the [start, end) range, only use [start, start)
-				*)
-				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
-														"newText"->insertionText|> } |> |>;
+        (*
+        For inserting, don't use the [start, end) range, only use [start, start)
+        *)
+        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+                                          "end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
+                            "newText"->insertionText|> } |> |>;
 
-				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
 
-				AppendTo[lspActions, lspAction];
+        AppendTo[lspActions, lspAction];
 
-				,
+        ,
 
-				DeleteNode,
+        DeleteNode,
 
-				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
-														"newText"->""|> } |> |>;
+        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+                                          "end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
+                            "newText"->""|> } |> |>;
 
-				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
 
-				AppendTo[lspActions, lspAction];
+        AppendTo[lspActions, lspAction];
 
-				,
+        ,
 
-				ReplaceNode,
+        ReplaceNode,
 
-				replacementNode = actionData["ReplacementNode"];
+        replacementNode = actionData["ReplacementNode"];
 
-				If[$Debug,
-					WriteString[$logFileStream, "replacementNode: ", ToString[replacementNode], "\n"];
-				];
+        If[$Debug,
+          WriteString[$logFileStream, "replacementNode: ", ToString[replacementNode], "\n"];
+        ];
 
-				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
-														"newText"->ToSourceCharacterString[replacementNode]|> } |> |>;
+        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+                                          "end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
+                            "newText"->ToSourceCharacterString[replacementNode]|> } |> |>;
 
-				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
 
-				AppendTo[lspActions, lspAction];
+        AppendTo[lspActions, lspAction];
 
-				,
+        ,
 
-				ReplaceText,
+        ReplaceText,
 
-				replacementText = actionData["ReplacementText"];
+        replacementText = actionData["ReplacementText"];
 
-				If[$Debug,
-					WriteString[$logFileStream, "replacementText: ", ToString[replacementText], "\n"];
-				];
+        If[$Debug,
+          WriteString[$logFileStream, "replacementText: ", ToString[replacementText], "\n"];
+        ];
 
-				edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-																					"end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
-														"newText"->replacementText|> } |> |>;
+        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
+                                          "end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
+                            "newText"->replacementText|> } |> |>;
 
-				lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
 
-				AppendTo[lspActions, lspAction];
+        AppendTo[lspActions, lspAction];
 
-			]
+      ]
 
-			,
-			{action, actions}
-		]
+      ,
+      {action, actions}
+    ]
 
-		,
-		{lint, lints}
-	];
+    ,
+    {lint, lints}
+  ];
 
-	<|"jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>
+  <|"jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>
 ]]
-
-
 
 End[]
 
