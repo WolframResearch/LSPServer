@@ -298,7 +298,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
   file = normalizeURI[uri];
 
-  cst = ConcreteParseFile[file];
+  cst = ConcreteParseFile[File[file]];
 
   (*
   Find the name of the symbol at the position
@@ -494,7 +494,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   file = normalizeURI[uri];
 
-  lints = LintFile[file];
+  lints = LintFile[File[file]];
 
   If[$Debug,
     WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];

@@ -18,7 +18,7 @@ Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
 
   file = normalizeURI[uri];
 
-  ast = ParseFile[file];
+  ast = ParseFile[File[file]];
 
   colorNodes = Cases[ast, CallNode[LeafNode[Symbol, "RGBColor" | "Hue", _], _, _], Infinity];
 
