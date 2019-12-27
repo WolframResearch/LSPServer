@@ -390,7 +390,7 @@ Module[{file, lints, lintsWithConfidence, shadowing},
 
   file = normalizeURI[uri];
 
-  lints = LintFile[file];
+  lints = LintFile[File[file]];
 
   (*
   Might get something like FileTooLarge
