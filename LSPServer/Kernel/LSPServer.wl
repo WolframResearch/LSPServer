@@ -280,7 +280,7 @@ Module[{params, id},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/references"]] :=
 Catch[
-Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
+Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs},
 
   id = content["id"];
   params = content["params"];
@@ -315,10 +315,12 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name},
 
   cases = Cases[cst, LeafNode[Symbol, name, _], Infinity];
 
-  locations = (<| "uri" -> uri,
-                 "range" -> <| "start" -> <| "line" -> #[[1,1]], "character" -> #[[1,2]] |>,
-                              "end" -> <| "line" -> #[[2,1]], "character" -> #[[2,2]] |>
-                           |> |>&[#[[3]][Source] - 1])& /@ cases;
+  srcs = #[[3, Key[Source] ]]& /@ cases;
+
+  locations = (<|   "uri" -> uri,
+                  "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                                  "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
+               |>&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs;
 
   <|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
 ]]
@@ -433,9 +435,9 @@ Module[{diagnostics},
   diagnostics = Flatten[diagnostics];
 
   <| "jsonrpc" -> "2.0",
-    "method" -> "textDocument/publishDiagnostics",
-    "params" -> <| "uri" -> uri,
-              "diagnostics" -> diagnostics |> |>
+      "method" -> "textDocument/publishDiagnostics",
+      "params" -> <|         "uri" -> uri,
+                     "diagnostics" -> diagnostics |> |>
 ]
 
 
@@ -458,14 +460,13 @@ Module[{srcs},
   ];
 
   srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
-  (Function[{src},
-    <|"code" -> tag,
+
+  ((<|     "code" -> tag,
         "message" -> plainify[message],
-        "severity" -> lintSeverityToLSPSeverity[severity],
-        "range" -> <|"start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-                     "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-        "source" -> "wolfram lint"
-      |>][#-1])& /@ srcs
+       "severity" -> lintSeverityToLSPSeverity[severity],
+          "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                          "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
+         "source" -> "wolfram lint" |>)&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs
 ]]
 
 
@@ -483,7 +484,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   range = params["range"];
 
   cursor = { { range["start"]["line"], range["start"]["character"] },
-          { range["end"]["line"], range["end"]["character"] } };
+             {   range["end"]["line"],   range["end"]["character"] } };
 
   (* convert to 1-based *)
   cursor+=1;
@@ -559,11 +560,14 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         (*
         For inserting, don't use the [start, end) range, only use [start, start)
         *)
-        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-                                          "end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
-                            "newText"->ToSourceCharacterString[insertionNode]|> } |> |>;
+        edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                                                              "end" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |> |>,
+                                            "newText" -> ToSourceCharacterString[insertionNode]|> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
-        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|      "title"  -> label,
+                             "kind"  -> "quickfix",
+                             "edit"  -> edit,
+                       "diagnostics" -> diagnostics |>;
 
         AppendTo[lspActions, lspAction];
 
@@ -580,11 +584,14 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         (*
         For inserting, don't use the [start, end) range, only use [start, start)
         *)
-        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-                                          "end"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|> |>,
-                            "newText"->insertionText|> } |> |>;
+        edit = (<| "changes" -> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                                                               "end" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |> |>,
+                                             "newText" -> insertionText|> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
-        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|       "title" -> label,
+                              "kind" -> "quickfix",
+                              "edit" -> edit,
+                       "diagnostics" -> diagnostics |>;
 
         AppendTo[lspActions, lspAction];
 
@@ -592,11 +599,14 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         DeleteNode,
 
-        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-                                          "end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
-                            "newText"->""|> } |> |>;
+        edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                                                              "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
+                                            "newText" -> "" |> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
-        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|       "title" -> label,
+                              "kind" -> "quickfix",
+                              "edit" -> edit,
+                       "diagnostics" -> diagnostics |>;
 
         AppendTo[lspActions, lspAction];
 
@@ -610,11 +620,14 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
           WriteString[$logFileStream, "replacementNode: ", ToString[replacementNode], "\n"];
         ];
 
-        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-                                          "end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
-                            "newText"->ToSourceCharacterString[replacementNode]|> } |> |>;
+        edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                                                              "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
+                                            "newText" -> ToSourceCharacterString[replacementNode] |> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
-        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|        "title" -> label,
+                               "kind" -> "quickfix",
+                               "edit" -> edit,
+                        "diagnostics" -> diagnostics |>;
 
         AppendTo[lspActions, lspAction];
 
@@ -628,11 +641,14 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
           WriteString[$logFileStream, "replacementText: ", ToString[replacementText], "\n"];
         ];
 
-        edit = <| "changes"-> <| uri -> { <| "range"-> <|"start"-><|"line"->actionSrc[[1,1]]-1, "character"->actionSrc[[1,2]]-1|>,
-                                          "end"-><|"line"->actionSrc[[2,1]]-1, "character"->actionSrc[[2,2]]-1|> |>,
-                            "newText"->replacementText|> } |> |>;
+        edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                                                              "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
+                                            "newText" -> replacementText|> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
-        lspAction = <|"title"->label, "kind"->"quickfix", "edit"->edit, "diagnostics"->diagnostics|>;
+        lspAction = <|       "title" -> label,
+                              "kind" -> "quickfix",
+                              "edit" -> edit,
+                       "diagnostics" -> diagnostics |>;
 
         AppendTo[lspActions, lspAction];
 
