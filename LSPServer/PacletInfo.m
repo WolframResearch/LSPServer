@@ -1,7 +1,7 @@
 
 Paclet[
     Name -> "LSPServer",
-    Version -> "0.15",
+    Version -> "0.16",
     WolframVersion -> "11.0+",
     Creator ->"Brenton Bostick <brenton@wolfram.com>",
     Extensions -> {
