@@ -143,7 +143,7 @@ Module[{content, json},
   content = handleContent[content];
 
   If[content === Null,
-    Throw[""]
+    Throw["Null"]
   ];
   If[!AssociationQ[content],
 

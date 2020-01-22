@@ -5,6 +5,7 @@ import re
 import subprocess
 import argparse
 import errno
+import time
 
 def main():
 	"""Wrap around a WolframKernel process and convert LSP traffic to a format that WolframKernel can handle.
@@ -75,10 +76,10 @@ def main():
 
 		# Assume LSPServer paclet is already installed
 		# Any messages will cause the kernel to quit
-		runString = 'Check[Needs["LSPServer`"];LSPServer`StartServer[' + stringEscape(kernelLogFile) + '],Quit[3]]'
+		runString = 'Check[Needs["LSPServer`"],Quit[3]];LSPServer`StartServer[' + stringEscape(kernelLogFile) + ']'
 		debug = True
 	else:
-		runString = 'Check[Needs["LSPServer`"];LSPServer`StartServer[],Quit[3]]'
+		runString = 'Check[Needs["LSPServer`"],Quit[3]];LSPServer`StartServer[]'
 		debug = False
 
 
@@ -209,24 +210,23 @@ def main():
 		kernelProc.stdin.flush()
 		contentBytes = kernelProc.stdout.readline()
 
-		# Did the kernel die?
-		if kernelProc.poll():
-			if debug:
-				logFile.write('The kernel died.\n')
-				logFile.flush()
-			break
-
 		#
-		# contentBytes is b'\x0a' , which is \n
-		# or contentBytes is b'\x0d\x0a', which is \r\n
+		# contentBytes is b'\x4e\x75\x6c\x6c\x0a' , which is Null\n
+		# or contentBytes is b'\x4e\x75\x6c\x6c\x0d\x0a', which is Null\r\n
 		#
 		# Null response from kernel
 		#
 		# Something like a notification was sent to the kernel, and we do not need to send a response back to the client
 		#
-		if len(contentBytes) <= 2:
+		if len(contentBytes) <= 6:
+			if len(contentBytes) <= 2:
+				if debug:
+					logFile.write('Empty line.\n')
+					logFile.write('The kernel died.\n')
+					logFile.flush()
+				break;
 			if debug:
-				logFile.write('P<--K  null\n')
+				logFile.write('P<--K  Null\n')
 				logFile.write('loop\n\n')
 				logFile.flush()
 			continue
@@ -250,11 +250,17 @@ def main():
 			logFile.write('loop\n\n')
 			logFile.flush()
 
-	# Make sure that child kernel is killed before exiting
-	try:
-		kernelProc.kill()
-	except OSError:
-		pass
+	# give time for kernel finish exiting
+	time.sleep(2)
+
+	# Is kernel still alive?
+	if kernelProc.poll() is not None:
+		# Make sure that child kernel is killed before exiting
+		try:
+			kernelProc.kill()
+		except OSError:
+			pass
+		
 	kernelProc.wait()
 	if debug:
 		logFile.write('kernel exit code: ' + str(kernelProc.returncode) + '\n')
