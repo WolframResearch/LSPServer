@@ -17,6 +17,7 @@ message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 
 set(WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Color.wl
+	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Hover.wl
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
 )

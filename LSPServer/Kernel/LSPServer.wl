@@ -10,6 +10,7 @@ handleContent
 Begin["`Private`"]
 
 Needs["LSPServer`Color`"]
+Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
 Needs["Lint`"]
 Needs["Lint`Report`"]
@@ -27,6 +28,9 @@ LSPEvaluate
 $ConfidenceLevel = 0.95
 
 $ColorProvider = False
+
+$HoverProvider = False
+
 
 
 $ErrorCodes = <|
@@ -185,7 +189,7 @@ returns: JSON-RPC Association
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
-  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider},
+  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider},
 
   id = content["id"];
   params = content["params"];
@@ -201,6 +205,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       colorProvider = initializationOptions["colorProvider"];
 
       $ColorProvider = colorProvider;
+    ];
+    If[KeyExistsQ[initializationOptions, "hoverProvider"],
+      hoverProvider = initializationOptions["hoverProvider"];
+
+      $HoverProvider = hoverProvider;
     ];
   ];
 
@@ -228,7 +237,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                                                  "change" -> $TextDocumentSyncKind["None"]
                                                               |>,
                                          "codeActionProvider" -> codeActionProviderValue,
-                                         "colorProvider" -> $ColorProvider
+                                         "colorProvider" -> $ColorProvider,
+                                         "hoverProvider" -> $HoverProvider
                                      |>
                  |>
   |>
