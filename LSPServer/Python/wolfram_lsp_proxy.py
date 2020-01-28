@@ -172,8 +172,12 @@ def main():
 		m = re.search('Content-Length: (\d+)', headerString);
 		if not m:
 			if debug:
-				logFile.write('Could not parse headerString (length ' + str(len(contentBytes)) + '): ' + headerString + '\n')
-				logFile.flush()
+				if not headerBytes:
+					logFile.write('headerString is empty. Client might be exiting unexpectedly.\n')
+					logFile.flush()
+				else:
+					logFile.write('Could not parse headerString (length ' + str(len(headerBytes)) + '): ' + headerString + '\n')
+					logFile.flush()
 			break
 		contentLength = int(m.group(1))
 
@@ -221,8 +225,7 @@ def main():
 		if len(contentBytes) <= 6:
 			if len(contentBytes) <= 2:
 				if debug:
-					logFile.write('Empty line.\n')
-					logFile.write('The kernel died.\n')
+					logFile.write('Empty line. The kernel died.\n')
 					logFile.flush()
 				break;
 			if debug:
@@ -250,21 +253,38 @@ def main():
 			logFile.write('loop\n\n')
 			logFile.flush()
 
-	# give time for kernel finish exiting
-	time.sleep(2)
+	if debug:
+		logFile.write('exited loop\n')
+		logFile.flush()
 
 	# Is kernel still alive?
-	if kernelProc.poll() is not None:
-		# Make sure that child kernel is killed before exiting
-		try:
-			kernelProc.kill()
-		except OSError:
-			pass
-		
+	#
+	# Actually, poll() is unreliable
+	#
+	# https://stackoverflow.com/a/11939814
+	# https://lists.gt.net/python/bugs/633489
+	# https://bugs.python.org/issue2475
+	#
+	#if kernelProc.poll() is not None:
+	#	# Make sure that child kernel is killed before exiting
+	#	try:
+	#		kernelProc.kill()
+	#	except OSError:
+	#		pass
+	#
+	if debug:
+		logFile.write('killing kernel\n')
+		logFile.flush()
+	try:
+		kernelProc.kill()
+	except OSError:
+		pass
+
 	kernelProc.wait()
 	if debug:
 		logFile.write('kernel exit code: ' + str(kernelProc.returncode) + '\n')
 		logFile.flush()
+
 
 
 def stringEscape(s):
