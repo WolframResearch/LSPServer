@@ -4,9 +4,11 @@ cmake_minimum_required(VERSION 3.0)
 project(lspserver)
 
 set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
+include(WolframKernel)
+include(PacletInfo)
 
 set(PACLET "LSPServer")
-set(WOLFRAMKERNEL /Applications/Mathematica.app/Contents/MacOS/WolframKernel CACHE FILEPATH "Path to WolframKernel")
+set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
 set(BUILD_DOCS OFF CACHE BOOL "Build documentation")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
 
@@ -53,9 +55,8 @@ endforeach()
 #
 # Set VERSION_NUMBER, SYSTEMID, and PACLET_VERSION
 #
-include(WolframKernel)
 CheckWolframKernel()
-
+CheckPacletInfo()
 
 
 file(MAKE_DIRECTORY
