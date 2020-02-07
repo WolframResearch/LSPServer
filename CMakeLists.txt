@@ -77,7 +77,7 @@ add_custom_command(
 		${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m ${COPIED_PACLETINFO}
 	COMMAND
 		${CMAKE_COMMAND} -DLOCAL_BUILD=${LOCAL_BUILD} -DCOPIED_PACLETINFO=${COPIED_PACLETINFO} -P ${PROJECT_SOURCE_DIR}/cmake/ReplacePacletInfo.cmake
-	MAIN_DEPENDENCY
+	DEPENDS
 		${CMAKE_SOURCE_DIR}/${PACLET}/PacletInfo.m
 )
 list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/PacletInfo.m)
@@ -87,14 +87,14 @@ foreach(SRC ${WL_PACLET_SOURCES})
 	add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
     COMMAND ${CMAKE_COMMAND} -E copy ${SRC} ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
-    MAIN_DEPENDENCY ${SRC})
+    DEPENDS ${SRC})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py
     COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py
-    MAIN_DEPENDENCY ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py)
+    DEPENDS ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py)
 list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py)
 
 set(PACLET_SOURCES
