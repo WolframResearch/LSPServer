@@ -12,11 +12,11 @@ Begin["`Private`"]
 Needs["LSPServer`Color`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
-Needs["Lint`"]
-Needs["Lint`Report`"]
-Needs["Lint`Utils`"]
-Needs["AST`"]
-Needs["AST`Utils`"]
+Needs["CodeInspector`"]
+Needs["CodeInspector`Report`"]
+Needs["CodeInspector`Utils`"]
+Needs["CodeParser`"]
+Needs["CodeParser`Utils`"]
 
 
 
@@ -308,7 +308,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs
 
   file = normalizeURI[uri];
 
-  cst = ConcreteParseFile[File[file]];
+  cst = CodeConcreteParse[File[file]];
 
   (*
   Find the name of the symbol at the position
@@ -402,7 +402,7 @@ Module[{file, lints, lintsWithConfidence, shadowing},
 
   file = normalizeURI[uri];
 
-  lints = LintFile[File[file]];
+  lints = CodeInspect[File[file]];
 
   (*
   Might get something like FileTooLarge
@@ -412,9 +412,9 @@ Module[{file, lints, lintsWithConfidence, shadowing},
     lints = {}
   ];
 
-  lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
+  lintsWithConfidence = Cases[lints, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
 
-  lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
+  lints = Cases[lintsWithConfidence, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
@@ -452,7 +452,7 @@ Module[{diagnostics},
 
 
 
-lintToDiagnostics[Lint[tag_, message_, severity_, data_]] :=
+lintToDiagnostics[InspectionObject[tag_, message_, severity_, data_]] :=
 Catch[
 Module[{srcs},
 
@@ -462,7 +462,7 @@ Module[{srcs},
 
     An example would be  a < b > c  being abstracted as an Inequality expression
 
-    Inequality is an undocumented symbol, but it does actually show up in the source code
+    Inequality is an undocumented symbol, but it does not actually show up in the source code
 
     So it would be wrong to report "Inequality is an undocumented symbol" for  a < b > c
     *)
@@ -505,7 +505,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   file = normalizeURI[uri];
 
-  lints = LintFile[File[file]];
+  lints = CodeInspect[File[file]];
 
   If[$Debug,
     WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];
@@ -518,9 +518,9 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
   ];
 
-  lintsWithConfidence = Cases[lints, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
+  lintsWithConfidence = Cases[lints, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
 
-  lints = Cases[lintsWithConfidence, Lint[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
+  lints = Cases[lintsWithConfidence, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 

@@ -5,7 +5,7 @@ Begin["`Private`"]
 
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
-Needs["AST`"]
+Needs["CodeParser`"]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
@@ -19,7 +19,7 @@ Module[{id, params, doc, uri, file, ast, position, hover},
 
   file = normalizeURI[uri];
 
-  ast = ParseFile[File[file]];
+  ast = CodeParse[File[file]];
 
   hover = <| "contents" -> "123 XXX 456" |>;
 

@@ -5,7 +5,7 @@ Begin["`Private`"]
 
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
-Needs["AST`"]
+Needs["CodeParser`"]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/documentColor"]] :=
@@ -18,7 +18,7 @@ Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
 
   file = normalizeURI[uri];
 
-  ast = ParseFile[File[file]];
+  ast = CodeParse[File[file]];
 
   colorNodes = Cases[ast, CallNode[LeafNode[Symbol, "RGBColor" | "Hue", _], _, _], Infinity];
 
