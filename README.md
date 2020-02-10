@@ -9,28 +9,28 @@ LSPServer is a paclet that implements the Language Server Protocol for Wolfram L
 
 Install LSPServer and dependencies from the public paclet server:
 ```
-In[1]:= PacletUpdate["AST", "Site" -> "http://pacletserver.wolfram.com", "UpdateSites" -> True]
-			PacletUpdate["Lint", "Site" -> "http://pacletserver.wolfram.com", "UpdateSites" -> True]
-			PacletUpdate["LSPServer", "Site" -> "http://pacletserver.wolfram.com", "UpdateSites" -> True]
+In[1]:= PacletUpdate["CodeParser", "UpdateSites" -> True]
+			PacletUpdate["CodeInspector", "UpdateSites" -> True]
+			PacletUpdate["LSPServer", "UpdateSites" -> True]
 
-Out[1]= Paclet[AST,0.2,<>]
-Out[2]= Paclet[Lint,0.2,<>]
-Out[3]= Paclet[LSPServer,0.2,<>]
+Out[1]= PacletObject[CodeParser,1.0,<>]
+Out[2]= PacletObject[CodeInspector,1.0,<>]
+Out[3]= PacletObject[LSPServer,1.0,<>]
 ```
 
 
 ## Setup
 
-LSPServer depends on the AST paclet and the Lint paclet. Make sure that the paclets can be found on your system:
+LSPServer depends on the CodeParser paclet and the CodeInspector paclet. Make sure that the paclets can be found on your system:
 ```
-In[1]:= Needs["AST`"]
-			Needs["Lint`"]
+In[1]:= Needs["CodeParser`"]
+			Needs["CodeInspector`"]
 			Needs["LSPServer`"]
 ```
 
-[AST on stash.wolfram.com](https://stash.wolfram.com/projects/COD/repos/ast/browse)
+[CodeParser on stash.wolfram.com](https://stash.wolfram.com/projects/COD/repos/codeparser/browse)
 
-[Lint on stash.wolfram.com](https://stash.wolfram.com/projects/COD/repos/lint/browse)
+[CodeInspector on stash.wolfram.com](https://stash.wolfram.com/projects/COD/repos/codeinspector/browse)
 
 
 ## Building
@@ -77,11 +77,3 @@ It is recommended to specify `wolfram.exe` instead of `WolframKernel.exe`.
 
 `WolframKernel.exe` opens a new window while it is running. But `wolfram.exe` runs inside the window that started it.
 
-
-## Testing
-
-You can simulate the client on the command-line:
-
-```
-brenton2maclap:build brenton$ echo "{\"method\":\"textDocument/didOpen\", \"params\":{ \"textDocument\": { \"uri\":\"file:///Applications/Mathematica120.app/Contents/AddOns/Applications/ClusterIntegration/CCSWin.m\" } }}" | /Applications/Mathematica120.app/Contents/MacOS/WolframKernel -noprompt -rawterm -run \(Needs[\"LSPServer\`\"]\;LSPServer\`StartServer[\"test.txt\"]\)
-```
