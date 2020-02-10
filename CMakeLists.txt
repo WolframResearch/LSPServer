@@ -20,12 +20,9 @@ message(STATUS "LOCAL_BUILD: ${LOCAL_BUILD}")
 set(WL_PACLET_SOURCES
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Color.wl
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Hover.wl
+	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Library.wl
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 	${CMAKE_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
-)
-
-set(PYTHON_SOURCE
-	${CMAKE_SOURCE_DIR}/LSPServer/Python/wolfram_lsp_proxy.py
 )
 
 set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
@@ -57,6 +54,14 @@ endforeach()
 #
 CheckWolframKernel()
 CheckPacletInfo()
+
+
+#
+# Version 12 introduced NumericArrays in LibraryLink
+#
+if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1200)
+	message(FATAL_ERROR "Wolfram Kernel must be at least version 12.0: ${VERSION_NUMBER}")
+endif()
 
 
 file(MAKE_DIRECTORY
@@ -91,15 +96,105 @@ foreach(SRC ${WL_PACLET_SOURCES})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
-add_custom_command(
-    OUTPUT ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py
-    DEPENDS ${CMAKE_SOURCE_DIR}/${PACLET}/Python/wolfram_lsp_proxy.py)
-list(APPEND COPIED_WL_PACLET_SOURCES ${CMAKE_BINARY_DIR}/paclet/${PACLET}/Python/wolfram_lsp_proxy.py)
+
+
+
+
+
+
+#
+# Build LSPServer library
+#
+
+set(WOLFRAMLIBRARY_INCLUDE_DIR ${WOLFRAMLIBRARY_INCLUDE_DIR_DEFAULT} CACHE FILEPATH "Path to WolframLibrary.h")
+
+message(STATUS "WOLFRAMLIBRARY_INCLUDE_DIR: ${WOLFRAMLIBRARY_INCLUDE_DIR}")
+
+set(CPP_INCLUDES
+	${CMAKE_SOURCE_DIR}/cpp/include/LSPServer.h
+)
+
+set(CPP_SOURCES
+	${CMAKE_SOURCE_DIR}/cpp/src/LSPServer.cpp
+)
+
+add_library(lspserver-lib SHARED
+	${CPP_INCLUDES}
+	${CPP_SOURCES}
+)
+
+target_include_directories(lspserver-lib
+	PRIVATE ${CMAKE_SOURCE_DIR}/cpp/include
+	PRIVATE ${WOLFRAMLIBRARY_INCLUDE_DIR}
+)
+
+
+set_target_properties(lspserver-lib PROPERTIES
+	OUTPUT_NAME
+		LSPServer
+	CXX_STANDARD
+		11
+	CXX_STANDARD_REQUIRED
+		ON
+	#
+	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
+	#
+	LIBRARY_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
+	# make sure that it is not created inside ${SYSTEMID}/Debug on Multi-configuration generators (VS, Xcode)
+	#
+	LIBRARY_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	LIBRARY_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
+	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#archive-output-artifacts
+	#
+	ARCHIVE_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	ARCHIVE_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	ARCHIVE_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
+	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#runtime-output-artifacts
+	#
+	RUNTIME_OUTPUT_DIRECTORY
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	RUNTIME_OUTPUT_DIRECTORY_DEBUG
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	RUNTIME_OUTPUT_DIRECTORY_RELEASE
+		${CMAKE_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	#
+	# WL / LibraryLink style dictates that the library be named "LSPServer.dylib" and not "libLSPServer.dylib"
+	#
+	PREFIX
+		""
+)
+
+#
+# Setup warnings
+#
+if(MSVC)
+	target_compile_options(lspserver-lib
+		# specify /MT to statically link runtime on Windows
+		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+		PRIVATE /W3 /EHsc /MT
+	)
+else(MSVC)
+	target_compile_options(lspserver-lib
+		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
+	)
+endif(MSVC)
+
+
+
+
 
 set(PACLET_SOURCES
 	${COPIED_WL_PACLET_SOURCES}
-	${COPIED_PYTHON_SOURCES}
+	lspserver-lib
 	${WL_GENERATE_CREATEPACLETARCHIVE_SOURCES}
 )
 

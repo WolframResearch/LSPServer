@@ -1,7 +1,7 @@
 BeginPackage["LSPServer`"]
 
-StartServer::usage = "StartServer[] puts the kernel into a state ready for traffic from the wolfram_lsp_proxy script.\
- StartServer[logFile] logs traffic to logFile."
+StartServer::usage = "StartServer[] puts the kernel into a state ready for traffic from the client.\
+ StartServer[logDir] logs traffic to logDir."
 
 
 
@@ -10,16 +10,31 @@ handleContent
 Begin["`Private`"]
 
 Needs["LSPServer`Color`"]
+Needs["LSPServer`Library`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
+
 Needs["CodeInspector`"]
 Needs["CodeInspector`Report`"]
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
+Needs["NumericArrayUtilities`"] (* for NumericArrayToByteArray *)
 
 
+(*
+This uses func := func = def idiom and is fast
+*)
+loadAllFuncs[]
+
+
+
+ReadLineFromStdIn
+ReadBytesFromStdIn
+
+WriteLineToStdOut
+WriteBytesToStdOut
 
 LSPEvaluate
 
@@ -72,6 +87,35 @@ $TextDocumentSyncKind = <|
 
 
 
+ReadLineFromStdIn[] :=
+Module[{res},
+  res = libraryFunctionWrapper[readLineFromStdInFunc];
+  res
+]
+
+ReadBytesFromStdIn[numBytes_Integer] :=
+Module[{arr},
+  arr = Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}];
+  libraryFunctionWrapper[readBytesFromStdInFunc, arr];
+  arr
+]
+
+WriteLineToStdOut[line_String] :=
+Module[{res},
+  res = libraryFunctionWrapper[writeLineToStdOutFunc, line];
+  res
+]
+
+WriteBytesToStdOut[na_NumericArray] :=
+Module[{res},
+  res = libraryFunctionWrapper[writeBytesToStdOutFunc, na];
+  res
+]
+
+
+
+
+
 
 $logFileStream
 
@@ -79,33 +123,22 @@ $Debug
 
 
 (*
-setup the REPL to handle traffic from wolfram_lsp_proxy script
+setup the REPL to handle traffic from client
 *)
-StartServer[logFile_String:""] :=
-Module[{},
+StartServer[logDir_String:""] :=
+Module[{logFile, na, res, line, numBytesStr, numBytes},
 
-  $Debug = (logFile != "");
+  $Debug = (logDir != "");
 
   If[$Debug,
-    
+
+    logFile = FileNameJoin[{logDir, "kernelLogFile.txt"}];
+
     $logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
 
     WriteString[$logFileStream, "$CommandLine: ", $CommandLine, "\n"];
   ];
 
-  (*
-  Convert the line of text from stdin into a String
-  *)
-  $PreRead = ToString[#, InputForm]&;
-  
-  $Pre = LSPEvaluate;
-  
-  (*
-  Some mode is turned on where everything is printed as InputForm.
-  Control by wrapping in OutputForm, and make sure to return Null.
-  *)
-  $Post = Print[OutputForm[#]]&;
-  
   (*
   Ensure that no messages are printed to stdout
   *)
@@ -114,70 +147,156 @@ Module[{},
     ,
     $Messages = {}
   ];
+
+  While[True,
+
+    (*
+    Headers
+    *)
+    While[True,
+
+      line = ReadLineFromStdIn[];
+
+      If[FailureQ[line],
+        If[$Debug,
+          WriteString[$logFileStream, "C-->S  ", line, "\n"];
+        ];
+        Exit[1]
+      ];
+
+      If[$Debug2,
+        WriteString[$logFileStream, "C-->S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+      ];
+
+      Which[
+        StringMatchQ[line, RegularExpression["Content-Length: (\\d+)"]],
+          numBytesStr = StringCases[line, RegularExpression["Content-Length: (\\d+)"] :> "$1"][[1]];
+          numBytes = ToExpression[numBytesStr];
+        ,
+        line == "",
+          Break[]
+        ,
+        True,
+          Exit[1]
+      ]
+    ];
+
+    (*Content*)
+
+    na = ReadBytesFromStdIn[numBytes];
+
+    If[FailureQ[na],
+      If[$Debug,
+        WriteString[$logFileStream, "C-->S  ", na, "\n"];
+      ];
+      Exit[1]
+    ];
+
+    If[$Debug2,
+      WriteString[$logFileStream, "C-->S  ", FromCharacterCode[Normal[Take[na, UpTo[100]]]], "\n"];
+    ];
+
+    na = LSPEvaluate[na];
+
+    If[na === Null,
+      Continue[]
+    ];
+
+    If[!NumericArrayQ[na],
+      If[$Debug,
+        WriteString[$logFileStream, na, "\n"]
+      ];
+      Exit[1]
+    ];
+
+    line = "Content-Length: " <> ToString[Length[na]];
+
+    If[$Debug2,
+      WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+    ];
+
+    res = WriteLineToStdOut[line];
+    If[res =!= Null,
+      If[$Debug,
+        WriteString[$logFileStream, "C<--S  ", res, "\n"];
+      ];
+      Exit[1]
+    ];
+
+    line = "";
+
+    If[$Debug2,
+      WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+    ];
+
+    res = WriteLineToStdOut[line];
+    If[res =!= Null,
+      If[$Debug,
+        WriteString[$logFileStream, "C<--S  ", res, "\n"];
+      ];
+      Exit[1]
+    ];
+
+    If[$Debug2,
+      WriteString[$logFileStream, "C<--S  ", FromCharacterCode[Normal[Take[na, UpTo[100]]]], "\n"];
+    ];
+
+    res = WriteBytesToStdOut[na];
+    If[res =!= Null,
+      If[$Debug,
+        WriteString[$logFileStream, "C<--S  ", res, "\n"];
+      ];
+      Exit[1]
+    ];
+  ]
 ]
 
 
 (*
-input string: RPC-JSON string on a single line
+input string: NumericArray representing an RPC-JSON string
 
-returns: RPC-JSON string
+returns: NumericArray representing an RPC-JSON string, or Null
 *)
-LSPEvaluate[string_String] :=
+LSPEvaluate[na_NumericArray] :=
 Catch[
-Module[{content, json},
+Module[{content, json, bytes, res},
 
-  If[$Debug,
-    WriteString[$logFileStream, "P-->K  ", string, "\n"];
-  ];
+  bytes = NumericArrayToByteArray[na];
 
-  content = string;
-
-  (*
-  RawJSON assumes UTF8-encoded strings and cannot handle non-ASCII characters
-
-  e.g., the single \[Alpha] character needs to be in the string as \[CapitalIHat]\[PlusMinus]
-
-  This is all a little mixed up
-
-  *)
-  content = ToString[content, CharacterEncoding -> "UTF8"];
-
-  content = ImportString[content, "RawJSON"];
+  content = ImportByteArray[bytes, "RawJSON"];
 
   content = handleContent[content];
 
   If[content === Null,
-    Throw["Null"]
+    Throw[Null]
   ];
-  If[!AssociationQ[content],
 
+  If[!AssociationQ[content],
     If[$Debug,
-      WriteString[$logFileStream, "ERROR\n"];
       WriteString[$logFileStream, content, "\n"];
     ];
-
     Exit[1]
   ];
 
   json = ExportString[content, "JSON"];
 
   If[!StringQ[json],
-
     If[$Debug,
-      WriteString[$logFileStream, "ERROR\n"];
       WriteString[$logFileStream, content, "\n"];
     ];
-
-    Exit[2]
+    Exit[1]
   ];
 
   json = StringReplace[json, "\n" -> ""];
 
-  If[$Debug,
-    WriteString[$logFileStream, "P<--K  ", json, "\n"];
-  ];
+  (*
+  assumes UTF-8
+  *)
+  bytes = StringToByteArray[json];
 
-  json
+  res = ByteArrayToNumericArray[bytes, "UnsignedInteger8", {Length[bytes]}];
+
+  res
 ]]
 
 
