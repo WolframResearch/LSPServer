@@ -26,7 +26,7 @@ Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
 
   colorInformations = DeleteCases[colorInformations, Null];
 
-  <|"jsonrpc" -> "2.0", "id" -> id, "result" -> colorInformations |>
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> colorInformations |>}
 ]
 
 

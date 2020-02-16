@@ -23,7 +23,7 @@ Module[{id, params, doc, uri, file, ast, position, hover},
 
   hover = <| "contents" -> "123 XXX 456" |>;
 
-  <|"jsonrpc" -> "2.0", "id" -> id, "result" -> hover |>
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> hover |>}
 ]
 
 

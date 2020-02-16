@@ -15,12 +15,10 @@ Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
 
 Needs["CodeInspector`"]
-Needs["CodeInspector`Report`"]
+Needs["CodeInspector`ImplicitTimes`"]
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
-
-Needs["NumericArrayUtilities`"] (* for NumericArrayToByteArray *)
 
 
 (*
@@ -94,10 +92,10 @@ Module[{res},
 ]
 
 ReadBytesFromStdIn[numBytes_Integer] :=
-Module[{arr},
-  arr = Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}];
-  libraryFunctionWrapper[readBytesFromStdInFunc, arr];
-  arr
+Module[{bytes},
+  bytes = ByteArray[Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}]];
+  libraryFunctionWrapper[readBytesFromStdInFunc, bytes];
+  bytes
 ]
 
 WriteLineToStdOut[line_String] :=
@@ -106,9 +104,9 @@ Module[{res},
   res
 ]
 
-WriteBytesToStdOut[na_NumericArray] :=
+WriteBytesToStdOut[bytes_ByteArray] :=
 Module[{res},
-  res = libraryFunctionWrapper[writeBytesToStdOutFunc, na];
+  res = libraryFunctionWrapper[writeBytesToStdOutFunc, bytes];
   res
 ]
 
@@ -121,12 +119,14 @@ $logFileStream
 
 $Debug
 
+$Debug2
+
 
 (*
 setup the REPL to handle traffic from client
 *)
 StartServer[logDir_String:""] :=
-Module[{logFile, na, res, line, numBytesStr, numBytes},
+Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
 
   $Debug = (logDir != "");
 
@@ -179,132 +179,119 @@ Module[{logFile, na, res, line, numBytesStr, numBytes},
         True,
           Exit[1]
       ]
-    ];
+    ];(*While*)
 
     (*Content*)
 
-    na = ReadBytesFromStdIn[numBytes];
+    bytes = ReadBytesFromStdIn[numBytes];
 
-    If[FailureQ[na],
+    If[FailureQ[bytes],
       If[$Debug,
-        WriteString[$logFileStream, "C-->S  ", na, "\n"];
+        WriteString[$logFileStream, "C-->S  ", bytes, "\n"];
       ];
       Exit[1]
     ];
 
     If[$Debug2,
-      WriteString[$logFileStream, "C-->S  ", FromCharacterCode[Normal[Take[na, UpTo[100]]]], "\n"];
+      WriteString[$logFileStream, "C-->S  ", FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], "\n"];
     ];
 
-    na = LSPEvaluate[na];
+    bytess = LSPEvaluate[bytes];
 
-    If[na === Null,
-      Continue[]
-    ];
-
-    If[!NumericArrayQ[na],
-      If[$Debug,
-        WriteString[$logFileStream, na, "\n"]
+    Do[
+    
+      If[!ByteArrayQ[bytes],
+        If[$Debug,
+          WriteString[$logFileStream, bytes, "\n"]
+        ];
+        Exit[1]
       ];
-      Exit[1]
-    ];
 
-    line = "Content-Length: " <> ToString[Length[na]];
-
-    If[$Debug2,
-      WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
-    ];
-
-    res = WriteLineToStdOut[line];
-    If[res =!= Null,
-      If[$Debug,
-        WriteString[$logFileStream, "C<--S  ", res, "\n"];
+      If[$Debug2,
+        WriteString[$logFileStream, "bytes", Normal[Take[bytes, UpTo[1000]]], "\n"];
       ];
-      Exit[1]
-    ];
 
-    line = "";
+      line = "Content-Length: " <> ToString[Length[bytes]];
 
-    If[$Debug2,
-      WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
-    ];
-
-    res = WriteLineToStdOut[line];
-    If[res =!= Null,
-      If[$Debug,
-        WriteString[$logFileStream, "C<--S  ", res, "\n"];
+      If[$Debug2,
+        WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
       ];
-      Exit[1]
-    ];
 
-    If[$Debug2,
-      WriteString[$logFileStream, "C<--S  ", FromCharacterCode[Normal[Take[na, UpTo[100]]]], "\n"];
-    ];
-
-    res = WriteBytesToStdOut[na];
-    If[res =!= Null,
-      If[$Debug,
-        WriteString[$logFileStream, "C<--S  ", res, "\n"];
+      res = WriteLineToStdOut[line];
+      If[res =!= Null,
+        If[$Debug,
+          WriteString[$logFileStream, "C<--S  ", res, "\n"];
+        ];
+        Exit[1]
       ];
-      Exit[1]
-    ];
-  ]
+
+      line = "";
+
+      If[$Debug2,
+        WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+      ];
+
+      res = WriteLineToStdOut[line];
+      If[res =!= Null,
+        If[$Debug,
+          WriteString[$logFileStream, "C<--S  ", res, "\n"];
+        ];
+        Exit[1]
+      ];
+
+      If[$Debug2,
+        WriteString[$logFileStream, "C<--S  ", FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], "\n"];
+      ];
+
+      res = WriteBytesToStdOut[bytes];
+      If[res =!= Null,
+        If[$Debug,
+          WriteString[$logFileStream, "C<--S  ", res, "\n"];
+        ];
+        Exit[1]
+      ];
+      ,
+      {bytes, bytess}
+    ](*Do*)
+  ](*While*)
 ]
 
 
 (*
-input string: NumericArray representing an RPC-JSON string
+input string: ByteArray representing an RPC-JSON string
 
-returns: NumericArray representing an RPC-JSON string, or Null
+returns: a list of ByteArray (possibly empty), each ByteArray represents an RPC-JSON string
 *)
-LSPEvaluate[na_NumericArray] :=
+LSPEvaluate[bytes_ByteArray] :=
 Catch[
-Module[{content, json, bytes, res},
-
-  bytes = NumericArrayToByteArray[na];
+Module[{content, contents, bytess},
 
   content = ImportByteArray[bytes, "RawJSON"];
 
-  content = handleContent[content];
+  contents = handleContent[content];
 
-  If[content === Null,
-    Throw[Null]
-  ];
-
-  If[!AssociationQ[content],
+  If[!MatchQ[contents, {_Association...}],
     If[$Debug,
-      WriteString[$logFileStream, content, "\n"];
+      WriteString[$logFileStream, contents, "\n"];
     ];
     Exit[1]
   ];
 
-  json = ExportString[content, "JSON"];
+  bytess = ExportByteArray[#, "JSON"]& /@ contents;
 
-  If[!StringQ[json],
-    If[$Debug,
-      WriteString[$logFileStream, content, "\n"];
-    ];
-    Exit[1]
-  ];
-
-  json = StringReplace[json, "\n" -> ""];
-
-  (*
-  assumes UTF-8
-  *)
-  bytes = StringToByteArray[json];
-
-  res = ByteArrayToNumericArray[bytes, "UnsignedInteger8", {Length[bytes]}];
-
-  res
+  bytess
 ]]
+
+
+
+
 
 
 
 (*
 content: JSON-RPC Association
 
-returns: JSON-RPC Association
+returns: a list of associations (possibly empty), each association represents JSON-RPC
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
@@ -349,7 +336,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     codeActionProviderValue = True
   ];
 
-  <| "jsonrpc" -> "2.0", "id" -> id,
+  {<| "jsonrpc" -> "2.0", "id" -> id,
      "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
                                         "textDocumentSync" -> <| "openClose" -> True,
                                                                  "save" -> <| "includeText" -> False |>,
@@ -360,7 +347,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "hoverProvider" -> $HoverProvider
                                      |>
                  |>
-  |>
+  |>}
 ]
 
 
@@ -368,7 +355,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 Do not send a response back
 *)
 handleContent[content:KeyValuePattern["method" -> "initialized"]] := (
-  Null
+  {}
 )
 
 
@@ -376,7 +363,7 @@ handleContent[content:KeyValuePattern["method" -> "initialized"]] := (
 handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
 Module[{id},
   id = content["id"];
-  <| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
 ]
 
 
@@ -401,8 +388,8 @@ handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$
 Module[{params, id},
   params = content["params"];
   id = params["id"];
-  <| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
-                                                   "message"->"Method Not Found" |> |>
+  {<| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
+                                                   "message"->"Method Not Found" |> |>}
 ]
 
 
@@ -451,7 +438,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs
                                   "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
                |>&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs;
 
-  <|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>}
 ]]
 
 
@@ -470,7 +457,7 @@ Module[{params, doc, uri},
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  publishDiagnosticsNotification[uri]
+  {publishDiagnosticsNotification[uri], publishImplicitTimesNotification[uri]}
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
@@ -485,7 +472,7 @@ Module[{params, doc, uri},
 
   NOTE: may want to be able to control this behavior
   *)
-  publishDiagnosticsNotification[uri, {}]
+  {publishDiagnosticsNotification[uri, {}], publishImplicitTimesNotification[uri, {}]}
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSave"]] :=
@@ -495,11 +482,11 @@ Module[{params, doc, uri},
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  publishDiagnosticsNotification[uri]
+  {publishDiagnosticsNotification[uri], publishImplicitTimesNotification[uri]}
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] := (
-  Null
+  {}
 )
 
 
@@ -537,7 +524,7 @@ Module[{file, lints, lintsWithConfidence, shadowing},
 
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
-  If[$Debug,
+  If[$Debug2,
    WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
   ];
 
@@ -568,6 +555,52 @@ Module[{diagnostics},
       "params" -> <|         "uri" -> uri,
                      "diagnostics" -> diagnostics |> |>
 ]
+
+
+
+
+
+
+publishImplicitTimesNotification[uri_String] :=
+Catch[
+Module[{file, inspectedFileObj, lines},
+
+  file = normalizeURI[uri];
+
+  inspectedFileObj = CodeInspectImplicitTimesSummarize[File[file]];
+
+  (*
+  Might get something like FileTooLarge
+  Still want to update
+  *)
+  If[FailureQ[inspectedFileObj],
+    Throw[publishImplicitTimesNotification[uri, {}]]
+  ];
+
+  (*
+  Even though we have:
+  Format[LintTimesCharacter, StandardForm] := "\[Times]"
+
+  we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
+  *)
+
+  lines = <| "line" -> #[[2]], "characters" -> ((# /. {CodeInspector`Format`LintTimesCharacter -> "\[Times]"})& /@ ((# /. LintMarkup[content_] :> content)& /@ #[[4, 2, 2;;]])) |> & /@ inspectedFileObj[[2]];
+
+  publishImplicitTimesNotification[uri, lines]
+]]
+
+
+publishImplicitTimesNotification[uri_String, lines_List] :=
+Module[{},
+
+  <| "jsonrpc" -> "2.0",
+      "method" -> "textDocument/publishImplicitTimes",
+      "params" -> <|   "uri" -> uri,
+                     "lines" -> lines |> |>
+]
+
+
+
 
 
 
@@ -618,7 +651,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   (* convert to 1-based *)
   cursor+=1;
 
-  If[$Debug,
+  If[$Debug2,
     WriteString[$logFileStream, "cursor: ", ToString[cursor], "\n"];
   ];
 
@@ -626,7 +659,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   lints = CodeInspect[File[file]];
 
-  If[$Debug,
+  If[$Debug2,
     WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];
   ];
 
@@ -634,7 +667,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   Might get something like FileTooLarge
   *)
   If[FailureQ[lints],
-    Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
+    Throw[{<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}]
   ];
 
   lintsWithConfidence = Cases[lints, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
@@ -643,7 +676,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
-  If[$Debug,
+  If[$Debug2,
    WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
   ];
 
@@ -655,13 +688,13 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
     diagnostics = lintToDiagnostics[lint];
 
-    If[$Debug,
+    If[$Debug2,
       WriteString[$logFileStream, "diagnostics: ", ToString[diagnostics], "\n"];
     ];
 
     actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, cursor]]], Infinity];
 
-    If[$Debug,
+    If[$Debug2,
       WriteString[$logFileStream, "actions: ", ToString[actions], "\n"];
     ];
 
@@ -682,7 +715,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         insertionNode = actionData["InsertionNode"];
 
-        If[$Debug,
+        If[$Debug2,
           WriteString[$logFileStream, "insertionNode: ", ToString[insertionNode], "\n"];
         ];
 
@@ -706,7 +739,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         insertionText = actionData["InsertionText"];
 
-        If[$Debug,
+        If[$Debug2,
           WriteString[$logFileStream, "insertionText: ", ToString[insertionText], "\n"];
         ];
 
@@ -745,7 +778,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         replacementNode = actionData["ReplacementNode"];
 
-        If[$Debug,
+        If[$Debug2,
           WriteString[$logFileStream, "replacementNode: ", ToString[replacementNode], "\n"];
         ];
 
@@ -766,7 +799,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         replacementText = actionData["ReplacementText"];
 
-        If[$Debug,
+        If[$Debug2,
           WriteString[$logFileStream, "replacementText: ", ToString[replacementText], "\n"];
         ];
 
@@ -791,7 +824,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     {lint, lints}
   ];
 
-  <|"jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>}
 ]]
 
 End[]

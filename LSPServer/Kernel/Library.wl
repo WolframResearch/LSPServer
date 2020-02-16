@@ -103,11 +103,11 @@ loadAllFuncs[] := (
 
 readLineFromStdInFunc := readLineFromStdInFunc = loadFunc["ReadLineFromStdIn_LibraryLink", {}, "UTF8String"];
 
-readBytesFromStdInFunc := readBytesFromStdInFunc = loadFunc["ReadBytesFromStdIn_LibraryLink", { {LibraryDataType[NumericArray, "UnsignedInteger8", 1], "Shared"} }, "Void"];
+readBytesFromStdInFunc := readBytesFromStdInFunc = loadFunc["ReadBytesFromStdIn_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, "Void"];
 
 writeLineToStdOutFunc := writeLineToStdOutFunc = loadFunc["WriteLineToStdOut_LibraryLink", {"UTF8String"}, "Void"];
 
-writeBytesToStdOutFunc := writeBytesToStdOutFunc = loadFunc["WriteBytesToStdOut_LibraryLink", { {LibraryDataType[NumericArray, "UnsignedInteger8", 1], "Shared"} }, "Void"];
+writeBytesToStdOutFunc := writeBytesToStdOutFunc = loadFunc["WriteBytesToStdOut_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, "Void"];
 )
 
 
