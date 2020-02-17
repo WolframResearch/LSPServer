@@ -15,6 +15,7 @@ Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
 
 Needs["CodeInspector`"]
+Needs["CodeInspector`Format`"]
 Needs["CodeInspector`ImplicitTimes`"]
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
@@ -584,7 +585,7 @@ Module[{file, inspectedFileObj, lines},
   we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
   *)
 
-  lines = <| "line" -> #[[2]], "characters" -> ((# /. {CodeInspector`Format`LintTimesCharacter -> "\[Times]"})& /@ ((# /. LintMarkup[content_] :> content)& /@ #[[4, 2, 2;;]])) |> & /@ inspectedFileObj[[2]];
+  lines = <| "line" -> #[[2]], "characters" -> ((# /. {LintTimesCharacter -> "\[Times]"})& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[4, 2, 2;;]])) |> & /@ inspectedFileObj[[2]];
 
   publishImplicitTimesNotification[uri, lines]
 ]]
