@@ -352,14 +352,23 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 ]
 
 
-(*
-Do not send a response back
-*)
-handleContent[content:KeyValuePattern["method" -> "initialized"]] := (
-  {}
-)
+handleContent[content:KeyValuePattern["method" -> "initialized"]] :=
+Module[{wolframVersion, codeParserVersion, codeInspectorVersion, lspServerVersion},
 
+  wolframVersion = ToString[$VersionNumber];
+  codeParserVersion = "Version" /. PacletManager`PacletInformation["CodeParser"] /. {"Version" -> "bad"};
+  codeInspectorVersion = "Version" /. PacletManager`PacletInformation["CodeInspector"] /. {"Version" -> "bad"};
+  lspServerVersion = "Version" /. PacletManager`PacletInformation["LSPServer"] /. {"Version" -> "bad"};
 
+  {<| "jsonrpc" -> "2.0",
+      "method"  -> "wolfram/versions",
+      "params"  -> <| "wolframVersion"-> wolframVersion,
+                    "codeParserVersion"-> codeParserVersion,
+                    "codeInspectorVersion"-> codeInspectorVersion,
+                    "lspServerVersion"-> lspServerVersion
+                   |>
+  |>}
+]
 
 handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
 Module[{id},
