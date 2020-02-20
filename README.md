@@ -1,22 +1,8 @@
 # LSPServer
 
-LSPServer is a paclet that implements the Language Server Protocol for Wolfram Language.
+`LSPServer` is a package that implements the Language Server Protocol for Wolfram Language.
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/)
-
-
-## Installing
-
-Install LSPServer and dependencies from the public paclet server:
-```
-In[1]:= PacletUpdate["CodeParser", "UpdateSites" -> True]
-			PacletUpdate["CodeInspector", "UpdateSites" -> True]
-			PacletUpdate["LSPServer", "UpdateSites" -> True]
-
-Out[1]= PacletObject[CodeParser,1.0,<>]
-Out[2]= PacletObject[CodeInspector,1.0,<>]
-Out[3]= PacletObject[LSPServer,1.0,<>]
-```
 
 
 ## Setup
@@ -25,12 +11,27 @@ LSPServer depends on the CodeParser paclet and the CodeInspector paclet. Make su
 ```
 In[1]:= Needs["CodeParser`"]
 			Needs["CodeInspector`"]
+      Needs["CodeFormatter`"]
 			Needs["LSPServer`"]
 ```
 
-[CodeParser on stash.wolfram.com](https://stash.wolfram.com/projects/COD/repos/codeparser/browse)
+[CodeParser on github.com](https://github.com/xxx)
+[CodeInspector on github.com](https://github.com/xxx)
+[CodeFormatter on github.com](https://github.com/xxx)
+[CodeParser on github.com](https://github.com/xxx)
 
-[CodeInspector on stash.wolfram.com](https://stash.wolfram.com/projects/COD/repos/codeinspector/browse)
+Install LSPServer and dependencies from the CodeTools paclet server:
+```
+In[1]:= PacletUpdate["CodeParser", "Site" -> "XXX", "UpdateSites" -> True]
+      PacletUpdate["CodeInspector", "Site" -> "XXX", "UpdateSites" -> True]
+      PacletUpdate["CodeFormatter", "Site" -> "XXX", "UpdateSites" -> True]
+      PacletUpdate["LSPServer", "Site" -> "XXX", "UpdateSites" -> True]
+
+Out[1]= PacletObject[CodeParser, 1.0, <>]
+Out[2]= PacletObject[CodeInspector, 1.0, <>]
+Out[3]= PacletObject[CodeFormatter, 1.0, <>]
+Out[4]= PacletObject[LSPServer, 1.0, <>]
+```
 
 
 ## Building
@@ -50,30 +51,8 @@ cmake --build . --target paclet
 
 The result is a directory named `paclet` that contains the WL package source code and a built LSPServer `.paclet` file for installing.
 
-You may see an error because the default path to `WolframKernel` may not be correct.
-
-Here is the cmake command using supplied values for `WOLFRAMKERNEL`:
+Specify `INSTALLATION_DIRECTORY` if you have Mathematica installed in a non-default location:
 ```
-cmake -DWOLFRAMKERNEL=/path/to/WolframKernel ..
+cmake -DINSTALLATION_DIRECTORY=/Applications/Mathematica111.app/Contents/ ..
+cmake --build . --target paclet
 ```
-
-Here are typical values for the variables:
-* `WOLFRAMKERNEL` `/Applications/Mathematica.app/Contents/MacOS/WolframKernel`
-
-Here is the build directory layout after building LSPServer:
-
-```
-paclet/
-  LSPServer/
-    Kernel/
-      LSPServer.wl
-    PacletInfo.m
-    ...
-```
-
-### Windows
-
-It is recommended to specify `wolfram.exe` instead of `WolframKernel.exe`.
-
-`WolframKernel.exe` opens a new window while it is running. But `wolfram.exe` runs inside the window that started it.
-
