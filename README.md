@@ -1,6 +1,6 @@
 # LSPServer
 
-`LSPServer` is a package that implements the Language Server Protocol for Wolfram Language.
+LSPServer is a package that implements the Language Server Protocol for Wolfram Language.
 
 [Language Server Protocol](https://microsoft.github.io/language-server-protocol/)
 
