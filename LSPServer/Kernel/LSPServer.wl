@@ -5,6 +5,13 @@ StartServer::usage = "StartServer[] puts the kernel into a state ready for traff
 
 
 
+RegisterDidOpenNotification
+
+RegisterDidCloseNotification
+
+RegisterDidSaveNotification
+
+
 handleContent
 
 Begin["`Private`"]
@@ -288,6 +295,29 @@ Module[{content, contents, bytess},
 
 
 
+$didOpenNotifications = {publishDiagnosticsNotification, publishImplicitTimesNotification}
+
+(*
+clear lints on file close
+
+NOTE: may want to be able to control this behavior
+*)
+$didCloseNotifications = {publishDiagnosticsNotification[#, {}]&, publishImplicitTimesNotification[#, {}]&}
+
+$didSaveNotifications = {publishDiagnosticsNotification, publishImplicitTimesNotification}
+
+
+RegisterDidOpenNotification[func_] := AppendTo[$didOpenNotifications, func]
+
+RegisterDidCloseNotification[func_] := AppendTo[$didCloseNotifications, func]
+
+RegisterDidSaveNotification[func_] := AppendTo[$didSaveNotifications, func]
+
+
+
+
+
+
 
 (*
 content: JSON-RPC Association
@@ -467,7 +497,7 @@ Module[{params, doc, uri},
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  {publishDiagnosticsNotification[uri], publishImplicitTimesNotification[uri]}
+  #[uri]& /@ $didOpenNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
@@ -477,12 +507,7 @@ Module[{params, doc, uri},
   doc = params["textDocument"];
   uri = doc["uri"];
 
-  (*
-  clear lints on file close
-
-  NOTE: may want to be able to control this behavior
-  *)
-  {publishDiagnosticsNotification[uri, {}], publishImplicitTimesNotification[uri, {}]}
+  #[uri]& /@ $didCloseNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSave"]] :=
@@ -492,7 +517,7 @@ Module[{params, doc, uri},
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  {publishDiagnosticsNotification[uri], publishImplicitTimesNotification[uri]}
+  #[uri]& /@ $didSaveNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] := (
