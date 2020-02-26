@@ -294,16 +294,31 @@ Module[{content, contents, bytess},
 
 
 
+(*
+Functions in this list are called as:
 
+func[uri, cst]
+
+*)
 $didOpenNotifications = {publishDiagnosticsNotification, publishImplicitTimesNotification}
 
 (*
-clear lints on file close
+Functions in this list are called as:
+
+func[uri]
+
+clear lints and lines on file close
 
 NOTE: may want to be able to control this behavior
 *)
-$didCloseNotifications = {publishDiagnosticsNotification[#, {}]&, publishImplicitTimesNotification[#, {}]&}
+$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishImplicitTimesNotificationWithLines[#1, {}]&}
 
+(*
+Functions in this list are called as:
+
+func[uri, cst]
+
+*)
 $didSaveNotifications = {publishDiagnosticsNotification, publishImplicitTimesNotification}
 
 
@@ -491,13 +506,22 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs
 textDocument/didOpen is a notification (so no response), but take this chance to do linting and send textDocument/publishDiagnostics
 *)
 handleContent[content:KeyValuePattern["method" -> "textDocument/didOpen"]] :=
-Module[{params, doc, uri},
+Module[{params, doc, uri, file, cst},
 
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  #[uri]& /@ $didOpenNotifications
+  file = normalizeURI[uri];
+
+  cst = CodeConcreteParse[File[file]];
+
+  If[$Debug2,
+    WriteString[$logFileStream, "Calling didOpenNotifications: ", $didOpenNotifications, "\n"];
+    WriteString[$logFileStream, "with these args: ", {uri, StringTake[ToString[cst], UpTo[100]] <> "..."}, "\n"];
+  ];
+
+  #[uri, cst]& /@ $didOpenNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
@@ -507,17 +531,31 @@ Module[{params, doc, uri},
   doc = params["textDocument"];
   uri = doc["uri"];
 
+  If[$Debug2,
+    WriteString[$logFileStream, "Calling didCloseNotifications: ", $didCloseNotifications, "\n"];
+    WriteString[$logFileStream, "with these args: ", {uri}, "\n"];
+  ];
+
   #[uri]& /@ $didCloseNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSave"]] :=
-Module[{params, doc, uri},
+Module[{params, doc, uri, file, cst},
   
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  #[uri]& /@ $didSaveNotifications
+  file = normalizeURI[uri];
+
+  cst = CodeConcreteParse[File[file]];
+
+  If[$Debug2,
+    WriteString[$logFileStream, "Calling didSaveNotifications: ", $didSaveNotifications, "\n"];
+    WriteString[$logFileStream, "with these args: ", {uri, StringTake[ToString[cst], UpTo[100]] <> "..."}, "\n"];
+  ];
+
+  #[uri, cst]& /@ $didSaveNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] := (
@@ -538,12 +576,10 @@ Switch[severity,
 ]
 
 
-publishDiagnosticsNotification[uri_String] :=
-Module[{file, lints, lintsWithConfidence, shadowing},
+publishDiagnosticsNotification[uri_String, cst_] :=
+Module[{lints, lintsWithConfidence, shadowing},
 
-  file = normalizeURI[uri];
-
-  lints = CodeInspect[File[file]];
+  lints = CodeInspectCST[cst];
 
   (*
   Might get something like FileTooLarge
@@ -565,11 +601,11 @@ Module[{file, lints, lintsWithConfidence, shadowing},
 
   lints = Complement[lints, shadowing];
 
-  publishDiagnosticsNotification[uri, lints]
+  publishDiagnosticsNotificationWithLints[uri, lints]
 ]
 
 
-publishDiagnosticsNotification[uri_String, lints_List] :=
+publishDiagnosticsNotificationWithLints[uri_String, lints_List] :=
 Module[{diagnostics},
 
   (*
@@ -596,20 +632,18 @@ Module[{diagnostics},
 
 
 
-publishImplicitTimesNotification[uri_String] :=
+publishImplicitTimesNotification[uri_String, cst_] :=
 Catch[
-Module[{file, inspectedFileObj, lines},
+Module[{inspectedFileObj, lines},
 
-  file = normalizeURI[uri];
-
-  inspectedFileObj = CodeInspectImplicitTimesSummarize[File[file]];
+  inspectedFileObj = CodeInspectImplicitTimesCSTSummarize[cst];
 
   (*
   Might get something like FileTooLarge
   Still want to update
   *)
   If[FailureQ[inspectedFileObj],
-    Throw[publishImplicitTimesNotification[uri, {}]]
+    Throw[publishImplicitTimesNotificationWithLines[uri, {}]]
   ];
 
   (*
@@ -621,11 +655,11 @@ Module[{file, inspectedFileObj, lines},
 
   lines = <| "line" -> #[[2]], "characters" -> ((# /. {LintTimesCharacter -> "\[Times]"})& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[4, 2, 2;;]])) |> & /@ inspectedFileObj[[2]];
 
-  publishImplicitTimesNotification[uri, lines]
+  publishImplicitTimesNotificationWithLines[uri, lines]
 ]]
 
 
-publishImplicitTimesNotification[uri_String, lines_List] :=
+publishImplicitTimesNotificationWithLines[uri_String, lines_List] :=
 Module[{},
 
   <| "jsonrpc" -> "2.0",
