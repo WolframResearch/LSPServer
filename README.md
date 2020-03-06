@@ -56,3 +56,64 @@ Specify `MATHEMATICA_INSTALL_DIR` if you have Mathematica installed in a non-def
 cmake -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica111.app/Contents/ ..
 cmake --build . --target paclet
 ```
+
+
+## Troubleshooting
+
+If there is any output written to the kernel's stdout, then this will break the protocol with LSP clients.
+
+For example, any messages that are produced when running the startup code will break the protocol and must be fixed first.
+
+```
+/Applications/Mathematica.app/Contents/MacOS/WolframKernel -noprompt -run Needs["LSPServer`"];LSPServer`StartServer[]
+
+Get::noopen: Cannot open CodeParser`.
+
+Needs::nocont: Context CodeParser` was not created when Needs was evaluated.
+
+Get::noopen: Cannot open CodeParser`.
+
+Needs::nocont: Context CodeParser` was not created when Needs was evaluated.
+
+Get::noopen: Cannot open CodeParser`.
+
+General::stop: Further output of Get::noopen will be suppressed during this calculation.
+
+Needs::nocont: Context CodeParser` was not created when Needs was evaluated.
+
+General::stop: Further output of Needs::nocont will be suppressed during this calculation.
+```
+
+
+
+Make sure that the required paclets are up-to-date:
+CodeParser
+CodeInspector
+CodeFormatter
+LSPServer
+
+
+remove older paclets
+
+
+
+
+### Debugging
+
+### Server settings
+
+Turn on debug logging from the kernel.
+
+Give a string argument to StartServer[]. This is a directory that kernel logs will be written to.
+
+```
+Needs["LSPServer`"];LSPServer`StartServer["/path/to/log/directory/"]
+```
+
+
+
+
+
+
+
+
