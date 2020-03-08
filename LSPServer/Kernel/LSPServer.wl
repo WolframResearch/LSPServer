@@ -17,6 +17,7 @@ handleContent
 Begin["`Private`"]
 
 Needs["LSPServer`Color`"]
+Needs["LSPServer`Definitions`"]
 Needs["LSPServer`Library`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
@@ -390,7 +391,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                                               |>,
                                          "codeActionProvider" -> codeActionProviderValue,
                                          "colorProvider" -> $ColorProvider,
-                                         "hoverProvider" -> $HoverProvider
+                                         "hoverProvider" -> $HoverProvider,
+                                         "definitionProvider" -> True
                                      |>
                  |>
   |>}
