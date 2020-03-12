@@ -53,6 +53,9 @@ $ColorProvider = False
 
 $HoverProvider = False
 
+$CodeActionLiteralSupport = False
+
+
 
 
 $ErrorCodes = <|
@@ -151,10 +154,10 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
   (*
   Ensure that no messages are printed to stdout
   *)
+  $Messages = Streams["stderr"];
+
   If[$Debug,
-    $Messages = { $logFileStream }
-    ,
-    $Messages = {}
+    $Messages = $Messages ~Join~ { $logFileStream }
   ];
 
   While[True,
