@@ -30,6 +30,9 @@ Module[{id, params, doc, uri, file, ast, position, locations, line, char, cases,
   file = normalizeURI[uri];
 
   ast = CodeParse[File[file]];
+  If[FailureQ[ast],
+    Throw[ast]
+  ];
 
   (*
   Find the name of the symbol at the position

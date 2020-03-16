@@ -9,6 +9,7 @@ Needs["CodeParser`"]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/documentColor"]] :=
+Catch[
 Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
 
   id = content["id"];
@@ -20,6 +21,10 @@ Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
 
   ast = CodeParse[File[file]];
 
+  If[FailureQ[ast],
+    Throw[ast]
+  ];
+
   colorNodes = Cases[ast, CallNode[LeafNode[Symbol, "RGBColor" | "Hue", _], _, _], Infinity];
 
   colorInformations = colorNodeToColorInformation /@ colorNodes;
@@ -27,7 +32,7 @@ Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
   colorInformations = DeleteCases[colorInformations, Null];
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> colorInformations |>}
-]
+]]
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {

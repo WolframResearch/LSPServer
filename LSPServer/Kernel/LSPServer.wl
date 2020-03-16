@@ -125,10 +125,6 @@ Module[{res},
 
 
 
-
-
-$logFileStream
-
 $Debug
 
 $Debug2
@@ -138,27 +134,30 @@ $Debug2
 setup the REPL to handle traffic from client
 *)
 StartServer[logDir_String:""] :=
-Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
-
-  $Debug = (logDir != "");
-
-  If[$Debug,
-
-    logFile = FileNameJoin[{logDir, "kernelLogFile.txt"}];
-
-    $logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
-
-    WriteString[$logFileStream, "$CommandLine: ", $CommandLine, "\n"];
-  ];
+Catch[
+Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream},
 
   (*
   Ensure that no messages are printed to stdout
   *)
   $Messages = Streams["stderr"];
 
+  $Debug = (logDir != "");
+
   If[$Debug,
-    $Messages = $Messages ~Join~ { $logFileStream }
+
+    Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
+
+    logFile = FileNameJoin[{logDir, "kernelLogFile.txt"}];
+
+    logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
+
+    $Messages = $Messages ~Join~ { logFileStream }
   ];
+
+  SetOptions[$Messages, PageWidth -> Infinity];
+
+  Write[$Messages, "$CommandLine: " //OutputForm, $CommandLine //OutputForm];
 
   While[True,
 
@@ -170,14 +169,15 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
       line = ReadLineFromStdIn[];
 
       If[FailureQ[line],
-        If[$Debug,
-          WriteString[$logFileStream, "C-->S  ", line, "\n"];
-        ];
+        Write[$Messages, "\n\n" //OutputForm];
+        Write[$Messages, "invalid line from stdin: " //OutputForm, line //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "\n\n" //OutputForm];
         Exit[1]
       ];
 
       If[$Debug2,
-        WriteString[$logFileStream, "C-->S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+        Write[$Messages, "C-->S  " //OutputForm, line //OutputForm, "  (length:"<>ToString[StringLength[line]]<>")" //OutputForm];
       ];
 
       Which[
@@ -189,6 +189,10 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
           Break[]
         ,
         True,
+          Write[$Messages, "\n\n" //OutputForm];
+          Write[$Messages, "invalid Content-Length from stdin: " //OutputForm, line //OutputForm];
+          Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+          Write[$Messages, "\n\n" //OutputForm];
           Exit[1]
       ]
     ];(*While*)
@@ -198,14 +202,15 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
     bytes = ReadBytesFromStdIn[numBytes];
 
     If[FailureQ[bytes],
-      If[$Debug,
-        WriteString[$logFileStream, "C-->S  ", bytes, "\n"];
-      ];
+      Write[$Messages, "\n\n" //OutputForm];
+      Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
+      Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+      Write[$Messages, "\n\n" //OutputForm];
       Exit[1]
     ];
 
     If[$Debug2,
-      WriteString[$logFileStream, "C-->S  ", FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], "\n"];
+      Write[$Messages, "C-->S  " //OutputForm, FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]] //OutputForm];
     ];
 
     bytess = LSPEvaluate[bytes];
@@ -213,59 +218,71 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess},
     Do[
     
       If[!ByteArrayQ[bytes],
-        If[$Debug,
-          WriteString[$logFileStream, bytes, "\n"]
-        ];
+        Write[$Messages, "\n\n" //OutputForm];
+        Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "\n\n" //OutputForm];
         Exit[1]
       ];
 
       If[$Debug2,
-        WriteString[$logFileStream, "bytes", Normal[Take[bytes, UpTo[1000]]], "\n"];
+        Write[$Messages, "bytes" //OutputForm, Normal[Take[bytes, UpTo[1000]]] //OutputForm];
       ];
 
       line = "Content-Length: " <> ToString[Length[bytes]];
 
       If[$Debug2,
-        WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+        Write[$Messages, "C<--S  " //OutputForm, line //OutputForm, "  (length:"<>ToString[StringLength[line]]<>")" //OutputForm];
       ];
 
       res = WriteLineToStdOut[line];
       If[res =!= Null,
-        If[$Debug,
-          WriteString[$logFileStream, "C<--S  ", res, "\n"];
-        ];
+        Write[$Messages, "\n\n" //OutputForm];
+        Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "\n\n" //OutputForm];
         Exit[1]
       ];
 
       line = "";
 
       If[$Debug2,
-        WriteString[$logFileStream, "C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")\n"];
+        Write[$Messages, "C<--S  " //OutputForm, line //OutputForm, "  (length:"<>ToString[StringLength[line]]<>")" //OutputForm];
       ];
 
       res = WriteLineToStdOut[line];
       If[res =!= Null,
-        If[$Debug,
-          WriteString[$logFileStream, "C<--S  ", res, "\n"];
-        ];
+        Write[$Messages, "\n\n" //OutputForm];
+        Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "\n\n" //OutputForm];
         Exit[1]
       ];
 
       If[$Debug2,
-        WriteString[$logFileStream, "C<--S  ", FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], "\n"];
+        Write[$Messages, "C<--S  " //OutputForm, FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]] //OutputForm];
       ];
 
       res = WriteBytesToStdOut[bytes];
       If[res =!= Null,
-        If[$Debug,
-          WriteString[$logFileStream, "C<--S  ", res, "\n"];
-        ];
+        Write[$Messages, "\n\n" //OutputForm];
+        Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "\n\n" //OutputForm];
         Exit[1]
       ];
       ,
       {bytes, bytess}
     ](*Do*)
   ](*While*)
+](*Module*)
+_,
+(
+  Write[$Messages, "\n\n" //OutputForm];
+  Write[$Messages, "uncaught Throw: " //OutputForm, #1 //OutputForm];
+  Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
+  Exit[1])&
 ]
 
 
@@ -283,9 +300,10 @@ Module[{content, contents, bytess},
   contents = handleContent[content];
 
   If[!MatchQ[contents, {_Association...}],
-    If[$Debug,
-      WriteString[$logFileStream, contents, "\n"];
-    ];
+    Write[$Messages, "\n\n" //OutputForm];
+    Write[$Messages, "invalid contents result: " //OutputForm, contents //OutputForm];
+    Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
     Exit[1]
   ];
 
@@ -476,6 +494,10 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs
 
   cst = CodeConcreteParse[File[file]];
 
+  If[FailureQ[cst],
+    Throw[cst]
+  ];
+
   (*
   Find the name of the symbol at the position
   *)
@@ -511,6 +533,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs
 textDocument/didOpen is a notification (so no response), but take this chance to do linting and send textDocument/publishDiagnostics
 *)
 handleContent[content:KeyValuePattern["method" -> "textDocument/didOpen"]] :=
+Catch[
 Module[{params, doc, uri, file, cst},
 
   params = content["params"];
@@ -521,13 +544,17 @@ Module[{params, doc, uri, file, cst},
 
   cst = CodeConcreteParse[File[file]];
 
+  If[FailureQ[cst],
+    Throw[cst]
+  ];
+
   If[$Debug2,
-    WriteString[$logFileStream, "Calling didOpenNotifications: ", $didOpenNotifications, "\n"];
-    WriteString[$logFileStream, "with these args: ", {uri, StringTake[ToString[cst], UpTo[100]] <> "..."}, "\n"];
+    Write[$Messages, "Calling didOpenNotifications: " //OutputForm, $didOpenNotifications //OutputForm];
+    Write[$Messages, "with these args: " //OutputForm, {uri, StringTake[ToString[cst], UpTo[100]] <> "..."} //OutputForm];
   ];
 
   #[uri, cst]& /@ $didOpenNotifications
-]
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
 Module[{params, doc, uri},
@@ -537,14 +564,15 @@ Module[{params, doc, uri},
   uri = doc["uri"];
 
   If[$Debug2,
-    WriteString[$logFileStream, "Calling didCloseNotifications: ", $didCloseNotifications, "\n"];
-    WriteString[$logFileStream, "with these args: ", {uri}, "\n"];
+    Write[$Messages, "Calling didCloseNotifications: " //OutputForm, $didCloseNotifications //OutputForm];
+    Write[$Messages, "with these args: " //OutputForm, {uri} //OutputForm];
   ];
 
   #[uri]& /@ $didCloseNotifications
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSave"]] :=
+Catch[
 Module[{params, doc, uri, file, cst},
   
   params = content["params"];
@@ -555,13 +583,17 @@ Module[{params, doc, uri, file, cst},
 
   cst = CodeConcreteParse[File[file]];
 
+  If[FailureQ[cst],
+    Throw[cst]
+  ];
+
   If[$Debug2,
-    WriteString[$logFileStream, "Calling didSaveNotifications: ", $didSaveNotifications, "\n"];
-    WriteString[$logFileStream, "with these args: ", {uri, StringTake[ToString[cst], UpTo[100]] <> "..."}, "\n"];
+    Write[$Messages, "Calling didSaveNotifications: " //OutputForm, $didSaveNotifications //OutputForm];
+    Write[$Messages, "with these args: " //OutputForm, {uri, StringTake[ToString[cst], UpTo[100]] <> "..."} //OutputForm];
   ];
 
   #[uri, cst]& /@ $didSaveNotifications
-]
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] := (
   {}
@@ -601,7 +633,7 @@ Module[{lints, lintsWithConfidence, shadowing},
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
   If[$Debug2,
-   WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
+   Write[$Messages, "shadowing: " //OutputForm, ToString[shadowing, InputForm] //OutputForm];
   ];
 
   lints = Complement[lints, shadowing];
@@ -726,7 +758,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   cursor+=1;
 
   If[$Debug2,
-    WriteString[$logFileStream, "cursor: ", ToString[cursor], "\n"];
+    Write[$Messages, "cursor: " //OutputForm, ToString[cursor] //OutputForm];
   ];
 
   file = normalizeURI[uri];
@@ -734,7 +766,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   lints = CodeInspect[File[file]];
 
   If[$Debug2,
-    WriteString[$logFileStream, "lints: ", ToString[lints, InputForm], "\n"];
+    Write[$Messages, "lints: " //OutputForm, ToString[lints, InputForm] //OutputForm];
   ];
 
   (*
@@ -751,7 +783,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
   If[$Debug2,
-   WriteString[$logFileStream, "shadowing: ", ToString[shadowing, InputForm], "\n"];
+   Write[$Messages, "shadowing: " //OutputForm, ToString[shadowing, InputForm] //OutputForm];
   ];
 
   lints = Complement[lints, shadowing];
@@ -763,13 +795,13 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     diagnostics = lintToDiagnostics[lint];
 
     If[$Debug2,
-      WriteString[$logFileStream, "diagnostics: ", ToString[diagnostics], "\n"];
+      Write[$Messages, "diagnostics: " //OutputForm, ToString[diagnostics] //OutputForm];
     ];
 
     actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, cursor]]], Infinity];
 
     If[$Debug2,
-      WriteString[$logFileStream, "actions: ", ToString[actions], "\n"];
+      Write[$Messages, "actions: " //OutputForm, ToString[actions] //OutputForm];
     ];
 
     Do[
@@ -790,7 +822,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         insertionNode = actionData["InsertionNode"];
 
         If[$Debug2,
-          WriteString[$logFileStream, "insertionNode: ", ToString[insertionNode], "\n"];
+          Write[$Messages, "insertionNode: " //OutputForm, ToString[insertionNode] //OutputForm];
         ];
 
         (*
@@ -814,7 +846,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         insertionText = actionData["InsertionText"];
 
         If[$Debug2,
-          WriteString[$logFileStream, "insertionText: ", ToString[insertionText], "\n"];
+          Write[$Messages, "insertionText: " //OutputForm, ToString[insertionText] //OutputForm];
         ];
 
         (*
@@ -853,7 +885,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         replacementNode = actionData["ReplacementNode"];
 
         If[$Debug2,
-          WriteString[$logFileStream, "replacementNode: ", ToString[replacementNode], "\n"];
+          Write[$Messages, "replacementNode: " //OutputForm, ToString[replacementNode] //OutputForm];
         ];
 
         edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
@@ -874,7 +906,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         replacementText = actionData["ReplacementText"];
 
         If[$Debug2,
-          WriteString[$logFileStream, "replacementText: ", ToString[replacementText], "\n"];
+          Write[$Messages, "replacementText: " //OutputForm, ToString[replacementText]];
         ];
 
         edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
