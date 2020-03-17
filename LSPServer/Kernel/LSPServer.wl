@@ -638,6 +638,16 @@ Module[{lints, lintsWithConfidence, shadowing},
 
   lints = Complement[lints, shadowing];
 
+
+  (*
+  Make sure to sort lints before taking
+  *)
+  lints = SortBy[lints, #[[4, Key[Source]]]&];
+
+  lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
+
+
+
   publishDiagnosticsNotificationWithLints[uri, lints]
 ]
 
