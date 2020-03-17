@@ -275,7 +275,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       {bytes, bytess}
     ](*Do*)
   ](*While*)
-](*Module*)
+],(*Module*)
 _,
 (
   Write[$Messages, "\n\n" //OutputForm];
