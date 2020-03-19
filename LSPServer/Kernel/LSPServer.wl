@@ -24,7 +24,7 @@ Needs["LSPServer`Utils`"]
 
 Needs["CodeInspector`"]
 Needs["CodeInspector`Format`"]
-Needs["CodeInspector`ImplicitTimes`"]
+Needs["CodeInspector`ImplicitTokens`"]
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
@@ -322,7 +322,7 @@ Functions in this list are called as:
 func[uri, cst]
 
 *)
-$didOpenNotifications = {publishDiagnosticsNotification, publishImplicitTimesNotification}
+$didOpenNotifications = {publishDiagnosticsNotification, publishImplicitTokensNotification}
 
 (*
 Functions in this list are called as:
@@ -333,7 +333,7 @@ clear lints and lines on file close
 
 NOTE: may want to be able to control this behavior
 *)
-$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishImplicitTimesNotificationWithLines[#1, {}]&}
+$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishImplicitTokensNotificationWithLines[#1, {}]&}
 
 (*
 Functions in this list are called as:
@@ -341,7 +341,7 @@ Functions in this list are called as:
 func[uri, cst]
 
 *)
-$didSaveNotifications = {publishDiagnosticsNotification, publishImplicitTimesNotification}
+$didSaveNotifications = {publishDiagnosticsNotification, publishImplicitTokensNotification}
 
 
 RegisterDidOpenNotification[func_] := AppendTo[$didOpenNotifications, func]
@@ -679,18 +679,18 @@ Module[{diagnostics},
 
 
 
-publishImplicitTimesNotification[uri_String, cst_] :=
+publishImplicitTokensNotification[uri_String, cst_] :=
 Catch[
 Module[{inspectedFileObj, lines},
 
-  inspectedFileObj = CodeInspectImplicitTimesCSTSummarize[cst];
+  inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst];
 
   (*
   Might get something like FileTooLarge
   Still want to update
   *)
   If[FailureQ[inspectedFileObj],
-    Throw[publishImplicitTimesNotificationWithLines[uri, {}]]
+    Throw[publishImplicitTokensNotificationWithLines[uri, {}]]
   ];
 
   (*
@@ -699,18 +699,32 @@ Module[{inspectedFileObj, lines},
 
   we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
   *)
+  
+  lines = <|
+    "line" -> #[[2]],
+    "characters" -> ((# /. {
+      LintTimesCharacter -> "x",
+      LintOneCharacter -> "1",
+      LintAllCharacter -> "A",
+      LintNullCharacter -> "N",
+      LintTimesOneCharacter -> "y",
+      LintAllTimesCharacter -> "B",
+      LintAllTimesOneCharacter -> "C",
+      LintOpenOneCharacter -> "1",
+      LintAllCloseCharacter -> "A",
+      LintCloseTimesOneCharacter -> "y"
+    })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[4, 2, 2;;]]))
+  |>& /@ inspectedFileObj[[2]];
 
-  lines = <| "line" -> #[[2]], "characters" -> ((# /. {LintTimesCharacter -> "\[Times]"})& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[4, 2, 2;;]])) |> & /@ inspectedFileObj[[2]];
-
-  publishImplicitTimesNotificationWithLines[uri, lines]
+  publishImplicitTokensNotificationWithLines[uri, lines]
 ]]
 
 
-publishImplicitTimesNotificationWithLines[uri_String, lines_List] :=
+publishImplicitTokensNotificationWithLines[uri_String, lines_List] :=
 Module[{},
 
   <| "jsonrpc" -> "2.0",
-      "method" -> "textDocument/publishImplicitTimes",
+      "method" -> "textDocument/publishImplicitTokens",
       "params" -> <|   "uri" -> uri,
                      "lines" -> lines |> |>
 ]
