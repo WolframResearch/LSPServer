@@ -35,7 +35,8 @@ set(PACLETINFO_SOURCE
 )
 
 set(DOCUMENTATION_NOTEBOOK_PATHS
-	#English/ReferencePages/Symbols/StartServer.nb
+	English/Guides/LSPServer.nb
+	English/Tutorials/ReleaseNotes.nb
 )
 
 #
