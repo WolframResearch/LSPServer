@@ -25,7 +25,9 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 //
 DLLEXPORT int ReadLineFromStdIn_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
 
-    std::string str;
+    static std::string str;
+
+    str.clear();
 
     char c;
     while (true) {
