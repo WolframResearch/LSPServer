@@ -1,7 +1,7 @@
 
 Paclet[
   Name -> "LSPServer",
-  Version -> "1.0",
+  Version -> "1.1",
   WolframVersion -> "12.0+",
   Description -> "Implement the Language Server Protocol for Wolfram Language.",
   Creator ->"Brenton Bostick <brenton@wolfram.com>",
