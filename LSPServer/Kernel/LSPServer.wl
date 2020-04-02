@@ -173,7 +173,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         Write[$Messages, "invalid line from stdin: " //OutputForm, line //OutputForm];
         Write[$Messages, "KERNEL IS EXITING" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Exit[1]
+        Pause[1];Exit[1]
       ];
 
       If[$Debug2,
@@ -193,7 +193,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
           Write[$Messages, "invalid Content-Length from stdin: " //OutputForm, line //OutputForm];
           Write[$Messages, "KERNEL IS EXITING" //OutputForm];
           Write[$Messages, "\n\n" //OutputForm];
-          Exit[1]
+          Pause[1];Exit[1]
       ]
     ];(*While*)
 
@@ -206,7 +206,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
       Write[$Messages, "KERNEL IS EXITING" //OutputForm];
       Write[$Messages, "\n\n" //OutputForm];
-      Exit[1]
+      Pause[1];Exit[1]
     ];
 
     If[$Debug2,
@@ -222,7 +222,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
         Write[$Messages, "KERNEL IS EXITING" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Exit[1]
+        Pause[1];Exit[1]
       ];
 
       If[$Debug2,
@@ -241,7 +241,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
         Write[$Messages, "KERNEL IS EXITING" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Exit[1]
+        Pause[1];Exit[1]
       ];
 
       line = "";
@@ -256,7 +256,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
         Write[$Messages, "KERNEL IS EXITING" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Exit[1]
+        Pause[1];Exit[1]
       ];
 
       If[$Debug2,
@@ -269,7 +269,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
         Write[$Messages, "KERNEL IS EXITING" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Exit[1]
+        Pause[1];Exit[1]
       ];
       ,
       {bytes, bytess}
@@ -282,7 +282,7 @@ _,
   Write[$Messages, "uncaught Throw: " //OutputForm, #1 //OutputForm];
   Write[$Messages, "KERNEL IS EXITING" //OutputForm];
   Write[$Messages, "\n\n" //OutputForm];
-  Exit[1])&
+  Pause[1];Exit[1])&
 ]
 
 
@@ -304,7 +304,7 @@ Module[{content, contents, bytess},
     Write[$Messages, "invalid contents result: " //OutputForm, contents //OutputForm];
     Write[$Messages, "KERNEL IS EXITING" //OutputForm];
     Write[$Messages, "\n\n" //OutputForm];
-    Exit[1]
+    Pause[1];Exit[1]
   ];
 
   bytess = ExportByteArray[#, "JSON"]& /@ contents;
