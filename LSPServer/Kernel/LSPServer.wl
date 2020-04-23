@@ -545,6 +545,17 @@ Module[{params, doc, uri, file, cst},
   cst = CodeConcreteParse[File[file]];
 
   If[FailureQ[cst],
+
+    (*
+    It is possible that a file is open in an editor, the actual file system contents get deleted,
+    but the editor still has a stale window open.
+    Focusing on that window could trigger a textDocument/didOpen notification, but the file does not exist!
+    TODO: is this a bug in Sublime / LSP package?
+    *)
+    If[MatchQ[cst, Failure["FindFileFailed", _]],
+      Throw[{}]
+    ];
+
     Throw[cst]
   ];
 
