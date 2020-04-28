@@ -22,6 +22,7 @@ Needs["LSPServer`Library`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
 
+Needs["CodeFormatter`"]
 Needs["CodeInspector`"]
 Needs["CodeInspector`Format`"]
 Needs["CodeInspector`ImplicitTokens`"]
@@ -413,7 +414,9 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "codeActionProvider" -> codeActionProviderValue,
                                          "colorProvider" -> $ColorProvider,
                                          "hoverProvider" -> $HoverProvider,
-                                         "definitionProvider" -> True
+                                         "definitionProvider" -> True,
+                                         "documentFormattingProvider" -> True,
+                                         "documentRangeFormattingProvider" -> True
                                      |>
                  |>
   |>}
@@ -967,6 +970,43 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>}
 ]]
+
+
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/formatting"]] :=
+Catch[
+Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, textEdit},
+
+  id = content["id"];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  file = normalizeURI[uri];
+
+  cst = CodeConcreteParse[File[file]];
+
+  startLineCol = cst[[2, 1, 3, Key[Source], 1]];
+  endLineCol = cst[[2, -1, 3, Key[Source], 2]];
+
+  startLineCol--;
+  endLineCol--;
+
+  formatted = CodeFormatCST[cst];
+
+  If[FailureQ[cst],
+    Throw[cst]
+  ];
+
+  textEdit = <| "range" -> <| "start" -> <| "line" -> startLineCol[[1]], "character" -> startLineCol[[2]] |>,
+                              "end" ->   <| "line" -> endLineCol[[1]], "character" -> endLineCol[[2]] |> |>,
+                "newText" -> formatted|>;
+
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
+]]
+
+
 
 End[]
 
