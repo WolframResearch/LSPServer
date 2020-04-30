@@ -1,5 +1,5 @@
 
-Paclet[
+UnbuiltPaclet[
   Name -> "LSPServer",
   Version -> "1.1",
   WolframVersion -> "12.0+",
