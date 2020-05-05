@@ -495,7 +495,7 @@ Module[{id, params, doc, uri, file, cst, pos, line, char, cases, sym, name, srcs
 
   file = normalizeURI[uri];
 
-  cst = CodeConcreteParse[File[file]];
+  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
 
   If[FailureQ[cst],
     Throw[cst]
@@ -545,7 +545,7 @@ Module[{params, doc, uri, file, cst},
   
   file = normalizeURI[uri];
 
-  cst = CodeConcreteParse[File[file]];
+  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
 
   If[FailureQ[cst],
 
@@ -595,7 +595,7 @@ Module[{params, doc, uri, file, cst},
   
   file = normalizeURI[uri];
 
-  cst = CodeConcreteParse[File[file]];
+  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
 
   If[FailureQ[cst],
     Throw[cst]
@@ -801,7 +801,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   file = normalizeURI[uri];
 
-  lints = CodeInspect[File[file]];
+  lints = CodeInspect[File[file], "TabWidth" -> 1];
 
   If[$Debug2,
     Write[$Messages, "lints: " //OutputForm, ToString[lints, InputForm] //OutputForm];
@@ -985,7 +985,7 @@ Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, te
 
   file = normalizeURI[uri];
 
-  cst = CodeConcreteParse[File[file]];
+  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
 
   startLineCol = cst[[2, 1, 3, Key[Source], 1]];
   endLineCol = cst[[2, -1, 3, Key[Source], 2]];
