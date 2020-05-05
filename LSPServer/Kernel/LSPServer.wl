@@ -50,6 +50,8 @@ LSPEvaluate
 
 $ConfidenceLevel = 0.95
 
+$ImplicitTokens = False
+
 $ColorProvider = False
 
 $HoverProvider = False
@@ -323,7 +325,7 @@ Functions in this list are called as:
 func[uri, cst]
 
 *)
-$didOpenNotifications = {publishDiagnosticsNotification, publishImplicitTokensNotification}
+$didOpenNotifications = {publishDiagnosticsNotification}
 
 (*
 Functions in this list are called as:
@@ -334,7 +336,7 @@ clear lints and lines on file close
 
 NOTE: may want to be able to control this behavior
 *)
-$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishImplicitTokensNotificationWithLines[#1, {}]&}
+$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&}
 
 (*
 Functions in this list are called as:
@@ -342,7 +344,7 @@ Functions in this list are called as:
 func[uri, cst]
 
 *)
-$didSaveNotifications = {publishDiagnosticsNotification, publishImplicitTokensNotification}
+$didSaveNotifications = {publishDiagnosticsNotification}
 
 
 RegisterDidOpenNotification[func_] := AppendTo[$didOpenNotifications, func]
@@ -364,7 +366,7 @@ returns: a list of associations (possibly empty), each association represents JS
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
-  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider},
+  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider, implicitTokens},
 
   id = content["id"];
   params = content["params"];
@@ -376,6 +378,13 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
       $ConfidenceLevel = confidenceLevel;
     ];
+
+    If[KeyExistsQ[initializationOptions, "implicitTokens"],
+      implicitTokens = initializationOptions["implicitTokens"];
+
+      $ImplicitTokens = implicitTokens;
+    ];
+
     If[KeyExistsQ[initializationOptions, "colorProvider"],
       colorProvider = initializationOptions["colorProvider"];
 
@@ -403,6 +412,12 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     codeActionProviderValue = <| "codeActionKinds" -> {"quickfix"} |>
     ,
     codeActionProviderValue = True
+  ];
+
+  If[$ImplicitTokens,
+    RegisterDidOpenNotification[publishImplicitTokensNotificationWithLines];
+    RegisterDidCloseNotification[publishImplicitTokensNotificationWithLines[#1, {}]&];
+    RegisterDidSaveNotification[publishImplicitTokensNotificationWithLines];
   ];
 
   {<| "jsonrpc" -> "2.0", "id" -> id,
