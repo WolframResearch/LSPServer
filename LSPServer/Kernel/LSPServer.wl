@@ -991,7 +991,8 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/formatting"]] :=
 Catch[
-Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, textEdit},
+Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, textEdit, options, tabSize, insertSpaces,
+  indentationString},
 
   id = content["id"];
 
@@ -999,9 +1000,13 @@ Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, te
   doc = params["textDocument"];
   uri = doc["uri"];
 
+  options = params["options"];
+  tabSize = options["tabSize"];
+  insertSpaces = options["insertSpaces"];
+
   file = normalizeURI[uri];
 
-  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
+  cst = CodeConcreteParse[File[file], "TabWidth" -> tabSize];
 
   startLineCol = cst[[2, 1, 3, Key[Source], 1]];
   endLineCol = cst[[2, -1, 3, Key[Source], 2]];
@@ -1009,7 +1014,13 @@ Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, te
   startLineCol--;
   endLineCol--;
 
-  formatted = CodeFormatCST[cst];
+  If[insertSpaces,
+    indentationString = StringJoin[Table[" ", {tabSize}]]
+    ,
+    indentationString = "\t"
+  ];
+
+  formatted = CodeFormatCST[cst, "TabWidth" -> tabSize, "IndentationString" -> indentationString];
 
   If[FailureQ[cst],
     Throw[cst]
