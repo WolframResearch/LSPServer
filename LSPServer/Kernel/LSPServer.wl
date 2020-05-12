@@ -415,9 +415,9 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   ];
 
   If[$ImplicitTokens,
-    RegisterDidOpenNotification[publishImplicitTokensNotificationWithLines];
+    RegisterDidOpenNotification[publishImplicitTokensNotification];
     RegisterDidCloseNotification[publishImplicitTokensNotificationWithLines[#1, {}]&];
-    RegisterDidSaveNotification[publishImplicitTokensNotificationWithLines];
+    RegisterDidSaveNotification[publishImplicitTokensNotification];
   ];
 
   {<| "jsonrpc" -> "2.0", "id" -> id,
