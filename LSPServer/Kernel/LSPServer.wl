@@ -60,6 +60,13 @@ $CodeActionLiteralSupport = False
 
 
 
+(*
+lint objects may be printed to log files and we do not want to include ANSI control codes
+*)
+CodeInspector`Format`Private`$UseANSI = False
+
+
+
 
 $ErrorCodes = <|
   (*
