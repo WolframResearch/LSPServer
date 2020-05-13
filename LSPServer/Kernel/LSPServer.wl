@@ -11,6 +11,8 @@ RegisterDidCloseNotification
 
 RegisterDidSaveNotification
 
+RegisterDidChangeNotification
+
 
 handleContent
 
@@ -138,6 +140,11 @@ Module[{res},
 $Debug
 
 $Debug2
+
+
+
+$OpenFilesMap = <||>
+
 
 
 (*
@@ -329,7 +336,7 @@ Module[{content, contents, bytess},
 (*
 Functions in this list are called as:
 
-func[uri, cst]
+func[uri]
 
 *)
 $didOpenNotifications = {publishDiagnosticsNotification}
@@ -348,10 +355,18 @@ $didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&}
 (*
 Functions in this list are called as:
 
-func[uri, cst]
+func[uri]
 
 *)
 $didSaveNotifications = {publishDiagnosticsNotification}
+
+(*
+Functions in this list are called as:
+
+func[uri]
+
+*)
+$didChangeNotifications = {publishDiagnosticsNotification}
 
 
 RegisterDidOpenNotification[func_] := AppendTo[$didOpenNotifications, func]
@@ -359,6 +374,8 @@ RegisterDidOpenNotification[func_] := AppendTo[$didOpenNotifications, func]
 RegisterDidCloseNotification[func_] := AppendTo[$didCloseNotifications, func]
 
 RegisterDidSaveNotification[func_] := AppendTo[$didSaveNotifications, func]
+
+RegisterDidChangeNotification[func_] := AppendTo[$didChangeNotifications, func]
 
 
 
@@ -425,13 +442,14 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     RegisterDidOpenNotification[publishImplicitTokensNotification];
     RegisterDidCloseNotification[publishImplicitTokensNotificationWithLines[#1, {}]&];
     RegisterDidSaveNotification[publishImplicitTokensNotification];
+    RegisterDidChangeNotification[publishImplicitTokensNotification];
   ];
 
   {<| "jsonrpc" -> "2.0", "id" -> id,
      "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
                                         "textDocumentSync" -> <| "openClose" -> True,
                                                                  "save" -> <| "includeText" -> False |>,
-                                                                 "change" -> $TextDocumentSyncKind["None"]
+                                                                 "change" -> $TextDocumentSyncKind["Full"]
                                                               |>,
                                          "codeActionProvider" -> codeActionProviderValue,
                                          "colorProvider" -> $ColorProvider,
@@ -562,15 +580,14 @@ textDocument/didOpen is a notification (so no response), but take this chance to
 *)
 handleContent[content:KeyValuePattern["method" -> "textDocument/didOpen"]] :=
 Catch[
-Module[{params, doc, uri, file, cst},
+Module[{params, doc, uri, cst, text},
 
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
-  
-  file = normalizeURI[uri];
+  text = doc["text"];
 
-  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
+  cst = CodeConcreteParse[text, "TabWidth" -> 1];
 
   If[FailureQ[cst],
 
@@ -589,14 +606,21 @@ Module[{params, doc, uri, file, cst},
 
   If[$Debug2,
     Write[$Messages, "Calling didOpenNotifications: " //OutputForm, $didOpenNotifications //OutputForm];
-    Write[$Messages, "with these args: " //OutputForm, {uri, StringTake[ToString[cst], UpTo[100]] <> "..."} //OutputForm];
+    Write[$Messages, "with these args: " //OutputForm, {uri} //OutputForm];
   ];
 
-  #[uri, cst]& /@ $didOpenNotifications
+  (*
+  This is a File, not a String
+  *)
+  cst[[1]] = File;
+
+  $OpenFilesMap[uri] = {text, cst};
+
+  #[uri]& /@ $didOpenNotifications
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
-Module[{params, doc, uri},
+Module[{params, doc, uri, res},
 
   params = content["params"];
   doc = params["textDocument"];
@@ -607,36 +631,53 @@ Module[{params, doc, uri},
     Write[$Messages, "with these args: " //OutputForm, {uri} //OutputForm];
   ];
 
-  #[uri]& /@ $didCloseNotifications
+  res = #[uri]& /@ $didCloseNotifications;
+
+  $OpenFilesMap[uri] =.;
+
+  res
 ]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSave"]] :=
+  {}
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] :=
 Catch[
-Module[{params, doc, uri, file, cst},
+Module[{params, doc, uri, cst, text, lastChange},
   
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
   
-  file = normalizeURI[uri];
+  changes = params["contentChanges"];
 
-  cst = CodeConcreteParse[File[file], "TabWidth" -> 1];
+  (*
+  Currently only supporting full text, so always only apply the last change
+  *)
+  lastChange = changes[[-1]];
+
+  text = lastChange["text"];
+
+  cst = CodeConcreteParse[text, "TabWidth" -> 1];
 
   If[FailureQ[cst],
     Throw[cst]
   ];
 
+  (*
+  This is a File, not a String
+  *)
+  cst[[1]] = File;
+
+  $OpenFilesMap[uri] = {text, cst};
+
   If[$Debug2,
-    Write[$Messages, "Calling didSaveNotifications: " //OutputForm, $didSaveNotifications //OutputForm];
-    Write[$Messages, "with these args: " //OutputForm, {uri, StringTake[ToString[cst], UpTo[100]] <> "..."} //OutputForm];
+    Write[$Messages, "Calling didChangeNotifications: " //OutputForm, $didChangeNotifications //OutputForm];
+    Write[$Messages, "with these args: " //OutputForm, {uri} //OutputForm];
   ];
 
-  #[uri, cst]& /@ $didSaveNotifications
+  #[uri]& /@ $didChangeNotifications
 ]]
-
-handleContent[content:KeyValuePattern["method" -> "textDocument/didChange"]] := (
-  {}
-)
 
 
 
@@ -652,8 +693,12 @@ Switch[severity,
 ]
 
 
-publishDiagnosticsNotification[uri_String, cst_] :=
-Module[{lints, lintsWithConfidence, shadowing},
+publishDiagnosticsNotification[uri_String] :=
+Module[{lints, lintsWithConfidence, shadowing, cst, entry},
+
+  entry = $OpenFilesMap[uri];
+
+  cst = entry[[2]];
 
   lints = CodeInspectCST[cst];
 
@@ -718,9 +763,13 @@ Module[{diagnostics},
 
 
 
-publishImplicitTokensNotification[uri_String, cst_] :=
+publishImplicitTokensNotification[uri_String] :=
 Catch[
-Module[{inspectedFileObj, lines},
+Module[{inspectedFileObj, lines, cst, entry},
+
+  entry = $OpenFilesMap[uri];
+
+  cst = entry[[2]];
 
   inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst];
 
