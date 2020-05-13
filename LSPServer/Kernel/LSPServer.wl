@@ -803,7 +803,7 @@ Module[{inspectedFileObj, lines, cst, entry},
       LintOpenOneCharacter -> "1",
       LintAllCloseCharacter -> "A",
       LintCloseTimesOneCharacter -> "y"
-    })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[4, 2, 2;;]]))
+    })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
   |>& /@ inspectedFileObj[[2]];
 
   publishImplicitTokensNotificationWithLines[uri, lines]
