@@ -457,9 +457,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "colorProvider" -> $ColorProvider,
                                          "hoverProvider" -> $HoverProvider,
                                          "definitionProvider" -> True,
-                                         "documentFormattingProvider" -> True
-                                         (*,
-                                         "documentRangeFormattingProvider" -> True*)
+                                         "documentFormattingProvider" -> True,
+                                         "documentRangeFormattingProvider" -> True
                                      |>
                  |>
   |>}
