@@ -10,7 +10,7 @@ Needs["CodeParser`Utils`"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/definition"]] :=
 Catch[
-Module[{id, params, doc, uri, file, ast, position, locations, line, char, cases, sym, name, srcs},
+Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, name, srcs, entry, cst, agg},
 
   id = content["id"];
   params = content["params"];
@@ -27,9 +27,11 @@ Module[{id, params, doc, uri, file, ast, position, locations, line, char, cases,
   line+=1;
   char+=1;
 
-  file = normalizeURI[uri];
+  entry = $OpenFilesMap[uri];
+  cst = entry[[2]];
+  agg = CodeParser`Abstract`Aggregate[cst];
+  ast = CodeParser`Abstract`Abstract[agg];
 
-  ast = CodeParse[File[file]];
   If[FailureQ[ast],
     Throw[ast]
   ];

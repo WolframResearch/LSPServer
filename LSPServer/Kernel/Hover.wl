@@ -10,7 +10,7 @@ Needs["CodeParser`"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
 Catch[
-Module[{id, params, doc, uri, file, ast, position, hover},
+Module[{id, params, doc, uri, ast, position, hover, entry, cst, agg},
 
   id = content["id"];
   params = content["params"];
@@ -18,9 +18,10 @@ Module[{id, params, doc, uri, file, ast, position, hover},
   uri = doc["uri"];
   position = params["position"];
 
-  file = normalizeURI[uri];
-
-  ast = CodeParse[File[file]];
+  entry = $OpenFilesMap[uri];
+  cst = entry[[2]];
+  agg = CodeParser`Abstract`Aggregate[cst];
+  ast = CodeParser`Abstract`Abstract[agg];
 
   If[FailureQ[ast],
     Throw[ast]

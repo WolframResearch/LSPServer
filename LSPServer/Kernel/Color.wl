@@ -10,16 +10,17 @@ Needs["CodeParser`"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/documentColor"]] :=
 Catch[
-Module[{id, params, doc, uri, file, colorInformations, ast, colorNodes},
+Module[{id, params, doc, uri, colorInformations, ast, colorNodes, agg, entry, cst},
 
   id = content["id"];
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
 
-  file = normalizeURI[uri];
-
-  ast = CodeParse[File[file]];
+  entry = $OpenFilesMap[uri];
+  cst = entry[[2]];
+  agg = CodeParser`Abstract`Aggregate[cst];
+  ast = CodeParser`Abstract`Abstract[agg];
 
   If[FailureQ[ast],
     Throw[ast]

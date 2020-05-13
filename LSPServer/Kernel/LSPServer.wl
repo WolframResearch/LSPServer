@@ -16,6 +16,8 @@ RegisterDidChangeNotification
 
 handleContent
 
+$OpenFilesMap
+
 Begin["`Private`"]
 
 Needs["LSPServer`Color`"]
