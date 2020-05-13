@@ -1082,8 +1082,8 @@ Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, te
 
   formatted = CodeFormatCST[cst, "TabWidth" -> tabSize, "IndentationString" -> indentationString];
 
-  If[FailureQ[cst],
-    Throw[cst]
+  If[FailureQ[formatted],
+    Throw[formatted]
   ];
 
   textEdit = <| "range" -> <| "start" -> <| "line" -> startLineCol[[1]], "character" -> startLineCol[[2]] |>,
@@ -1093,10 +1093,10 @@ Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, te
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
 
-(*
 handleContent[content:KeyValuePattern["method" -> "textDocument/rangeFormatting"]] :=
 Catch[
-Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, textEdit},
+Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize,
+  insertSpaces, rangeSource, lines},
 
   id = content["id"];
 
@@ -1104,29 +1104,55 @@ Module[{params, doc, uri, id, file, cst, formatted, startLineCol, endLineCol, te
   doc = params["textDocument"];
   uri = doc["uri"];
 
-  file = normalizeURI[uri];
+  range = params["range"];
+  
+  rangeSource = { { range["start"]["line"], range["start"]["character"] },
+                {   range["end"]["line"],   range["end"]["character"] } };
 
-  cst = CodeConcreteParse[ xx only a range xx File[file], "TabWidth" -> 1];
+  (* convert to 1-based *)
+  rangeSource+=1;
 
-  startLineCol = cst[[2, 1, 3, Key[Source], 1]];
-  endLineCol = cst[[2, -1, 3, Key[Source], 2]];
+  options = params["options"];
+  tabSize = options["tabSize"];
+  insertSpaces = options["insertSpaces"];
 
-  startLineCol--;
-  endLineCol--;
+  entry = $OpenFilesMap[uri];
 
-  formatted = CodeFormatCST[cst];
+  text = entry[[1]];
 
-  If[FailureQ[cst],
-    Throw[cst]
+  lines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+  lines = lines[[rangeSource[[1, 1]];;rangeSource[[2, 1]]]];
+  If[rangeSource[[1, 1]] == rangeSource[[2, 1]],
+    (*
+    single line selection
+    *)
+    text = StringTake[lines[[1]], {rangeSource[[1, 2]], rangeSource[[2, 2]] - 1}]
+    ,
+    (*
+    multiple line selection
+    *)
+    lines[[1]] = StringDrop[lines[[1]], rangeSource[[1, 2]] - 1];
+    lines[[-1]] = StringTake[lines[[-1]], rangeSource[[2, 2]]];
+    text = StringJoin[Riffle[lines, "\n"]];
   ];
 
-  textEdit = <| "range" -> <| "start" -> <| "line" -> startLineCol[[1]], "character" -> startLineCol[[2]] |>,
-                              "end" ->   <| "line" -> endLineCol[[1]], "character" -> endLineCol[[2]] |> |>,
+  If[insertSpaces,
+    indentationString = StringJoin[Table[" ", {tabSize}]]
+    ,
+    indentationString = "\t"
+  ];
+
+  formatted = CodeFormat[text, "TabWidth" -> tabSize, "IndentationString" -> indentationString];
+
+  If[FailureQ[formatted],
+    Throw[formatted]
+  ];
+
+  textEdit = <| "range" -> range,
                 "newText" -> formatted|>;
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
-*)
 
 End[]
 
