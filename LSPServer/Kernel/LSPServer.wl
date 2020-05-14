@@ -30,6 +30,7 @@ Needs["CodeFormatter`"]
 Needs["CodeInspector`"]
 Needs["CodeInspector`Format`"]
 Needs["CodeInspector`ImplicitTokens`"]
+Needs["CodeInspector`BracketMismatches`"]
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
@@ -54,20 +55,31 @@ LSPEvaluate
 
 $ConfidenceLevel = 0.95
 
-$ImplicitTokens = False
-
 $ColorProvider = False
 
 $HoverProvider = False
 
 $CodeActionLiteralSupport = False
 
+$ImplicitTokens = False
+
+$BracketMatcher = False
 
 
 (*
 lint objects may be printed to log files and we do not want to include ANSI control codes
 *)
 CodeInspector`Format`Private`$UseANSI = False
+
+
+
+$sampleHTML = StringReplace["
+<span style=\"color:#7777ff\">
+<span>\[DoubleUpArrow]<br>
+Here is some text<br>
+</span>
+</span>
+", "\n" -> ""]
 
 
 
@@ -392,25 +404,20 @@ returns: a list of associations (possibly empty), each association represents JS
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
-  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider, implicitTokens},
+  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider, implicitTokens,
+  bracketMatcher},
 
   id = content["id"];
   params = content["params"];
 
   If[KeyExistsQ[params, "initializationOptions"],
     initializationOptions = params["initializationOptions"];
+
     If[KeyExistsQ[initializationOptions, "confidenceLevel"],
       confidenceLevel = initializationOptions["confidenceLevel"];
 
       $ConfidenceLevel = confidenceLevel;
     ];
-
-    If[KeyExistsQ[initializationOptions, "implicitTokens"],
-      implicitTokens = initializationOptions["implicitTokens"];
-
-      $ImplicitTokens = implicitTokens;
-    ];
-
     If[KeyExistsQ[initializationOptions, "colorProvider"],
       colorProvider = initializationOptions["colorProvider"];
 
@@ -420,6 +427,17 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       hoverProvider = initializationOptions["hoverProvider"];
 
       $HoverProvider = hoverProvider;
+    ];
+
+    If[KeyExistsQ[initializationOptions, "implicitTokens"],
+      implicitTokens = initializationOptions["implicitTokens"];
+
+      $ImplicitTokens = implicitTokens;
+    ];
+    If[KeyExistsQ[initializationOptions, "bracketMatcher"],
+      bracketMatcher = initializationOptions["bracketMatcher"];
+
+      $BracketMatcher = bracketMatcher;
     ];
   ];
 
@@ -442,9 +460,16 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
   If[$ImplicitTokens,
     RegisterDidOpenNotification[publishImplicitTokensNotification];
-    RegisterDidCloseNotification[publishImplicitTokensNotificationWithLines[#1, {}]&];
+    RegisterDidCloseNotification[publishImplicitTokensNotificationWithLines[#, {}]&];
     RegisterDidSaveNotification[publishImplicitTokensNotification];
     RegisterDidChangeNotification[publishImplicitTokensNotification];
+  ];
+
+  If[$BracketMatcher,
+    RegisterDidOpenNotification[publishBracketMismatchesNotification];
+    RegisterDidCloseNotification[publishBracketMismatchesNotificationWithLines[#, {}]&];
+    RegisterDidSaveNotification[publishBracketMismatchesNotification];
+    RegisterDidChangeNotification[publishBracketMismatchesNotification];
   ];
 
   {<| "jsonrpc" -> "2.0", "id" -> id,
@@ -818,6 +843,63 @@ Module[{},
                      "lines" -> lines |> |>
 ]
 
+
+
+publishBracketMismatchesNotification[uri_String] :=
+Catch[
+Module[{inspectedFileObj, lines, entry, cst},
+
+  entry = $OpenFilesMap[uri];
+
+  text = entry[[1]];
+
+  (*
+  FIXME: Must use the tab width from the editor
+  *)
+  cst = cst = CodeConcreteParse[text, "TabWidth" -> 4];
+
+  inspectedFileObj = CodeInspectBracketMismatchesCSTSummarize[cst];
+
+  (*
+  Might get something like FileTooLarge
+  Still want to update
+  *)
+  If[FailureQ[inspectedFileObj],
+    Throw[publishBracketMismatchesNotificationWithLines[uri, {}]]
+  ];
+
+  (*
+  Even though we have:
+  Format[LintTimesCharacter, StandardForm] := "\[Times]"
+
+  we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
+  *)
+
+  lines = <|
+    "line" -> #[[2]],
+    "characters" -> ((# /. {
+      " " -> "&nbsp;",
+      LintErrorIndicatorCharacter -> $sampleHTML
+    })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
+  |> & /@ inspectedFileObj[[2]];
+
+  If[$Debug2,
+    Write[$Messages, "publishBracketMismatchesNotification inspectedFileObj: " //OutputForm, ToString[inspectedFileObj, InputForm] //OutputForm];
+    Write[$Messages, "publishBracketMismatchesNotification lines: " //OutputForm, ToString[lines, InputForm] //OutputForm];
+  ];
+
+  publishBracketMismatchesNotificationWithLines[uri, lines]
+]]
+
+
+publishBracketMismatchesNotificationWithLines[uri_String, lines_List] :=
+Module[{},
+
+  <| "jsonrpc" -> "2.0",
+      "method" -> "textDocument/publishHTMLSnippet",
+      "params" -> <|   "uri" -> uri,
+                     "lines" -> lines |> |>
+]
 
 
 
