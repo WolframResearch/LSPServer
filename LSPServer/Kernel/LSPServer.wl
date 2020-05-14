@@ -173,6 +173,11 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
   *)
   $Messages = Streams["stderr"];
 
+  (*
+  Ensure that no Print output is printed to stdout
+  *)
+  $Output = Streams["stderr"];
+
   $Debug = (logDir != "");
 
   If[$Debug,
