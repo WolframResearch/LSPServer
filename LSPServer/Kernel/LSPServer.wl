@@ -831,6 +831,7 @@ Module[{inspectedFileObj, lines, cst, entry},
       LintAllTimesOneCharacter -> "C",
       LintOpenOneCharacter -> "1",
       LintAllCloseCharacter -> "A",
+      LintNullCloseCharacter -> "N",
       LintCloseTimesOneCharacter -> "y"
     })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
   |>& /@ inspectedFileObj[[2]];
