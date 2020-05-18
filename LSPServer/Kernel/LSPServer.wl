@@ -73,13 +73,21 @@ CodeInspector`Format`Private`$UseANSI = False
 
 
 
-$sampleHTML = StringReplace["
-<span style=\"color:#7777ff\">
-<span>\[DoubleUpArrow]<br>
-Here is some text<br>
-</span>
-</span>
-", "\n" -> ""]
+$missingOpenerHTML = "\
+<span style=\"color:#7777ff\">\
+<span>\[DoubleUpArrow]<br>\
+Missing opener<br>\
+</span>\
+</span>\
+"
+
+$missingCloserHTML = "\
+<span style=\"color:#7777ff\">\
+<span>\[DoubleUpArrow]<br>\
+Missing closer<br>\
+</span>\
+</span>\
+"
 
 
 
@@ -833,21 +841,24 @@ Module[{inspectedFileObj, lines, cst, entry},
   lines = <|
     "line" -> #[[2]],
     "characters" -> ((# /. {
-      LintTimesCharacter -> "x",
-      LintOneCharacter -> "1",
+      (*
+      convert characters to the little markup language described in notes.md
+
+      Openers and closers are dropped here
+      *)
       LintAllCharacter -> "A",
       LintNullCharacter -> "N",
-      LintTimesOneCharacter -> "y",
-      LintAllTimesCharacter -> "B",
-      LintAllTimesOneCharacter -> "C",
-      LintOpenOneCharacter -> "1",
+      LintOneCharacter -> "1",
+      LintTimesCharacter -> "x",
       LintAllCloseCharacter -> "A",
-      LintNullCloseCharacter -> "N",
-      LintCloseTimesOneCharacter -> "y",
-      (*
-      Characters below are conjectured to be unnecessary and indicate a problem with parsing
-      *)
-      LintCloseCloseCharacter -> " "
+      LintAllTimesCharacter -> "B",
+      LintCloseCloseCharacter -> " ",
+      LintCloseTimesCharacter -> "x",
+      LintOpenOneCharacter -> "1",
+      LintOpenOpenCharacter -> " ",
+      LintTimesOneCharacter -> "y",
+      LintAllTimesOneCharacter -> "C",
+      LintCloseTimesOneCharacter -> "y"
     })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
   |>& /@ inspectedFileObj[[2]];
 
@@ -877,7 +888,7 @@ Module[{inspectedFileObj, lines, entry, cst},
   (*
   FIXME: Must use the tab width from the editor
   *)
-  cst = cst = CodeConcreteParse[text, "TabWidth" -> 4];
+  cst = CodeConcreteParse[text, "TabWidth" -> 4];
 
   inspectedFileObj = CodeInspectBracketMismatchesCSTSummarize[cst];
 
@@ -900,7 +911,8 @@ Module[{inspectedFileObj, lines, entry, cst},
     "line" -> #[[2]],
     "characters" -> ((# /. {
       " " -> "&nbsp;",
-      LintErrorIndicatorCharacter -> $sampleHTML
+      LintMissingOpenerIndicatorCharacter -> $missingOpenerHTML,
+      LintMissingCloserIndicatorCharacter -> $missingCloserHTML
     })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
   |> & /@ inspectedFileObj[[2]];
 
