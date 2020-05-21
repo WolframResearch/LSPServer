@@ -1250,7 +1250,10 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
     multiple line selection
     *)
     lines[[1]] = StringDrop[lines[[1]], rangeSource[[1, 2]] - 1];
-    lines[[-1]] = StringTake[lines[[-1]], rangeSource[[2, 2]]];
+    lines[[-1]] = StringTake[lines[[-1]], rangeSource[[2, 2]] - 1];
+    (*
+    FIXME: use the correct newline
+    *)
     text = StringJoin[Riffle[lines, "\n"]];
   ];
 
