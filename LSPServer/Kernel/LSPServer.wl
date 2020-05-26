@@ -63,6 +63,9 @@ $CodeActionLiteralSupport = False
 
 $ImplicitTokens = False
 
+(*
+if $BracketMatcher, then load ML4Code` and use ML bracket matching tech
+*)
 $BracketMatcher = False
 
 
@@ -72,23 +75,10 @@ lint objects may be printed to log files and we do not want to include ANSI cont
 CodeInspector`Format`Private`$UseANSI = False
 
 
-
-$missingOpenerHTML = "\
-<span style=\"color:#7777ff\">\
-<span>\[DoubleUpArrow]<br>\
-Missing opener<br>\
-</span>\
-</span>\
-"
-
-$missingCloserHTML = "\
-<span style=\"color:#7777ff\">\
-<span>\[DoubleUpArrow]<br>\
-Missing closer<br>\
-</span>\
-</span>\
-"
-
+(*
+The counter that is used for creating unique hrefs
+*)
+$hrefIdCounter = 0
 
 
 
@@ -162,6 +152,9 @@ Module[{res},
 $Debug
 
 $Debug2
+
+$DebugBracketMatcher
+
 
 
 
@@ -375,7 +368,7 @@ Functions in this list are called as:
 func[uri]
 
 *)
-$didOpenNotifications = {publishDiagnosticsNotification}
+$didOpenNotifications = {publishDiagnosticsNotification, publishBracketMismatchesNotification}
 
 (*
 Functions in this list are called as:
@@ -386,7 +379,7 @@ clear lints and lines on file close
 
 NOTE: may want to be able to control this behavior
 *)
-$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&}
+$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishBracketMismatchesNotificationWithLinesAndActions[#, {}, {}]&}
 
 (*
 Functions in this list are called as:
@@ -394,7 +387,7 @@ Functions in this list are called as:
 func[uri]
 
 *)
-$didSaveNotifications = {publishDiagnosticsNotification}
+$didSaveNotifications = {publishDiagnosticsNotification, publishBracketMismatchesNotification}
 
 (*
 Functions in this list are called as:
@@ -402,7 +395,7 @@ Functions in this list are called as:
 func[uri]
 
 *)
-$didChangeNotifications = {publishDiagnosticsNotification}
+$didChangeNotifications = {publishDiagnosticsNotification, publishBracketMismatchesNotification}
 
 
 RegisterDidOpenNotification[func_] := AppendTo[$didOpenNotifications, func]
@@ -427,11 +420,11 @@ returns: a list of associations (possibly empty), each association represents JS
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
   codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider, implicitTokens,
-  bracketMatcher},
+  bracketMatcher, debugBracketMatcher},
 
   id = content["id"];
   params = content["params"];
-
+  
   If[KeyExistsQ[params, "initializationOptions"],
     initializationOptions = params["initializationOptions"];
 
@@ -461,6 +454,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
       $BracketMatcher = bracketMatcher;
     ];
+    If[KeyExistsQ[initializationOptions, "debugBracketMatcher"],
+      debugBracketMatcher = initializationOptions["debugBracketMatcher"];
+
+      $DebugBracketMatcher = debugBracketMatcher;
+    ];
   ];
 
   capabilities = params["capabilities"];
@@ -488,10 +486,9 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   ];
 
   If[$BracketMatcher,
-    RegisterDidOpenNotification[publishBracketMismatchesNotification];
-    RegisterDidCloseNotification[publishBracketMismatchesNotificationWithLines[#, {}]&];
-    RegisterDidSaveNotification[publishBracketMismatchesNotification];
-    RegisterDidChangeNotification[publishBracketMismatchesNotification];
+
+    Needs["ML4Code`"];
+
   ];
 
   {<| "jsonrpc" -> "2.0", "id" -> id,
@@ -887,59 +884,252 @@ Module[{},
 
 publishBracketMismatchesNotification[uri_String] :=
 Catch[
-Module[{inspectedFileObj, lines, entry, cst},
+Module[{lines, entry, cst, text, mismatches, actions, textLines, action,
+  topLineMap, bottomLineMap, topLine, bottomLine, suggestions, probabilitiesMap, badChunkLineNums,
+  badChunkLines, badChunk, originalColumnCount, rank, chunkOffset},
 
   entry = $OpenFilesMap[uri];
 
   text = entry[[1]];
 
   (*
+  Using "TabWidth" -> 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
   FIXME: Must use the tab width from the editor
   *)
   cst = CodeConcreteParse[text, "TabWidth" -> 4];
 
-  inspectedFileObj = CodeInspectBracketMismatchesCSTSummarize[cst];
-
-  (*
-  Might get something like FileTooLarge
-  Still want to update
-  *)
-  If[FailureQ[inspectedFileObj],
-    Throw[publishBracketMismatchesNotificationWithLines[uri, {}]]
+  If[!$BracketMatcher,
+    Throw[publishBracketMismatchesNotificationWithLinesAndActions[uri, {}, {}]]
   ];
 
   (*
-  Even though we have:
-  Format[LintTimesCharacter, StandardForm] := "\[Times]"
-
-  we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
+  Using $BracketMatcher here
   *)
 
-  lines = <|
-    "line" -> #[[2]],
-    "characters" -> ((# /. {
-      " " -> "&nbsp;",
-      LintMissingOpenerIndicatorCharacter -> $missingOpenerHTML,
-      LintMissingCloserIndicatorCharacter -> $missingCloserHTML
-    })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
-  |> & /@ inspectedFileObj[[2]];
+  mismatches = CodeInspectBracketMismatchesCST[cst];
 
-  If[$Debug2,
-    Write[$Messages, "publishBracketMismatchesNotification inspectedFileObj: " //OutputForm, ToString[inspectedFileObj, InputForm] //OutputForm];
-    Write[$Messages, "publishBracketMismatchesNotification lines: " //OutputForm, ToString[lines, InputForm] //OutputForm];
+  lines = {};
+  actions = {};
+  If[!empty[mismatches],
+
+    textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+
+    topLineMap = <||>;
+    bottomLineMap = <||>;
+    Function[{mismatch},
+      badChunkLineNums = mismatch[[3, Key[Source], All, 1]];
+      badChunkLines = Take[textLines, badChunkLineNums];
+      badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
+
+      suggestions = ML4Code`SuggestBracketEdits[badChunk] /. $Failed -> {};
+      suggestions = convertSuggestionToLineColumn[#, badChunkLines]& /@ suggestions;
+
+      If[$Debug2,
+        Write[$Messages, "badChunkLineNums: " //OutputForm, badChunkLineNums];
+        Write[$Messages, "badChunk: " //OutputForm, badChunk];
+        Write[$Messages, "suggestions: " //OutputForm, suggestions];
+      ];
+      probabilitiesMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
+      Function[{suggestion},
+        rank = probabilitiesMap[suggestion[[3]]];
+
+        (*
+        offset to add to relative line numbers inside suggestions to obtain line numbers of text
+        *)
+        chunkOffset = badChunkLineNums[[1]] - 1;
+        originalColumnCount = StringLength[textLines[[suggestion[[1, 3, 1]] + chunkOffset]]];
+
+        If[$Debug2,
+          Write[$Messages, "rank: " //OutputForm, rank];
+          Write[$Messages, "chunkOffset: " //OutputForm, chunkOffset];
+          Write[$Messages, "originalColumnCount: " //OutputForm, originalColumnCount];
+        ];
+
+        {topLine, bottomLine, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
+        If[TrueQ[$DebugBracketMatcher],
+          (*
+          if debug, then keep all lines separated
+          *)
+          AppendTo[lines, topLine]
+          ,
+          (*
+          if not debug, then merge lines together
+          *)
+          If[KeyExistsQ[topLineMap, topLine["line"]],
+            topLineMap[topLine["line"]] = merge[topLineMap[topLine["line"]], topLine]
+            ,
+            topLineMap[topLine["line"]] = topLine
+          ];
+          If[KeyExistsQ[bottomLineMap, bottomLine["line"]],
+            bottomLineMap[bottomLine["line"]] = merge[bottomLineMap[bottomLine["line"]], bottomLine]
+            ,
+            bottomLineMap[bottomLine["line"]] = bottomLine
+          ];
+        ];
+
+        AppendTo[actions, action];
+
+      ] /@ suggestions;
+    ] /@ mismatches;
+
+    If[!TrueQ[$DebugBracketMatcher],
+      lines = Values[topLineMap] ~Join~ Values[bottomLineMap]
+    ]
   ];
 
-  publishBracketMismatchesNotificationWithLines[uri, lines]
+  publishBracketMismatchesNotificationWithLinesAndActions[uri, lines, actions]
 ]]
 
 
-publishBracketMismatchesNotificationWithLines[uri_String, lines_List] :=
+convertSuggestionToLineColumn[{{command_Symbol, text_String, index_Integer}, completed_String, prob_}, badChunkLines_] :=
+  Module[{line, column},
+    {line, column} = indexToLineColumn[index, badChunkLines];
+    {{command, text, {line, column}}, completed, prob}
+  ]
+
+indexToLineColumn[index_, badChunkLines_] :=
+  Module[{indexs, line, taken, lineStartIndex, column},
+    indexs = FoldList[#1 + StringLength[#2] + 1 &, 1, badChunkLines];
+    taken = TakeWhile[indexs, (# <= index) &];
+    line = Length[taken];
+    lineStartIndex = Last[taken];
+    column = index - lineStartIndex + 1;
+    {line, column}
+  ]
+
+
+merge[line1_Association, line2_Association] :=
+  Module[{},
+    If[line1["line"] =!= line2["line"],
+      Throw[{line1, line2}, "Unhandled"]
+    ];
+    If[Length[line1["characters"]] =!= Length[line2["characters"]],
+      Throw[{line1, line2}, "Unhandled"]
+    ];
+    <|"line" -> line1["line"], "characters" -> ((# /. {
+        {a_, "&nbsp;"} :> a,
+        {"&nbsp;", b_} :> b,
+        (*
+        FIXME: arbitrarily choose the first arrow
+        if these are the same action, then there is no problem
+        but if one is an Insert and one is a Delete? Is that possible?
+        maybe should choose based on probability
+        *)
+        {a_, b_} :> a
+      })& /@ Transpose[{line1["characters"], line2["characters"]}]) |>
+  ]
+
+
+suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, probability_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
+  Module[{escaped},
+    escaped = StringReplace[insertionText, {"<" -> "&lt;", ">" -> "&gt;"}];
+
+    $hrefIdCounter++;
+    
+    {
+      (*
+      top line
+      *)
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount}], column -> makeHTML[blueRank[rank], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+      |>
+      ,
+      (*
+      bottom line
+      *)
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount}], column -> makeHTML[blueRank[rank], escaped, ToString[$hrefIdCounter], ""]]
+      |>
+      ,
+      (*
+      action
+      *)
+      <|"command" -> "insert",
+        "insertionText" -> insertionText,
+        "line" -> line + chunkOffset,
+        "column" -> column,
+        "href" -> ToString[$hrefIdCounter]
+      |>
+    }
+  ]
+
+suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_Integer}}, completed_String, probability_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
+  Module[{escaped},
+    escaped = StringReplace[deletionText, {"<" -> "&lt;", ">" -> "&gt;"}];
+
+    $hrefIdCounter++;
+    
+    {
+      (*
+      top line
+      *)
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount}], column -> makeHTML[redRank[rank], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+      |>
+      ,
+      (*
+      bottom line
+      *)
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> Table["&nbsp;", {originalColumnCount}]
+      |>
+      ,
+      (*
+      action
+      *)
+      <|
+        "command" -> "delete",
+        "deletionText" -> deletionText,
+        "line" -> line + chunkOffset,
+        "column" -> column,
+        "href" -> ToString[$hrefIdCounter]
+      |>
+    }
+  ]
+
+(*
+FIXME: designed for a white background color scheme, need to get current background from client
+*)
+redRank[rank_] :=
+  Switch[rank,
+    1,
+      RGBColor[1, 0, 0]
+    ,
+    2,
+      RGBColor[1, 0.55, 0.55]
+    ,
+    3,
+      RGBColor[1, 0.75, 0.75]
+  ]
+
+(*
+FIXME: designed for a white background color scheme, need to get current background from client
+*)
+blueRank[rank_] :=
+  Switch[rank,
+    1,
+      RGBColor[0, 0, 1]
+    ,
+    2,
+      RGBColor[0.55, 0.55, 1]
+    ,
+    3,
+      RGBColor[0.75, 0.75, 1]
+  ]
+
+
+publishBracketMismatchesNotificationWithLinesAndActions[uri_String, lines_List, actions_List] :=
 Module[{},
 
   <| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishHTMLSnippet",
       "params" -> <|   "uri" -> uri,
-                     "lines" -> lines |> |>
+                     "lines" -> lines,
+                     "actions" -> actions |> |>
 ]
 
 
@@ -1039,7 +1229,10 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
       Write[$Messages, "diagnostics: " //OutputForm, ToString[diagnostics] //OutputForm];
     ];
 
-    actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, cursor]]], Infinity];
+    (*
+    Need to filter the actions that match the cursor
+    *)
+    actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberIntersectingQ[src, cursor]]], Infinity];
 
     If[$Debug2,
       Write[$Messages, "actions: " //OutputForm, ToString[actions] //OutputForm];
@@ -1296,6 +1489,34 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
+
+
+$upArrow = "\:25b2"
+
+$downArrow = "\:25bc"
+
+(*
+FIXME: Use the same font as the editor
+*)
+$fontFamily = "Fira Code"
+
+
+makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; TrueQ[$DebugBracketMatcher] :=
+  Module[{colorHex},
+    colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
+"\
+<a style=\"font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";text-decoration: none;\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a><br>\
+<a style=\"font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";text-decoration: none;\" href=" <> "\"" <> href <> "\"" <> ">" <> debugStr <> "</a>\
+"
+  ]
+
+makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; !TrueQ[$DebugBracketMatcher] :=
+  Module[{colorHex},
+    colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
+"\
+<a style=\"font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";text-decoration: none;\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a>\
+"
+  ]
 
 End[]
 
