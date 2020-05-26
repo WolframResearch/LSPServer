@@ -330,9 +330,37 @@ returns: a list of ByteArray (possibly empty), each ByteArray represents an RPC-
 *)
 LSPEvaluate[bytes_ByteArray] :=
 Catch[
-Module[{content, contents, bytess},
+Module[{content, contents, bytess, str, escapes, surrogates},
 
   content = ImportByteArray[bytes, "RawJSON"];
+
+  (*
+  (*  
+  Figuring out what to with UTF-16 surrogates...
+  *)
+
+  (*
+  Coming in as JSON, so non-ASCII characters are using \uXXXX escaping
+  So safe to treat bytes as ASCII
+  *)
+  str = FromCharacterCode[Normal[bytes], "ASCII"];
+
+  escapes = StringCases[str, "\\u" ~~ ds : (_ ~~ _ ~~ _ ~~ _) :> ds];
+  If[escapes != {},
+    surrogates = Select[escapes, (
+        (* high and low surrogates *)
+        16^^d800 <= FromDigits[#, 16] <= 16^^dfff
+      )&];
+    If[surrogates != {},
+      (*
+      surrogates have been detected
+      *)
+      Null
+    ]
+  ];
+
+  content = ImportString[str, "RawJSON"];
+  *)
 
   contents = handleContent[content];
 
