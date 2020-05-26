@@ -559,9 +559,23 @@ error code MethodNotFound (e.g. -32601).
 handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
 Module[{params, id},
   params = content["params"];
-  id = params["id"];
-  {<| "jsonrpc" -> "2.0", "id" -> id, "error" -> <| "code" -> $ErrorCodes["MethodNotFound"],
-                                                   "message"->"Method Not Found" |> |>}
+
+  If[KeyExistsQ[params, "id"],
+    (*
+    has id, so this is a request
+    *)
+    id = params["id"];
+    {<| "jsonrpc" -> "2.0", "id" -> id,
+      "error" -> <|
+        "code" -> $ErrorCodes["MethodNotFound"],
+        "message"->"Method Not Found" |> |>}
+    ,
+    (*
+    does not have id, so this is a notification
+    just ignore
+    *)
+    {}
+  ]
 ]
 
 
