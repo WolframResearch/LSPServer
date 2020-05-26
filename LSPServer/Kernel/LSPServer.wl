@@ -254,7 +254,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
     ];
 
     If[$Debug2,
-      Write[$Messages, "C-->S  " //OutputForm, FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]] //OutputForm];
+      Write[$Messages, "C-->S bytes " //OutputForm, Normal[Take[bytes, UpTo[1000]]] //OutputForm];
     ];
 
     bytess = LSPEvaluate[bytes];
@@ -270,7 +270,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       ];
 
       If[$Debug2,
-        Write[$Messages, "bytes" //OutputForm, Normal[Take[bytes, UpTo[1000]]] //OutputForm];
+        Write[$Messages, "C<--S bytes " //OutputForm, Normal[Take[bytes, UpTo[1000]]] //OutputForm];
       ];
 
       line = "Content-Length: " <> ToString[Length[bytes]];
@@ -635,10 +635,6 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs},
 
 
 
-
-
-
-
 (*
 textDocument/didOpen is a notification (so no response), but take this chance to do linting and send textDocument/publishDiagnostics
 *)
@@ -650,6 +646,10 @@ Module[{params, doc, uri, cst, text},
   doc = params["textDocument"];
   uri = doc["uri"];
   text = doc["text"];
+
+  If[$Debug2,
+    Write[$Messages, "text: " //OutputForm, ToString[text, InputForm] //OutputForm];
+  ];
 
   cst = CodeConcreteParse[text, "TabWidth" -> 1];
 
@@ -780,12 +780,7 @@ Module[{lints, lintsWithConfidence, shadowing, cst, entry},
 
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
-  If[$Debug2,
-   Write[$Messages, "shadowing: " //OutputForm, ToString[shadowing, InputForm] //OutputForm];
-  ];
-
   lints = Complement[lints, shadowing];
-
 
   (*
   Make sure to sort lints before taking
@@ -794,7 +789,9 @@ Module[{lints, lintsWithConfidence, shadowing, cst, entry},
 
   lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
 
-
+  If[$Debug2,
+   Write[$Messages, "lints: " //OutputForm, ToString[lints, InputForm] //OutputForm];
+  ];
 
   publishDiagnosticsNotificationWithLints[uri, lints]
 ]
@@ -821,9 +818,6 @@ Module[{diagnostics},
       "params" -> <|         "uri" -> uri,
                      "diagnostics" -> diagnostics |> |>
 ]
-
-
-
 
 
 
@@ -996,7 +990,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   cursor = { { range["start"]["line"], range["start"]["character"] },
              {   range["end"]["line"],   range["end"]["character"] } };
 
-  (* convert to 1-based *)
+  (* convert from 0-based to 1-based *)
   cursor+=1;
 
   If[$Debug2,
@@ -1007,6 +1001,9 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   text = entry[[1]];
 
+  (*
+  Using "TabWidth" -> 1 here because the lints Sources are sent over LSP and tabs are a single, normal character
+  *)
   lints = CodeInspect[text, "TabWidth" -> 1];
 
   If[$Debug2,
@@ -1164,6 +1161,14 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         AppendTo[lspActions, lspAction];
 
+        ,
+
+        _,
+
+        If[$Debug,
+          Write[$Messages, "UNSUPPORTED COMMAND: " //OutputForm, command];
+        ];
+
       ]
 
       ,
@@ -1203,6 +1208,9 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
   startLineCol = cst[[2, 1, 3, Key[Source], 1]];
   endLineCol = cst[[2, -1, 3, Key[Source], 2]];
 
+  (*
+  convert from 1-based to 0-based
+  *)
   startLineCol--;
   endLineCol--;
 
@@ -1239,9 +1247,9 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
   range = params["range"];
   
   rangeSource = { { range["start"]["line"], range["start"]["character"] },
-                {   range["end"]["line"],   range["end"]["character"] } };
+                  { range["end"]["line"],   range["end"]["character"] } };
 
-  (* convert to 1-based *)
+  (* convert from 0-based to 1-based *)
   rangeSource+=1;
 
   options = params["options"];
