@@ -502,7 +502,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "hoverProvider" -> $HoverProvider,
                                          "definitionProvider" -> True,
                                          "documentFormattingProvider" -> True,
-                                         "documentRangeFormattingProvider" -> True
+                                         "documentRangeFormattingProvider" -> True,
+                                         "executeCommandProvider" -> True
                                      |>
                  |>
   |>}
@@ -1489,6 +1490,32 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
+
+
+handleContent[content:KeyValuePattern["method" -> "workspace/executeCommand"]] :=
+Catch[
+Module[{params, id, command},
+
+  id = content["id"];
+
+  params = content["params"];
+
+  command = params["command"];
+
+  Switch[command,
+    "enable_debug_mode",
+      $DebugBracketMatcher = True;
+    ,
+    "disable_debug_mode",
+      $DebugBracketMatcher = False;
+    ,
+    _,
+      Null
+  ];
+
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { } |>}
+]]
+
 
 
 $upArrow = "\:25b2"
