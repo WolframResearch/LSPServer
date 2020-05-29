@@ -52,7 +52,7 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
   cases =
     Cases[
       ast,
-      CallNode[LeafNode[Symbol, "SetDelayed", _], {lhs_, rhs_}, KeyValuePattern["Definition" -> name]] :> lhs,
+      CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {lhs_, rhs_}, KeyValuePattern["Definition" -> name]] :> lhs,
       Infinity
     ];
 
