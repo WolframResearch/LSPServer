@@ -68,6 +68,11 @@ if $BracketMatcher, then load ML4Code` and use ML bracket matching tech
 *)
 $BracketMatcher = False
 
+$BracketMatcherUseDesignColors = True
+
+$BracketMatcherDisplayInsertionText = False
+
+
 
 (*
 lint objects may be printed to log files and we do not want to include ANSI control codes
@@ -913,9 +918,9 @@ Module[{},
 
 publishBracketMismatchesNotification[uri_String] :=
 Catch[
-Module[{lines, entry, cst, text, mismatches, actions, textLines, action,
-  topLineMap, bottomLineMap, topLine, bottomLine, suggestions, probabilitiesMap, badChunkLineNums,
-  badChunkLines, badChunk, originalColumnCount, rank, chunkOffset},
+Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
+  badChunkLines, badChunk, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
+  line1Map, line2Map, line3Map, line4Map},
 
   entry = $OpenFilesMap[uri];
 
@@ -937,14 +942,20 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action,
 
   mismatches = CodeInspectBracketMismatchesCST[cst];
 
+  If[$Debug2,
+    Write[$Messages, "mismatches: " //OutputForm, mismatches];
+  ];
+
   lines = {};
   actions = {};
   If[!empty[mismatches],
 
     textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
 
-    topLineMap = <||>;
-    bottomLineMap = <||>;
+    line1Map = <||>;
+    line2Map = <||>;
+    line3Map = <||>;
+    line4Map = <||>;
     Function[{mismatch},
       badChunkLineNums = mismatch[[3, Key[Source], All, 1]];
       badChunkLines = Take[textLines, badChunkLineNums];
@@ -958,9 +969,9 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action,
         Write[$Messages, "badChunk: " //OutputForm, badChunk];
         Write[$Messages, "suggestions: " //OutputForm, suggestions];
       ];
-      probabilitiesMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
+      confidenceMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
       Function[{suggestion},
-        rank = probabilitiesMap[suggestion[[3]]];
+        rank = confidenceMap[suggestion[[3]]];
 
         (*
         offset to add to relative line numbers inside suggestions to obtain line numbers of text
@@ -974,25 +985,35 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action,
           Write[$Messages, "originalColumnCount: " //OutputForm, originalColumnCount];
         ];
 
-        {topLine, bottomLine, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
+        {line1, line2, line3, line4, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
         If[TrueQ[$DebugBracketMatcher],
           (*
           if debug, then keep all lines separated
           *)
-          AppendTo[lines, topLine]
+          AppendTo[lines, line1]
           ,
           (*
           if not debug, then merge lines together
           *)
-          If[KeyExistsQ[topLineMap, topLine["line"]],
-            topLineMap[topLine["line"]] = merge[topLineMap[topLine["line"]], topLine]
+          If[KeyExistsQ[line1Map, line1["line"]],
+            line1Map[line1["line"]] = merge[line1Map[line1["line"]], line1]
             ,
-            topLineMap[topLine["line"]] = topLine
+            line1Map[line1["line"]] = line1
           ];
-          If[KeyExistsQ[bottomLineMap, bottomLine["line"]],
-            bottomLineMap[bottomLine["line"]] = merge[bottomLineMap[bottomLine["line"]], bottomLine]
+          If[KeyExistsQ[line2Map, line2["line"]],
+            line2Map[line2["line"]] = merge[line2Map[line2["line"]], line2]
             ,
-            bottomLineMap[bottomLine["line"]] = bottomLine
+            line2Map[line2["line"]] = line2
+          ];
+          If[KeyExistsQ[line3Map, line3["line"]],
+            line3Map[line3["line"]] = merge[line3Map[line3["line"]], line3]
+            ,
+            line3Map[line3["line"]] = line3
+          ];
+          If[KeyExistsQ[line4Map, line4["line"]],
+            line4Map[line4["line"]] = merge[line4Map[line4["line"]], line4]
+            ,
+            line4Map[line4["line"]] = line4
           ];
         ];
 
@@ -1001,8 +1022,18 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action,
       ] /@ suggestions;
     ] /@ mismatches;
 
-    If[!TrueQ[$DebugBracketMatcher],
-      lines = Values[topLineMap] ~Join~ Values[bottomLineMap]
+    If[TrueQ[$DebugBracketMatcher],
+
+      lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines
+      ,
+
+      lines = Values[line1Map] ~Join~ Values[line2Map] ~Join~ Values[line3Map] ~Join~ Values[line4Map];
+
+      lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines;
+
+      lines = Merge[<|#["line"] -> #|>& /@ lines, ({StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ #, "<br>"], "</div>"], #[[1]]["characterCount"]})&];
+      
+      lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|> &, lines]
     ]
   ];
 
@@ -1049,27 +1080,46 @@ merge[line1_Association, line2_Association] :=
   ]
 
 
-suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, probability_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
-  Module[{escaped},
-    escaped = StringReplace[insertionText, {"<" -> "&lt;", ">" -> "&gt;"}];
+suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, confidence_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
+  Module[{escaped, confidenceStr},
+    escaped = StringReplace[Characters[insertionText], {"<" -> "&lt;", ">" -> "&gt;"}];
+    confidenceStr = " confidence: " <> ToString[PercentForm[confidence]];
 
     $hrefIdCounter++;
     
     {
       (*
-      top line
+      top most line
       *)
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount}], column -> makeHTML[blueRank[rank], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2|3, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> confidenceStr]}]
+      |>
+      ,
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> confidenceStr]}]
+      |>
+      ,
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> confidenceStr]}]
       |>
       ,
       (*
-      bottom line
+      bottom most line
       *)
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount}], column -> makeHTML[blueRank[rank], escaped, ToString[$hrefIdCounter], ""]]
+        "characters" ->
+          If[$BracketMatcherDisplayInsertionText,
+            ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {
+              column -> makeHTML[blueRank[rank], escaped[[1]], ToString[$hrefIdCounter], ""],
+              column + 1 -> If[Length[escaped] == 2, makeHTML[blueRank[rank], escaped[[2]], ToString[$hrefIdCounter], ""], "&nbsp;"]
+            }]
+            ,
+            Table["&nbsp;", {originalColumnCount + 1}]
+          ]
       |>
       ,
       (*
@@ -1092,19 +1142,29 @@ suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_
     
     {
       (*
-      top line
+      top most line
       *)
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount}], column -> makeHTML[redRank[rank], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2|3, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+      |>
+      ,
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+      |>
+      ,
+      <|
+        "line" -> line + chunkOffset,
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
       |>
       ,
       (*
-      bottom line
+      bottom most line
       *)
       <|
         "line" -> line + chunkOffset,
-        "characters" -> Table["&nbsp;", {originalColumnCount}]
+        "characters" -> Table["&nbsp;", {originalColumnCount + 1}]
       |>
       ,
       (*
@@ -1120,34 +1180,53 @@ suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_
     }
   ]
 
+
+
+gray[] :=
+  RGBColor[0.74902, 0.74902, 0.74902]
+
+redRank[rank_] /; TrueQ[$BracketMatcherUseDesignColors] :=
+  RGBColor[0.984314, 0.0509804, 0.105882]
+
+blueRank[rank_] /; TrueQ[$BracketMatcherUseDesignColors] :=
+  RGBColor[0.27451, 0.662745, 0.988235]
+
 (*
 FIXME: designed for a white background color scheme, need to get current background from client
 *)
-redRank[rank_] :=
-  Switch[rank,
-    1,
-      RGBColor[1, 0, 0]
+redRank[rank_] /; !TrueQ[$BracketMatcherUseDesignColors] :=
+  If[TrueQ[$DebugBracketMatcher],
+    RGBColor[1, 0, 0]
     ,
-    2,
-      RGBColor[1, 0.55, 0.55]
-    ,
-    3,
-      RGBColor[1, 0.75, 0.75]
+    Switch[rank,
+      1,
+        RGBColor[1, 0, 0]
+      ,
+      2,
+        RGBColor[1, 0.55, 0.55]
+      ,
+      3,
+        RGBColor[1, 0.75, 0.75]
+    ]
   ]
 
 (*
 FIXME: designed for a white background color scheme, need to get current background from client
 *)
-blueRank[rank_] :=
-  Switch[rank,
-    1,
-      RGBColor[0, 0, 1]
+blueRank[rank_] /; !TrueQ[$BracketMatcherUseDesignColors] :=
+  If[TrueQ[$DebugBracketMatcher],
+    RGBColor[0, 0, 1]
     ,
-    2,
-      RGBColor[0.55, 0.55, 1]
-    ,
-    3,
-      RGBColor[0.75, 0.75, 1]
+    Switch[rank,
+      1,
+        RGBColor[0, 0, 1]
+      ,
+      2,
+        RGBColor[0.55, 0.55, 1]
+      ,
+      3,
+        RGBColor[0.75, 0.75, 1]
+    ]
   ]
 
 
@@ -1531,14 +1610,28 @@ Module[{params, id, command},
   command = params["command"];
 
   Switch[command,
-    "enable_debug_mode",
+    "enable_bracket_matcher_debug_mode",
       $DebugBracketMatcher = True;
     ,
-    "disable_debug_mode",
+    "disable_bracket_matcher_debug_mode",
       $DebugBracketMatcher = False;
     ,
+    "enable_bracket_matcher_design_colors",
+      $BracketMatcherUseDesignColors = True;
+    ,
+    "disable_bracket_matcher_design_colors",
+      $BracketMatcherUseDesignColors = False;
+    ,
+    "enable_bracket_matcher_display_insertion_text",
+      $BracketMatcherDisplayInsertionText = True;
+    ,
+    "disable_bracket_matcher_display_insertion_text",
+      $BracketMatcherDisplayInsertionText = False;
+    ,
     _,
-      Null
+      If[$Debug,
+        Write[$Messages, "UNSUPPORTED COMMAND: " //OutputForm, command];
+      ];
   ];
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { } |>}
@@ -1560,8 +1653,10 @@ makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; TrueQ[$D
   Module[{colorHex},
     colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
 "\
-<a style=\"font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";text-decoration: none;\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a><br>\
-<a style=\"font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";text-decoration: none;\" href=" <> "\"" <> href <> "\"" <> ">" <> debugStr <> "</a>\
+<span style=\"" <> "margin: 0;border: 0;padding: 0;" <> "\">\
+<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a><br>\
+<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> debugStr <> "</a>\
+</span>\
 "
   ]
 
@@ -1569,7 +1664,9 @@ makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; !TrueQ[$
   Module[{colorHex},
     colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
 "\
-<a style=\"font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";text-decoration: none;\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a>\
+<span style=\"" <> "margin: 0;border: 0;padding: 0;" <> "\">\
+<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a>\
+</span>\
 "
   ]
 
