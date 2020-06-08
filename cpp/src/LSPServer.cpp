@@ -6,6 +6,10 @@
 #include <string>
 #include <cstdio>
 #include <cstring>
+#ifdef _WIN32
+#include <io.h> // for _setmode
+#include <fcntl.h> // for _O_BINARY
+#endif // _WIN32
 
 
 DLLEXPORT mint WolframLibrary_getVersion() {
@@ -13,6 +17,55 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 }
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
+    
+#ifdef _WIN32
+    
+    //
+    // Set binary mode for stdin and stdout on Windows
+    //
+    
+    auto result = _setmode(_fileno(stdin), _O_BINARY);
+    if (result == -1) {
+        
+        switch (errno) {
+            case EBADF:
+                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdin: bad file descriptor\n");
+                break;
+            case EINVAL:
+                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdin: invalid mode argument\n");
+                break;
+        }
+        
+        return 1;
+    }
+
+    //
+    // The note here:
+    // https://docs.microsoft.com/en-us/cpp/c-runtime-library/reference/setmode?view=vs-2019
+    // says:
+    // "If you have not written data to the stream, you do not have to flush the code."
+    //
+//    if (fflush(stdout)) {
+//        fprintf(stderr, "WolframLibrary_initialize: fflush failed before setting _O_BINARY mode on stdin\n");
+//        return 1;
+//    }
+    
+    result = _setmode(_fileno(stdout), _O_BINARY);
+    if (result == -1) {
+        
+        switch (errno) {
+            case EBADF:
+                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdout: bad file descriptor\n");
+                break;
+            case EINVAL:
+                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdout: invalid mode argument\n");
+                break;
+        }
+        
+        return 1;
+    }
+#endif // _WIN32
+    
     return 0;
 }
 
@@ -44,6 +97,9 @@ DLLEXPORT int ReadLineFromStdIn_LibraryLink(WolframLibraryData libData, mint Arg
         // EOF can insert \n at the end
         //
         if (c == '\n') {
+            
+            fprintf(stderr, "ReadLineFromStdIn: unexpected \\n character\n");
+            
             return LIBRARY_FUNCTION_ERROR;
         }
         str += c;
