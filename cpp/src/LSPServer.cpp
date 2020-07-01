@@ -20,6 +20,13 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     
 #ifdef _WIN32
     
+    switch (_fileno(stdin)) {
+        case -1:
+        case -2:
+            fprintf(stderr, "WolframLibrary_initialize: stdin is not associated with an input stream\n");
+            return 1;
+    }
+
     //
     // Set binary mode for stdin and stdout on Windows
     //
@@ -36,7 +43,16 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
                 break;
         }
         
-        return 1;
+        return 2;
+    }
+
+
+
+    switch (_fileno(stdout)) {
+        case -1:
+        case -2:
+            fprintf(stderr, "WolframLibrary_initialize: stdout is not associated with an output stream\n");
+            return 1;
     }
 
     //
@@ -62,7 +78,7 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
                 break;
         }
         
-        return 1;
+        return 2;
     }
 #endif // _WIN32
     

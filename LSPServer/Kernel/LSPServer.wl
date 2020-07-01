@@ -181,8 +181,22 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
 
   (*
   Ensure that no Print output is printed to stdout
+
+  There may have been messages printed from doing Needs["LSPServer`"], and we can't do anything about those
+  But they will be detected when doing RunDiagnostic[] 
   *)
   $Output = Streams["stderr"];
+
+  (*
+  res = RunDiagnostic[];
+  If[!TrueQ[res],
+    Write[$Messages, "\n\n" //OutputForm];
+    Write[$Messages, "RunDiagnostic[] did not return True: " //OutputForm, res //OutputForm];
+    Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
+    Pause[1];Exit[1]
+  ];
+  *)
 
   $Debug = (logDir != "");
 
@@ -199,7 +213,34 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
 
   SetOptions[$Messages, PageWidth -> Infinity];
 
+
   Write[$Messages, "$CommandLine: " //OutputForm, $CommandLine //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
+
+  If[!StringStartsQ[ToLowerCase[FileBaseName[$CommandLine[[1]]]], "wolframkernel"],
+    Write[$Messages, "WARNING: Command for Wolfram Language Server does not start with 'WolframKernel': " <> $CommandLine[[1]] //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
+  ];
+  If[!MemberQ[$CommandLine, "-noinit"],
+    Write[$Messages, "WARNING: -noinit is not in $CommandLine" //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
+  ];
+  If[!MemberQ[$CommandLine, "-noprompt"],
+    Write[$Messages, "WARNING: -noprompt is not in $CommandLine" //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
+  ];
+  If[!MemberQ[$CommandLine, "-nopaclet"],
+    Write[$Messages, "WARNING: -nopaclet is not in $CommandLine" //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
+  ];
+  If[!MemberQ[$CommandLine, "-noicon"],
+    Write[$Messages, "WARNING: -noicon is not in $CommandLine" //OutputForm];
+    Write[$Messages, "\n\n" //OutputForm];
+  ];
+
+
+  Write[$Messages, "Starting server... (If this is the last line you see, then there may be a problem and the server is hanging.)" //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
 
   While[True,
 
@@ -326,6 +367,22 @@ _,
   Write[$Messages, "\n\n" //OutputForm];
   Pause[1];Exit[1])&
 ]
+
+
+
+RunDiagnostic[command:{_String...}] :=
+  Module[{},
+    (*
+    launch a child kernel with same command args that a client has
+    this kernel will be the client
+    scheduled task for 3 seconds to kill child kernel if no response
+    send traffic to kernel, read response
+    read stderr also
+    then shutdown child kernel
+    *)
+    True
+  ]
+
 
 
 (*
