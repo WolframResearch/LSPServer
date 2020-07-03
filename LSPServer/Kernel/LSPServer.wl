@@ -57,8 +57,6 @@ $ConfidenceLevel = 0.95
 
 $ColorProvider = False
 
-$HoverProvider = False
-
 $CodeActionLiteralSupport = False
 
 $ImplicitTokens = False
@@ -509,7 +507,7 @@ returns: a list of associations (possibly empty), each association represents JS
 *)
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
-  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, hoverProvider, implicitTokens,
+  codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, implicitTokens,
   bracketMatcher, debugBracketMatcher},
 
   id = content["id"];
@@ -527,11 +525,6 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       colorProvider = initializationOptions["colorProvider"];
 
       $ColorProvider = colorProvider;
-    ];
-    If[KeyExistsQ[initializationOptions, "hoverProvider"],
-      hoverProvider = initializationOptions["hoverProvider"];
-
-      $HoverProvider = hoverProvider;
     ];
 
     If[KeyExistsQ[initializationOptions, "implicitTokens"],
@@ -589,7 +582,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                                               |>,
                                          "codeActionProvider" -> codeActionProviderValue,
                                          "colorProvider" -> $ColorProvider,
-                                         "hoverProvider" -> $HoverProvider,
+                                         "hoverProvider" -> True,
                                          "definitionProvider" -> True,
                                          "documentFormattingProvider" -> True,
                                          "documentRangeFormattingProvider" -> True,
@@ -1115,28 +1108,6 @@ indexToLineColumn[index_, badChunkLines_] :=
   ]
 
 
-merge[line1_Association, line2_Association] :=
-  Module[{},
-    If[line1["line"] =!= line2["line"],
-      Throw[{line1, line2}, "Unhandled"]
-    ];
-    If[Length[line1["characters"]] =!= Length[line2["characters"]],
-      Throw[{line1, line2}, "Unhandled"]
-    ];
-    <|"line" -> line1["line"], "characters" -> ((# /. {
-        {a_, "&nbsp;"} :> a,
-        {"&nbsp;", b_} :> b,
-        (*
-        FIXME: arbitrarily choose the first arrow
-        if these are the same action, then there is no problem
-        but if one is an Insert and one is a Delete? Is that possible?
-        maybe should choose based on probability
-        *)
-        {a_, b_} :> a
-      })& /@ Transpose[{line1["characters"], line2["characters"]}]) |>
-  ]
-
-
 suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, confidence_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
   Module[{escaped, confidenceStr},
     escaped = StringReplace[Characters[insertionText], {"<" -> "&lt;", ">" -> "&gt;"}];
@@ -1296,7 +1267,6 @@ Module[{},
                      "lines" -> lines,
                      "actions" -> actions |> |>
 ]
-
 
 
 
