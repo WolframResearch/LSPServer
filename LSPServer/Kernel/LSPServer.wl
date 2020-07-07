@@ -859,10 +859,20 @@ Module[{lints, lintsWithConfidence, shadowing, cst, entry},
 
   lints = Cases[lintsWithConfidence, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
+  
+
+  (*
+
+  Disable shadow filtering for now
+
+  Below is quadratic time
+
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
   lints = Complement[lints, shadowing];
+  *)
 
+  
   (*
   Make sure to sort lints before taking
   *)
@@ -1346,6 +1356,13 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   lints = Cases[lintsWithConfidence, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _?(GreaterEqualThan[$ConfidenceLevel])]]];
 
+
+  (*
+
+  Disable shadow filtering for now
+
+  Below is quadratic time
+
   shadowing = Select[lints, Function[lint, AnyTrue[lints, shadows[lint, #]&]]];
 
   If[$Debug2,
@@ -1353,7 +1370,10 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   ];
 
   lints = Complement[lints, shadowing];
+  *)
+  
 
+  
   lspActions = {};
 
   Do[
