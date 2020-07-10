@@ -70,6 +70,17 @@ $BracketMatcherUseDesignColors = True
 
 $BracketMatcherDisplayInsertionText = False
 
+$ExecuteCommandProvider = <|
+  "commands" -> {
+    "enable_bracket_matcher_debug_mode",
+    "disable_bracket_matcher_debug_mode",
+    "enable_bracket_matcher_design_colors",
+    "disable_bracket_matcher_design_colors",
+    "enable_bracket_matcher_display_insertion_text",
+    "disable_bracket_matcher_display_insertion_text"
+  } |>
+
+
 
 
 (*
@@ -392,6 +403,10 @@ LSPEvaluate[bytes_ByteArray] :=
 Catch[
 Module[{content, contents, bytess, str, escapes, surrogates},
 
+  If[$Debug2,
+    Write[$Messages, "C-->S LSPEvaluate content " //OutputForm, FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]] //OutputForm];
+  ];
+
   content = ImportByteArray[bytes, "RawJSON"];
 
   (*
@@ -434,6 +449,10 @@ Module[{content, contents, bytess, str, escapes, surrogates},
 
   Check[
     bytess = ExportByteArray[#, "JSON"]& /@ contents;
+
+    If[$Debug2,
+      Write[$Messages, "C<--S LSPEvaluate content " //OutputForm, FromCharacterCode[Normal[Take[#, UpTo[1000]]]]& /@ bytess //OutputForm];
+    ];
 
     bytess
     ,
@@ -586,7 +605,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "definitionProvider" -> True,
                                          "documentFormattingProvider" -> True,
                                          "documentRangeFormattingProvider" -> True,
-                                         "executeCommandProvider" -> True
+                                         "executeCommandProvider" -> $ExecuteCommandProvider
                                      |>
                  |>
   |>}
