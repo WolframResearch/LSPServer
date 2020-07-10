@@ -181,6 +181,7 @@ setup the REPL to handle traffic from client
 *)
 StartServer[logDir_String:""] :=
 Catch[
+Catch[
 Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream},
 
   (*
@@ -251,6 +252,13 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
   Write[$Messages, "Starting server... (If this is the last line you see, then there may be a problem and the server is hanging.)" //OutputForm];
   Write[$Messages, "\n\n" //OutputForm];
 
+  (*
+  loop over:
+    read headers
+    read content
+    evaluate
+    write content
+  *)
   While[True,
 
     (*
@@ -261,9 +269,23 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       line = ReadLineFromStdIn[];
 
       If[FailureQ[line],
+
+        If[TrueQ[$ServerState == "shutdown"],
+          (*
+          some signal or something was sent to the kernel process to shut it down
+
+          Not a graceful exit, but also not a hard exit
+          *)
+
+          Write[$Messages, "\n\n" //OutputForm];
+          Write[$Messages, "KERNEL IS EXITING SEMI-GRACEFULLY" //OutputForm];
+          Write[$Messages, "\n\n" //OutputForm];
+          Pause[1];Exit[1]
+        ];
+
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid line from stdin: " //OutputForm, line //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
         Pause[1];Exit[1]
       ];
@@ -278,12 +300,15 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
           numBytes = ToExpression[numBytesStr];
         ,
         line == "",
+          (*
+          break out of headers loop
+          *)
           Break[]
         ,
         True,
           Write[$Messages, "\n\n" //OutputForm];
           Write[$Messages, "invalid Content-Length from stdin: " //OutputForm, line //OutputForm];
-          Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+          Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
           Write[$Messages, "\n\n" //OutputForm];
           Pause[1];Exit[1]
       ]
@@ -296,23 +321,27 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
     If[FailureQ[bytes],
       Write[$Messages, "\n\n" //OutputForm];
       Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
-      Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+      Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
       Write[$Messages, "\n\n" //OutputForm];
       Pause[1];Exit[1]
     ];
 
     If[$Debug2,
-      Write[$Messages, "C-->S bytes " //OutputForm, Normal[Take[bytes, UpTo[1000]]] //OutputForm];
+      Write[$Messages, "C-->S " <> ToString[Length[bytes]] <> " bytes " //OutputForm, Normal[Take[bytes, UpTo[1000]]] //OutputForm];
     ];
 
     bytess = LSPEvaluate[bytes];
 
+    (*
+    write out each byte array in bytess
+    *)
     Do[
     
       If[!ByteArrayQ[bytes],
+        
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
         Pause[1];Exit[1]
       ];
@@ -331,7 +360,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       If[res =!= Null,
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
         Pause[1];Exit[1]
       ];
@@ -346,7 +375,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       If[res =!= Null,
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
         Pause[1];Exit[1]
       ];
@@ -359,7 +388,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       If[res =!= Null,
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
         Pause[1];Exit[1]
       ];
@@ -367,12 +396,12 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       {bytes, bytess}
     ](*Do*)
   ](*While*)
-],(*Module*)
+]],(*Module*)
 _,
 (
   Write[$Messages, "\n\n" //OutputForm];
   Write[$Messages, "uncaught Throw: " //OutputForm, #1 //OutputForm];
-  Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+  Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
   Write[$Messages, "\n\n" //OutputForm];
   Pause[1];Exit[1])&
 ]
@@ -437,12 +466,18 @@ Module[{content, contents, bytess, str, escapes, surrogates},
   content = ImportString[str, "RawJSON"];
   *)
 
-  contents = handleContent[content];
+  Which[
+    TrueQ[$ServerState == "shutdown"],
+      contents = handleContentShutdown[content]
+    ,
+    True,
+      contents = handleContent[content];
+  ];
 
   If[!MatchQ[contents, {_Association...}],
     Write[$Messages, "\n\n" //OutputForm];
     Write[$Messages, "invalid contents result: " //OutputForm, contents //OutputForm];
-    Write[$Messages, "KERNEL IS EXITING" //OutputForm];
+    Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
     Write[$Messages, "\n\n" //OutputForm];
     Pause[1];Exit[1]
   ];
@@ -635,12 +670,16 @@ Module[{wolframVersion, codeParserVersion, codeInspectorVersion, lspServerVersio
 handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
 Module[{id},
   id = content["id"];
+
+  $ServerState = "shutdown";
+
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
 ]
 
 
 handleContent[content:KeyValuePattern["method" -> "exit"]] := (
-  Exit[0]
+
+  Exit[1]
 )
 
 
@@ -658,6 +697,7 @@ error code MethodNotFound (e.g. -32601).
 *)
 handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
 Module[{params, id},
+
   params = content["params"];
 
   If[KeyExistsQ[params, "id"],
@@ -677,6 +717,42 @@ Module[{params, id},
     {}
   ]
 ]
+
+
+
+handleContentShutdown[content:KeyValuePattern["method" -> "exit"]] := (
+
+  Write[$Messages, "\n\n" //OutputForm];
+  Write[$Messages, "KERNEL IS EXITING GRACEFULLY" //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
+  Pause[1];Exit[0]
+)
+
+(*
+Called if any requests or notifications come in after shutdown
+*)
+handleContentShutdown[content_] :=
+  Module[{params, id},
+
+    params = content["params"];
+
+    If[KeyExistsQ[params, "id"],
+      (*
+      has id, so this is a request
+      *)
+      id = params["id"];
+      {<| "jsonrpc" -> "2.0", "id" -> id,
+        "error" -> <|
+          "code" -> $ErrorCodes["InvalidRequest"],
+          "message"->"Invalid request" |> |>}
+      ,
+      (*
+      does not have id, so this is a notification
+      just ignore
+      *)
+      {}
+    ]
+  ]
 
 
 
