@@ -25,6 +25,7 @@ Needs["LSPServer`Definitions`"]
 Needs["LSPServer`Library`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
+Needs["LSPServer`Workspace`"]
 
 Needs["CodeFormatter`"]
 Needs["CodeInspector`"]

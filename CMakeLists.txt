@@ -37,6 +37,7 @@ set(WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Library.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl
 )
 
 set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
