@@ -81,6 +81,8 @@ $ExecuteCommandProvider = <|
     "disable_bracket_matcher_display_insertion_text"
   } |>
 
+$HTMLSnippets = False
+
 
 
 
@@ -522,7 +524,7 @@ clear lints and lines on file close
 
 NOTE: may want to be able to control this behavior
 *)
-$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishBracketMismatchesNotificationWithLinesAndActions[#, {}, {}]&}
+$didCloseNotifications = {publishDiagnosticsNotificationWithLints[#1, {}]&, publishHTMLSnippetWithLines[#, {}]&}
 
 (*
 Functions in this list are called as:
@@ -563,7 +565,7 @@ returns: a list of associations (possibly empty), each association represents JS
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
   codeActionProviderValue, initializationOptions, confidenceLevel, colorProvider, implicitTokens,
-  bracketMatcher, debugBracketMatcher},
+  bracketMatcher, debugBracketMatcher, htmlSnippets},
 
   id = content["id"];
   params = content["params"];
@@ -596,6 +598,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       debugBracketMatcher = initializationOptions["debugBracketMatcher"];
 
       $DebugBracketMatcher = debugBracketMatcher;
+    ];
+    If[KeyExistsQ[initializationOptions, "htmlSnippets"],
+      htmlSnippets = initializationOptions["htmlSnippets"];
+
+      $HTMLSnippets = htmlSnippets;
     ];
   ];
 
@@ -1089,7 +1096,7 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
   cst = CodeConcreteParse[text, "TabWidth" -> 4];
 
   If[!$BracketMatcher,
-    Throw[publishBracketMismatchesNotificationWithLinesAndActions[uri, {}, {}]]
+    Throw[publishHTMLSnippetWithLinesAndActions[uri, {}, {}]]
   ];
 
   (*
@@ -1193,7 +1200,7 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
     ]
   ];
 
-  publishBracketMismatchesNotificationWithLinesAndActions[uri, lines, actions]
+  publishHTMLSnippetWithLinesAndActions[uri, lines, actions]
 ]]
 
 
@@ -1364,15 +1371,36 @@ blueRank[rank_] /; !TrueQ[$BracketMatcherUseDesignColors] :=
   ]
 
 
-publishBracketMismatchesNotificationWithLinesAndActions[uri_String, lines_List, actions_List] :=
+
+publishHTMLSnippetWithLines[uri_String, lines_List] :=
+Catch[
 Module[{},
 
-  <| "jsonrpc" -> "2.0",
+  If[!$HTMLSnippets,
+    Throw[{}]
+  ];
+
+  {<| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishHTMLSnippet",
       "params" -> <|   "uri" -> uri,
                      "lines" -> lines,
-                     "actions" -> actions |> |>
-]
+                     "actions" -> {} |> |>}
+]]
+
+publishHTMLSnippetWithLinesAndActions[uri_String, lines_List, actions_List] :=
+Catch[
+Module[{},
+
+  If[!$HTMLSnippets,
+    Throw[{}]
+  ];
+
+  {<| "jsonrpc" -> "2.0",
+      "method" -> "textDocument/publishHTMLSnippet",
+      "params" -> <|   "uri" -> uri,
+                     "lines" -> lines,
+                     "actions" -> actions |> |>}
+]]
 
 
 
