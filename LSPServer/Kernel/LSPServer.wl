@@ -288,17 +288,14 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
           Not a graceful exit, but also not a hard exit
           *)
 
-          Write[$Messages, "\n\n" //OutputForm];
-          Write[$Messages, "KERNEL IS EXITING SEMI-GRACEFULLY" //OutputForm];
-          Write[$Messages, "\n\n" //OutputForm];
-          Pause[1];Exit[1]
+          exitSemiGracefully[]
         ];
 
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid line from stdin: " //OutputForm, line //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Pause[1];Exit[1]
+
+        exitHard[]
       ];
 
       If[$Debug2,
@@ -319,9 +316,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         True,
           Write[$Messages, "\n\n" //OutputForm];
           Write[$Messages, "invalid Content-Length from stdin: " //OutputForm, line //OutputForm];
-          Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
           Write[$Messages, "\n\n" //OutputForm];
-          Pause[1];Exit[1]
+
+          exitHard[]
       ]
     ];(*While*)
 
@@ -332,9 +329,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
     If[FailureQ[bytes],
       Write[$Messages, "\n\n" //OutputForm];
       Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
-      Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
       Write[$Messages, "\n\n" //OutputForm];
-      Pause[1];Exit[1]
+
+      exitHard[]
     ];
 
     If[$Debug2,
@@ -352,9 +349,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
         
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid bytes from stdin: " //OutputForm, bytes //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Pause[1];Exit[1]
+
+        exitHard[]
       ];
 
       If[$Debug2,
@@ -371,9 +368,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       If[res =!= Null,
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Pause[1];Exit[1]
+
+        exitHard[]
       ];
 
       line = "";
@@ -386,9 +383,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       If[res =!= Null,
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Pause[1];Exit[1]
+
+        exitHard[]
       ];
 
       If[$Debug2,
@@ -399,9 +396,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       If[res =!= Null,
         Write[$Messages, "\n\n" //OutputForm];
         Write[$Messages, "invalid result from stdout: " //OutputForm, res //OutputForm];
-        Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
         Write[$Messages, "\n\n" //OutputForm];
-        Pause[1];Exit[1]
+
+        exitHard[]
       ];
       ,
       {bytes, bytess}
@@ -412,9 +409,11 @@ _,
 (
   Write[$Messages, "\n\n" //OutputForm];
   Write[$Messages, "uncaught Throw: " //OutputForm, #1 //OutputForm];
-  Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
   Write[$Messages, "\n\n" //OutputForm];
-  Pause[1];Exit[1])&
+  
+  exitHard[]
+
+  )&
 ]
 
 
@@ -488,9 +487,9 @@ Module[{content, contents, bytess, str, escapes, surrogates},
   If[!MatchQ[contents, {_Association...}],
     Write[$Messages, "\n\n" //OutputForm];
     Write[$Messages, "invalid contents result: " //OutputForm, contents //OutputForm];
-    Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
     Write[$Messages, "\n\n" //OutputForm];
-    Pause[1];Exit[1]
+
+    exitHard[]
   ];
 
   Check[
@@ -692,10 +691,12 @@ Module[{id},
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
 ]
 
-
+(*
+Unexpected call to exit
+*)
 handleContent[content:KeyValuePattern["method" -> "exit"]] := (
 
-  Exit[1]
+  exitSemiGracefully[]
 )
 
 
@@ -738,10 +739,7 @@ Module[{params, id},
 
 handleContentShutdown[content:KeyValuePattern["method" -> "exit"]] := (
 
-  Write[$Messages, "\n\n" //OutputForm];
-  Write[$Messages, "KERNEL IS EXITING GRACEFULLY" //OutputForm];
-  Write[$Messages, "\n\n" //OutputForm];
-  Pause[1];Exit[0]
+  exitGracefully[]
 )
 
 (*
@@ -1848,6 +1846,30 @@ makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; !TrueQ[$
 </span>\
 "
   ]
+
+
+
+exitGracefully[] := (
+  Write[$Messages, "\n\n" //OutputForm];
+  Write[$Messages, "KERNEL IS EXITING GRACEFULLY" //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
+  Pause[1];Exit[0]
+)
+
+exitSemiGracefully[] := (
+  Write[$Messages, "\n\n" //OutputForm];
+  Write[$Messages, "KERNEL IS EXITING SEMI-GRACEFULLY" //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
+  Pause[1];Exit[1]
+)
+
+exitHard[] := (
+  Write[$Messages, "\n\n" //OutputForm];
+  Write[$Messages, "KERNEL IS EXITING HARD" //OutputForm];
+  Write[$Messages, "\n\n" //OutputForm];
+  Pause[1];Exit[1]
+)
+
 
 End[]
 
