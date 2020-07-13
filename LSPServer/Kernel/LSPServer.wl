@@ -71,6 +71,13 @@ $BracketMatcherUseDesignColors = True
 
 $BracketMatcherDisplayInsertionText = False
 
+(*
+Bracket suggestions from ML4Code can take O(n^2) time in the size of the chunk, so make sure to
+have a time limit 
+*)
+$ML4CodeTimeLimit = 0.4
+
+
 $ExecuteCommandProvider = <|
   "commands" -> {
     "enable_bracket_matcher_debug_mode",
@@ -1105,93 +1112,93 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
 
   lines = {};
   actions = {};
-  If[!empty[mismatches],
 
-    textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+  textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
 
-    line1Map = <||>;
-    line2Map = <||>;
-    line3Map = <||>;
-    line4Map = <||>;
-    Function[{mismatch},
-      badChunkLineNums = mismatch[[3, Key[Source], All, 1]];
-      badChunkLines = Take[textLines, badChunkLineNums];
-      badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
+  line1Map = <||>;
+  line2Map = <||>;
+  line3Map = <||>;
+  line4Map = <||>;
+  Function[{mismatch},
 
-      suggestions = ML4Code`SuggestBracketEdits[badChunk] /. $Failed -> {};
-      suggestions = convertSuggestionToLineColumn[#, badChunkLines]& /@ suggestions;
+
+    badChunkLineNums = mismatch[[3, Key[Source], All, 1]];
+    badChunkLines = Take[textLines, badChunkLineNums];
+    badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
+
+    suggestions = TimeConstrained[ML4Code`SuggestBracketEdits[badChunk], $ML4CodeTimeLimit, {}] /. $Failed -> {};
+    suggestions = convertSuggestionToLineColumn[#, badChunkLines]& /@ suggestions;
+
+    If[$Debug2,
+      Write[$Messages, "badChunkLineNums: " //OutputForm, badChunkLineNums];
+      Write[$Messages, "badChunk: " //OutputForm, badChunk];
+      Write[$Messages, "suggestions: " //OutputForm, suggestions];
+    ];
+    confidenceMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
+    Function[{suggestion},
+      rank = confidenceMap[suggestion[[3]]];
+
+      (*
+      offset to add to relative line numbers inside suggestions to obtain line numbers of text
+      *)
+      chunkOffset = badChunkLineNums[[1]] - 1;
+      originalColumnCount = StringLength[textLines[[suggestion[[1, 3, 1]] + chunkOffset]]];
 
       If[$Debug2,
-        Write[$Messages, "badChunkLineNums: " //OutputForm, badChunkLineNums];
-        Write[$Messages, "badChunk: " //OutputForm, badChunk];
-        Write[$Messages, "suggestions: " //OutputForm, suggestions];
+        Write[$Messages, "rank: " //OutputForm, rank];
+        Write[$Messages, "chunkOffset: " //OutputForm, chunkOffset];
+        Write[$Messages, "originalColumnCount: " //OutputForm, originalColumnCount];
       ];
-      confidenceMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
-      Function[{suggestion},
-        rank = confidenceMap[suggestion[[3]]];
 
+      {line1, line2, line3, line4, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
+      If[TrueQ[$DebugBracketMatcher],
         (*
-        offset to add to relative line numbers inside suggestions to obtain line numbers of text
+        if debug, then keep all lines separated
         *)
-        chunkOffset = badChunkLineNums[[1]] - 1;
-        originalColumnCount = StringLength[textLines[[suggestion[[1, 3, 1]] + chunkOffset]]];
-
-        If[$Debug2,
-          Write[$Messages, "rank: " //OutputForm, rank];
-          Write[$Messages, "chunkOffset: " //OutputForm, chunkOffset];
-          Write[$Messages, "originalColumnCount: " //OutputForm, originalColumnCount];
-        ];
-
-        {line1, line2, line3, line4, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
-        If[TrueQ[$DebugBracketMatcher],
-          (*
-          if debug, then keep all lines separated
-          *)
-          AppendTo[lines, line1]
+        AppendTo[lines, line1]
+        ,
+        (*
+        if not debug, then merge lines together
+        *)
+        If[KeyExistsQ[line1Map, line1["line"]],
+          line1Map[line1["line"]] = merge[line1Map[line1["line"]], line1]
           ,
-          (*
-          if not debug, then merge lines together
-          *)
-          If[KeyExistsQ[line1Map, line1["line"]],
-            line1Map[line1["line"]] = merge[line1Map[line1["line"]], line1]
-            ,
-            line1Map[line1["line"]] = line1
-          ];
-          If[KeyExistsQ[line2Map, line2["line"]],
-            line2Map[line2["line"]] = merge[line2Map[line2["line"]], line2]
-            ,
-            line2Map[line2["line"]] = line2
-          ];
-          If[KeyExistsQ[line3Map, line3["line"]],
-            line3Map[line3["line"]] = merge[line3Map[line3["line"]], line3]
-            ,
-            line3Map[line3["line"]] = line3
-          ];
-          If[KeyExistsQ[line4Map, line4["line"]],
-            line4Map[line4["line"]] = merge[line4Map[line4["line"]], line4]
-            ,
-            line4Map[line4["line"]] = line4
-          ];
+          line1Map[line1["line"]] = line1
         ];
+        If[KeyExistsQ[line2Map, line2["line"]],
+          line2Map[line2["line"]] = merge[line2Map[line2["line"]], line2]
+          ,
+          line2Map[line2["line"]] = line2
+        ];
+        If[KeyExistsQ[line3Map, line3["line"]],
+          line3Map[line3["line"]] = merge[line3Map[line3["line"]], line3]
+          ,
+          line3Map[line3["line"]] = line3
+        ];
+        If[KeyExistsQ[line4Map, line4["line"]],
+          line4Map[line4["line"]] = merge[line4Map[line4["line"]], line4]
+          ,
+          line4Map[line4["line"]] = line4
+        ];
+      ];
 
-        AppendTo[actions, action];
+      AppendTo[actions, action];
 
-      ] /@ suggestions;
-    ] /@ mismatches;
+    ] /@ suggestions;
+  ] /@ mismatches;
 
-    If[TrueQ[$DebugBracketMatcher],
+  If[TrueQ[$DebugBracketMatcher],
 
-      lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines
-      ,
+    lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines
+    ,
 
-      lines = Values[line1Map] ~Join~ Values[line2Map] ~Join~ Values[line3Map] ~Join~ Values[line4Map];
+    lines = Values[line1Map] ~Join~ Values[line2Map] ~Join~ Values[line3Map] ~Join~ Values[line4Map];
 
-      lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines;
+    lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines;
 
-      lines = Merge[<|#["line"] -> #|>& /@ lines, ({StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ #, "<br>"], "</div>"], #[[1]]["characterCount"]})&];
-      
-      lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|> &, lines]
-    ]
+    lines = Merge[<|#["line"] -> #|>& /@ lines, ({StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ #, "<br>"], "</div>"], #[[1]]["characterCount"]})&];
+    
+    lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|> &, lines]
   ];
 
   publishHTMLSnippetWithLinesAndActions[uri, lines, actions]
