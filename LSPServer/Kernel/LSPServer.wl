@@ -853,7 +853,7 @@ Module[{params, doc, uri, cst, text},
 
   $OpenFilesMap[uri] = {text, cst};
 
-  #[uri]& /@ $didOpenNotifications
+  Flatten[#[uri]& /@ $didOpenNotifications, 1]
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didClose"]] :=
@@ -868,7 +868,7 @@ Module[{params, doc, uri, res},
     Write[$Messages, "with these args: " //OutputForm, {uri} //OutputForm];
   ];
 
-  res = #[uri]& /@ $didCloseNotifications;
+  res = Flatten[#[uri]& /@ $didCloseNotifications, 1];
 
   $OpenFilesMap[uri] =.;
 
@@ -913,7 +913,7 @@ Module[{params, doc, uri, cst, text, lastChange},
     Write[$Messages, "with these args: " //OutputForm, {uri} //OutputForm];
   ];
 
-  #[uri]& /@ $didChangeNotifications
+  Flatten[#[uri]& /@ $didChangeNotifications, 1]
 ]]
 
 
@@ -996,10 +996,10 @@ Module[{diagnostics},
 
   diagnostics = Flatten[diagnostics];
 
-  <| "jsonrpc" -> "2.0",
+  {<| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishDiagnostics",
       "params" -> <|         "uri" -> uri,
-                     "diagnostics" -> diagnostics |> |>
+                     "diagnostics" -> diagnostics |> |>}
 ]
 
 
@@ -1060,10 +1060,10 @@ Module[{inspectedFileObj, lines, cst, entry},
 publishImplicitTokensNotificationWithLines[uri_String, lines_List] :=
 Module[{},
 
-  <| "jsonrpc" -> "2.0",
+  {<| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishImplicitTokens",
       "params" -> <|   "uri" -> uri,
-                     "lines" -> lines |> |>
+                     "lines" -> lines |> |>}
 ]
 
 
