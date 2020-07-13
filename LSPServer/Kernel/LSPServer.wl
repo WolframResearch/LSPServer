@@ -265,7 +265,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
 
   (*
   loop over:
-    read headers
+    loop reading headers
     read content
     evaluate
     write content
@@ -273,7 +273,7 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
   While[True,
 
     (*
-    Headers
+    Headers loop
     *)
     While[True,
 
@@ -303,6 +303,9 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
       ];
 
       Which[
+        (*
+        Content-Length is the only recognized header so far
+        *)
         StringMatchQ[line, RegularExpression["Content-Length: (\\d+)"]],
           numBytesStr = StringCases[line, RegularExpression["Content-Length: (\\d+)"] :> "$1"][[1]];
           numBytes = ToExpression[numBytesStr];
@@ -451,6 +454,8 @@ Module[{content, contents, bytess, str, escapes, surrogates},
   (*
   (*  
   Figuring out what to with UTF-16 surrogates...
+
+  Related bugs: 382744
   *)
 
   (*
