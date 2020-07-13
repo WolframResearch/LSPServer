@@ -11,27 +11,14 @@ Needs["CodeParser`Utils`"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
 Catch[
-Module[{id, params, doc, uri, position},
+Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs, lineMap, originalLineNumber, line,
+  originalColumn, rules, char, decoded, rule, positionLine, positionColumn, segment, pre, index, result},
 
   id = content["id"];
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
   position = params["position"];
-
-  (*
-  give a null response, and then send a multisource string notification
-  *)
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>} ~Join~
-    publishMultisourceStringNotification[uri, position]
-]]
-
-
-
-publishMultisourceStringNotification[uri_String, position_] :=
-Catch[
-Module[{lines, entry, cst, text, textLines, strs, lineMap, originalLineNumber, line, originalColumn, rules,
-  char, decoded, rule, positionLine, positionColumn, segment, pre, index},
 
   entry = $OpenFilesMap[uri];
 
@@ -62,66 +49,175 @@ Module[{lines, entry, cst, text, textLines, strs, lineMap, originalLineNumber, l
   *)
   cst = CodeConcreteParse[text, "TabWidth" -> 4];
 
+  (*
+  Find strings with multi-SourceCharacter WLCharacters
+  *)
   strs = Cases[cst,
-    LeafNode[String, str_ /;
-      StringContainsQ[str, RegularExpression[
-        "\\\\(?:\
-(?:\\[[a-zA-Z0-9]+\\])|\
-(?::[0-9a-fA-F]{4})|\
-(?:\\.[0-9a-fA-F]{2})|\
-(?:[0-7]{3})|\
-(?:\\|[0-9a-fA-F]{6})\
-)"]], KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {positionLine, positionColumn}]]], Infinity];
+    LeafNode[String, str_ /; containsUnicodeCharacterQ[str],
+      KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {positionLine, positionColumn}]]], Infinity];
 
   lineMap = <||>;
-  If[!empty[strs],
 
-    Function[{str},
+  Function[{str},
 
-      {originalLineNumber, originalColumn} = str[[3, Key[Source], 1]];
+    {originalLineNumber, originalColumn} = str[[3, Key[Source], 1]];
 
-      segments = StringSplit[str[[2]], {"\r\n", "\n", "\r"}, All];
+    segments = StringSplit[str[[2]], {"\r\n", "\n", "\r"}, All];
 
-      If[Length[segments] == 1,
+    If[Length[segments] == 1,
 
-        segment = segments[[1]];
+      segment = segments[[1]];
 
-        (*
-        Handle tab stops
-        FIXME: Must use the tab width from the editor
-        *)
-        originalColumnCount = 1;
-        Scan[(
-          If[# == "\t", originalColumnCount = (4 * Quotient[originalColumnCount, 4] + 1) + 4, originalColumnCount++];)&
+      rules = {};
+      
+      decoded = convertSegment[segment];
+
+      (*
+      Handle tab stops
+      FIXME: Must use the tab width from the editor
+      *)
+      originalColumnCount = 1;
+      Scan[(
+        If[# == "\t", originalColumnCount = (4 * Quotient[originalColumnCount, 4] + 1) + 4, originalColumnCount++];)&
+        ,
+        Characters[decoded]
+      ];
+
+      If[!FailureQ[decoded],
+        index = 1;
+        Function[{char},
+          Switch[char,
+            "\t",
+              index = (4 * Quotient[index, 4] + 1) + 4
+            ,
+            " ",
+              index++
+            ,
+            _,
+              rule = index -> char;
+              AppendTo[rules, rule];
+              index++
+          ]
+        ] /@ Characters[decoded]
+      ];
+
+      If[rules != {},
+
+        line = <| "line" -> originalLineNumber, "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], rules]|>;
+
+        If[KeyExistsQ[lineMap, line["line"]],
+          lineMap[line["line"]] = merge[lineMap[line["line"]], line]
           ,
-          Characters[textLines[[originalLineNumber]]]
+          lineMap[line["line"]] = line
         ];
+      ]
+
+      ,
+
+      MapIndexed[Function[{segment, segmentIndex},
 
         rules = {};
-        
-        decoded = Quiet[Check[ToExpression[segment], $Failed]];
+        Which[
+          (positionLine == (originalLineNumber + segmentIndex[[1]] - 1)) && containsUnicodeCharacterQ[segment] && segmentIndex == {1},
+            decoded = convertStartingSegment[segment];
+            If[!FailureQ[decoded],
 
-        If[!FailureQ[decoded],
-          index = originalColumn;
-          Function[{char},
-            Switch[char,
-              "\t",
-                index = (4 * Quotient[index, 4] + 1) + 4
-              ,
-              " ",
-                index++
-              ,
-              _,
-                rule = index -> char;
-                AppendTo[rules, rule];
-                index++
-            ]
-          ] /@ Characters[decoded]
+              (*
+              Handle tab stops
+              FIXME: Must use the tab width from the editor
+              *)
+              originalColumnCount = 1;
+              Scan[(
+                If[# == "\t", originalColumnCount = (4 * Quotient[originalColumnCount, 4] + 1) + 4, originalColumnCount++];)&
+                ,
+                Characters[decoded]
+              ];
+
+              index = 1;
+              Function[{char},
+                Switch[char,
+                  "\t",
+                    index = (4 * Quotient[index, 4] + 1) + 4
+                  ,
+                  " ",
+                    index++
+                  ,
+                  _,
+                    rule = index -> char;
+                    AppendTo[rules, rule];
+                    index++
+                ];
+              ] /@ Characters[decoded]
+            ];
+          ,
+          (positionLine == (originalLineNumber + segmentIndex[[1]] - 1)) && containsUnicodeCharacterQ[segment] && segmentIndex == {Length[segments]},
+            decoded = convertEndingSegment[segment];
+            If[!FailureQ[decoded],
+
+              (*
+              Handle tab stops
+              FIXME: Must use the tab width from the editor
+              *)
+              originalColumnCount = 1;
+              Scan[(
+                If[# == "\t", originalColumnCount = (4 * Quotient[originalColumnCount, 4] + 1) + 4, originalColumnCount++];)&
+                ,
+                Characters[decoded]
+              ];
+
+              index = 1;
+              Function[{char},
+                Switch[char,
+                  "\t",
+                    index = (4 * Quotient[index, 4] + 1) + 4
+                  ,
+                  " ",
+                    index++
+                  ,
+                  _,
+                    rule = index -> char;
+                    AppendTo[rules, rule];
+                    index++
+                ];
+              ] /@ Characters[decoded]
+            ];
+          ,
+          (positionLine == (originalLineNumber + segmentIndex[[1]] - 1)) && containsUnicodeCharacterQ[segment],
+            decoded = convertMiddleSegment[segment];
+            If[!FailureQ[decoded],
+
+              (*
+              Handle tab stops
+              FIXME: Must use the tab width from the editor
+              *)
+              originalColumnCount = 1;
+              Scan[(
+                If[# == "\t", originalColumnCount = (4 * Quotient[originalColumnCount, 4] + 1) + 4, originalColumnCount++];)&
+                ,
+                Characters[decoded]
+              ];
+
+              index = 1;
+              Function[{char},
+                Switch[char,
+                  "\t",
+                    index = (4 * Quotient[index, 4] + 1) + 4
+                  ,
+                  " ",
+                    index++
+                  ,
+                  _,
+                    rule = index -> char;
+                    AppendTo[rules, rule];
+                    index++
+                ];
+              ] /@ Characters[decoded]
+            ];
         ];
 
         If[rules != {},
 
-          line = <| "line" -> originalLineNumber, "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], rules]|>;
+          line = <| "line" -> originalLineNumber + segmentIndex[[1]] - 1, "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], rules]|>;
 
           If[KeyExistsQ[lineMap, line["line"]],
             lineMap[line["line"]] = merge[lineMap[line["line"]], line]
@@ -130,114 +226,58 @@ Module[{lines, entry, cst, text, textLines, strs, lineMap, originalLineNumber, l
           ];
         ]
 
-        ,
+      ], segments]
 
-        MapIndexed[Function[{segment, segmentIndex},
+    ];
 
-          (*
-          Handle tab stops
-          FIXME: Must use the tab width from the editor
-          *)
-          originalColumnCount = 1;
-          Scan[(
-            If[# == "\t", originalColumnCount = (4 * Quotient[originalColumnCount, 4] + 1) + 4, originalColumnCount++];)&
-            ,
-            Characters[textLines[[originalLineNumber + segmentIndex[[1]] - 1]]]
-          ];
-
-          rules = {};
-          Switch[segmentIndex,
-            {1},
-              decoded = Quiet[Check[ToExpression[segment <> "\""], $Failed]];
-              If[!FailureQ[decoded],
-                index = originalColumn;
-                Function[{char},
-                  Switch[char,
-                    "\t",
-                      index = (4 * Quotient[index, 4] + 1) + 4
-                    ,
-                    " ",
-                      index++
-                    ,
-                    _,
-                      rule = index -> char;
-                      AppendTo[rules, rule];
-                      index++
-                  ];
-                ] /@ Characters[decoded]
-              ];
-            ,
-            {Length[segments]},
-              decoded = Quiet[Check[ToExpression["\"" <> segment], $Failed]];
-              If[!FailureQ[decoded],
-                index = 1;
-                Function[{char},
-                  Switch[char,
-                    "\t",
-                      index = (4 * Quotient[index, 4] + 1) + 4
-                    ,
-                    " ",
-                      index++
-                    ,
-                    _,
-                      rule = index -> char;
-                      AppendTo[rules, rule];
-                      index++
-                  ];
-                ] /@ Characters[decoded]
-              ];
-            ,
-            _,
-              decoded = Quiet[Check[ToExpression["\"" <> segment <> "\""], $Failed]];
-              If[!FailureQ[decoded],
-                index = 1;
-                Function[{char},
-                  Switch[char,
-                    "\t",
-                      index = (4 * Quotient[index, 4] + 1) + 4
-                    ,
-                    " ",
-                      index++
-                    ,
-                    _,
-                      rule = index -> char;
-                      AppendTo[rules, rule];
-                      index++
-                  ];
-                ] /@ Characters[decoded]
-              ];
-          ];
-
-          If[rules != {},
-
-            line = <| "line" -> originalLineNumber + segmentIndex[[1]] - 1, "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], rules]|>;
-
-            If[KeyExistsQ[lineMap, line["line"]],
-              lineMap[line["line"]] = merge[lineMap[line["line"]], line]
-              ,
-              lineMap[line["line"]] = line
-            ];
-          ]
-
-        ], segments]
-
-      ];
-
-    ] /@ strs;
-  ];
+  ] /@ strs;
 
   lines = Values[lineMap];
 
-  lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines;
+  lines = StringJoin[#["characters"]]& /@ lines;
 
-  {<| "jsonrpc" -> "2.0",
-      "method" -> "textDocument/publishHTMLSnippet",
-      "params" -> <|   "uri" -> uri,
-                     "lines" -> lines,
-                     "actions" -> {} |> |>}
+  Which[
+    Length[line] == 0,
+      result = Null
+    ,
+    Length[lines] == 1,
+      result = <| "contents" -> lines[[1]] |>
+    ,
+    True,
+      result = <| "contents" -> "BAD!!!" |>
+  ];
+
+  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
 ]]
 
 
+
+endsWithOddBackslashesQ[str_String] := 
+  StringMatchQ[str, RegularExpression[".*(?<!\\\\)\\\\(\\\\\\\\)*"]]
+
+convertSegment[segment_] :=
+  Quiet[Check[ToExpression[segment], $Failed]]
+
+convertStartingSegment[segment_] :=
+  Quiet[Check[ToExpression[segment <> If[endsWithOddBackslashesQ[segment], "\\\"", "\""]], $Failed]]
+
+convertMiddleSegment[segment_] :=
+  Quiet[Check[ToExpression["\"" <> segment <> If[endsWithOddBackslashesQ[segment], "\\\"", "\""]], $Failed]]
+
+convertEndingSegment[segment_] :=
+  Quiet[Check[ToExpression["\"" <> segment], $Failed]]
+
+
+
+containsUnicodeCharacterQ[str_String] :=
+  StringContainsQ[str, RegularExpression[
+        "(?<!\\\\)\\\\(?:\\\\\\\\)*(?# odd number of leading backslashes)(?:\
+(?:\\[[a-zA-Z0-9]+\\])|(?# \\[Alpha] long name)\
+(?::[0-9a-fA-F]{4})|(?# \\:xxxx hex)\
+(?:\\.[0-9a-fA-F]{2})|(?# \\.xx hex)\
+(?:[0-7]{3})|(?# \\xxx octal)\
+(?:\\|[0-9a-fA-F]{6})(?# \\|xxxxxx hex)\
+)"]]
 
 
 
