@@ -226,6 +226,14 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
 
   SetOptions[$Messages, PageWidth -> Infinity];
 
+  (*
+  There may be messages that we want to see
+
+  TODO: investigate resetting the General::stop counter at the start of each loop
+  *)
+  Off[General::stop];
+
+
 
   Write[$Messages, "$CommandLine: " //OutputForm, $CommandLine //OutputForm];
   Write[$Messages, "\n\n" //OutputForm];
