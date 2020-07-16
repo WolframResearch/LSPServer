@@ -1085,6 +1085,10 @@ Catch[
 Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
   badChunkLines, badChunk, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
   line1Map, line2Map, line3Map, line4Map},
+  
+  If[!$BracketMatcher,
+    Throw[publishHTMLSnippetWithLinesAndActions[uri, {}, {}]]
+  ];
 
   entry = $OpenFilesMap[uri];
 
@@ -1095,10 +1099,6 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
   FIXME: Must use the tab width from the editor
   *)
   cst = CodeConcreteParse[text, "TabWidth" -> 4];
-
-  If[!$BracketMatcher,
-    Throw[publishHTMLSnippetWithLinesAndActions[uri, {}, {}]]
-  ];
 
   (*
   Using $BracketMatcher here
