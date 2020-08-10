@@ -12,7 +12,7 @@ Needs["CodeParser`Utils`"]
 handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
 Catch[
 Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs, lineMap, originalLineNumber, line,
-  originalColumn, rules, char, decoded, rule, positionLine, positionColumn, segment, pre, index, result},
+  originalColumn, rules, char, decoded, rule, positionLine, positionColumn, segment, pre, index, result, cstTabs},
 
   id = content["id"];
   params = content["params"];
@@ -21,10 +21,6 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
   position = params["position"];
 
   entry = $OpenFilesMap[uri];
-
-  text = entry[[1]];
-
-  textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
 
   positionLine = position["line"];
   positionColumn = position["character"];
@@ -35,24 +31,34 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
   positionLine++;
   positionColumn++;
 
-  (*
-  Adjust the hover position to accommodate tab stops
-  FIXME: Must use the tab width from the editor
-  *)
-  pre = StringTake[textLines[[positionLine]], positionColumn-1];
-  positionColumn = 1;
-  Scan[(If[# == "\t", positionColumn = (4 * Quotient[positionColumn, 4] + 1) + 4, positionColumn++])&, Characters[pre]];
+  text = entry[[1]];
+  cstTabs = entry[[3]];
 
-  (*
-  Using "TabWidth" -> 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
-  FIXME: Must use the tab width from the editor
-  *)
-  cst = CodeConcreteParse[text, "TabWidth" -> 4];
+  If[cstTabs === Null,
+    (*
+    Using "TabWidth" -> 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
+    FIXME: Must use the tab width from the editor
+    *)
+    cstTabs = CodeConcreteParse[text, "TabWidth" -> 4];
+    
+    $OpenFilesMap[uri][[3]] = cstTabs;
+  ];
+
+  If[StringContainsQ[text, "\t"],
+    (*
+    Adjust the hover position to accommodate tab stops
+    FIXME: Must use the tab width from the editor
+    *)
+    textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+    pre = StringTake[textLines[[positionLine]], positionColumn-1];
+    positionColumn = 1;
+    Scan[(If[# == "\t", positionColumn = (4 * Quotient[positionColumn, 4] + 1) + 4, positionColumn++])&, Characters[pre]];
+  ];
 
   (*
   Find strings with multi-SourceCharacter WLCharacters
   *)
-  strs = Cases[cst,
+  strs = Cases[cstTabs,
     LeafNode[String, str_ /; containsUnicodeCharacterQ[str],
       KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {positionLine, positionColumn}]]], Infinity];
 

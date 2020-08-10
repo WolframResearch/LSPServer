@@ -785,9 +785,7 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs},
 
   entry = $OpenFilesMap[uri];
 
-  text = entry[[1]];
-
-  cst = CodeConcreteParse[text, "TabWidth" -> 1];
+  cst = entry[[2]];
 
   If[FailureQ[cst],
     Throw[cst]
@@ -863,7 +861,30 @@ Module[{params, doc, uri, cst, text},
   *)
   cst[[1]] = File;
 
-  $OpenFilesMap[uri] = {text, cst};
+  (*
+  Structure of entries is:
+
+  { text, cst, cstTabs }
+
+  text: String that is the text of the file
+  
+  cst: cst of the file, with "TabWidth" -> 1
+    Usually all that you need
+
+  cstTabs: cst of the file, with "TabWidth" -> tab width of editor
+    FIXME: needs to get tab width of editor
+    this is used when doing something such as:
+      rendering down to HTML and cannot rely on \t characters displaying properly, need to convert to spaces
+    this is parsed lazily, on demand
+  *)
+  $OpenFilesMap[uri] = {text, cst, Null};
+
+  (*
+  save time if the file has no tabs
+  *)
+  If[!StringContainsQ[text, "\t"],
+    $OpenFilesMap[uri][[3]] = cst
+  ];
 
   Flatten[#[uri]& /@ $didOpenNotifications, 1]
 ]]
@@ -918,7 +939,14 @@ Module[{params, doc, uri, cst, text, lastChange},
   *)
   cst[[1]] = File;
 
-  $OpenFilesMap[uri] = {text, cst};
+  $OpenFilesMap[uri] = {text, cst, Null};
+
+  (*
+  save time if the file has no tabs
+  *)
+  If[!StringContainsQ[text, "\t"],
+    $OpenFilesMap[uri][[3]] = cst
+  ];
 
   If[$Debug2,
     Write[$Messages, "Calling didChangeNotifications: " //OutputForm, $didChangeNotifications //OutputForm];
@@ -1024,7 +1052,7 @@ Module[{inspectedFileObj, lines, cst, entry},
 
   cst = entry[[2]];
 
-  inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst];
+  inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst, "TabWidth" -> 1];
 
   (*
   Might get something like FileTooLarge
@@ -1084,7 +1112,7 @@ publishBracketMismatchesNotification[uri_String] :=
 Catch[
 Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
   badChunkLines, badChunk, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
-  line1Map, line2Map, line3Map, line4Map},
+  line1Map, line2Map, line3Map, line4Map, cstTabs},
   
   If[!$BracketMatcher,
     Throw[publishHTMLSnippetWithLinesAndActions[uri, {}, {}]]
@@ -1092,19 +1120,24 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
 
   entry = $OpenFilesMap[uri];
 
-  text = entry[[1]];
+  cstTabs = entry[[3]];
 
-  (*
-  Using "TabWidth" -> 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
-  FIXME: Must use the tab width from the editor
-  *)
-  cst = CodeConcreteParse[text, "TabWidth" -> 4];
+  If[cstTabs === Null,
+    text = entry[[1]];
+    (*
+    Using "TabWidth" -> 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
+    FIXME: Must use the tab width from the editor
+    *)
+    cstTabs = CodeConcreteParse[text, "TabWidth" -> 4];
+    
+    $OpenFilesMap[uri][[3]] = cstTabs;
+  ];
 
   (*
   Using $BracketMatcher here
   *)
 
-  mismatches = CodeInspectBracketMismatchesCST[cst];
+  mismatches = CodeInspectBracketMismatchesCST[cstTabs];
 
   If[$Debug2,
     Write[$Messages, "mismatches: " //OutputForm, mismatches];
@@ -1439,7 +1472,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/codeAction"]] :=
 Catch[
 Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit, diagnostics,
   command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
-  shadowing, insertionText, cursor, entry, text},
+  shadowing, insertionText, cursor, entry, text, cst},
   
   id = content["id"];
   params = content["params"];
@@ -1459,12 +1492,9 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   entry = $OpenFilesMap[uri];
 
-  text = entry[[1]];
+  cst = entry[[2]];
 
-  (*
-  Using "TabWidth" -> 1 here because the lints Sources are sent over LSP and tabs are a single, normal character
-  *)
-  lints = CodeInspect[text, "TabWidth" -> 1];
+  lints = CodeInspectCST[cst];
 
   If[$Debug2,
     Write[$Messages, "lints: " //OutputForm, ToString[lints, InputForm] //OutputForm];
