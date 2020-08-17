@@ -1120,10 +1120,10 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
 
   entry = $OpenFilesMap[uri];
 
+  text = entry[[1]];
   cstTabs = entry[[3]];
 
   If[cstTabs === Null,
-    text = entry[[1]];
     (*
     Using "TabWidth" -> 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
     FIXME: Must use the tab width from the editor
@@ -1161,6 +1161,12 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
 
     suggestions = TimeConstrained[ML4Code`SuggestBracketEdits[badChunk], $ML4CodeTimeLimit, {}] /. $Failed -> {};
     suggestions = convertSuggestionToLineColumn[#, badChunkLines]& /@ suggestions;
+    If[AnyTrue[suggestions, FailureQ],
+      (*
+      If any of the suggestions are malformed, then just give up. There is something wrong with ML4Code
+      *)
+      suggestions = {}
+    ];
 
     If[$Debug2,
       Write[$Messages, "badChunkLineNums: " //OutputForm, badChunkLineNums];
@@ -1243,6 +1249,15 @@ convertSuggestionToLineColumn[{{command_Symbol, text_String, index_Integer}, com
     {line, column} = indexToLineColumn[index, badChunkLines];
     {{command, text, {line, column}}, completed, prob}
   ]
+
+(*
+ML4Code`SuggestBracketEdits may be broken and return crazy unevaluated stuff
+
+Make sure to filter this out
+*)
+convertSuggestionToLineColumn[___] :=
+  $Failed
+
 
 indexToLineColumn[index_, badChunkLines_] :=
   Module[{indexs, line, taken, lineStartIndex, column},
