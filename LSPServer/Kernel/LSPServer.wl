@@ -1052,6 +1052,10 @@ Module[{inspectedFileObj, lines, cst, entry},
 
   cst = entry[[2]];
 
+  If[!CodeSyntaxCSTQ[cst],
+    Throw[publishImplicitTokensNotificationWithLines[uri, {}]]
+  ];
+
   inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst, "TabWidth" -> 1];
 
   (*
