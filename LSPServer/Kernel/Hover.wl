@@ -41,7 +41,7 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
     *)
     cstTabs = CodeConcreteParse[text, "TabWidth" -> 4];
     
-    $OpenFilesMap[uri][[3]] = cstTabs;
+    $OpenFilesMap[[Key[uri], 3]] = cstTabs;
   ];
 
   If[StringContainsQ[text, "\t"],

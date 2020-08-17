@@ -883,7 +883,7 @@ Module[{params, doc, uri, cst, text},
   save time if the file has no tabs
   *)
   If[!StringContainsQ[text, "\t"],
-    $OpenFilesMap[uri][[3]] = cst
+    $OpenFilesMap[[Key[uri], 3]] = cst
   ];
 
   Flatten[#[uri]& /@ $didOpenNotifications, 1]
@@ -945,7 +945,7 @@ Module[{params, doc, uri, cst, text, lastChange},
   save time if the file has no tabs
   *)
   If[!StringContainsQ[text, "\t"],
-    $OpenFilesMap[uri][[3]] = cst
+    $OpenFilesMap[[Key[uri], 3]] = cst
   ];
 
   If[$Debug2,
@@ -1130,7 +1130,7 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
     *)
     cstTabs = CodeConcreteParse[text, "TabWidth" -> 4];
     
-    $OpenFilesMap[uri][[3]] = cstTabs;
+    $OpenFilesMap[[Key[uri], 3]] = cstTabs;
   ];
 
   (*
