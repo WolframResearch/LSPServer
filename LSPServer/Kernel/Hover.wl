@@ -99,6 +99,11 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
             " ",
               index++
             ,
+            "`",
+              rule = index -> "`` ` ``";
+              AppendTo[rules, rule];
+              index++
+            ,
             _,
               rule = index -> char;
               AppendTo[rules, rule];
@@ -148,6 +153,11 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
                   " ",
                     index++
                   ,
+                  "`",
+                    rule = index -> "`` ` ``";
+                    AppendTo[rules, rule];
+                    index++
+                  ,
                   _,
                     rule = index -> char;
                     AppendTo[rules, rule];
@@ -180,6 +190,11 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
                   " ",
                     index++
                   ,
+                  "`",
+                    rule = index -> "`` ` ``";
+                    AppendTo[rules, rule];
+                    index++
+                  ,
                   _,
                     rule = index -> char;
                     AppendTo[rules, rule];
@@ -210,6 +225,11 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
                     index = (4 * Quotient[index, 4] + 1) + 4
                   ,
                   " ",
+                    index++
+                  ,
+                  "`",
+                    rule = index -> "`` ` ``";
+                    AppendTo[rules, rule];
                     index++
                   ,
                   _,
