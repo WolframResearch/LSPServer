@@ -100,7 +100,10 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
               index++
             ,
             "`",
-              rule = index -> "`` ` ``";
+              (*
+              escape backticks for Markdown
+              *)
+              rule = index -> "\\`";
               AppendTo[rules, rule];
               index++
             ,
@@ -154,7 +157,10 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
                     index++
                   ,
                   "`",
-                    rule = index -> "`` ` ``";
+                    (*
+                    escape backticks for Markdown
+                    *)
+                    rule = index -> "\\`";
                     AppendTo[rules, rule];
                     index++
                   ,
@@ -191,7 +197,10 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
                     index++
                   ,
                   "`",
-                    rule = index -> "`` ` ``";
+                    (*
+                    escape backticks for Markdown
+                    *)
+                    rule = index -> "\\`";
                     AppendTo[rules, rule];
                     index++
                   ,
@@ -228,7 +237,10 @@ Module[{id, params, doc, uri, position, lines, entry, cst, text, textLines, strs
                     index++
                   ,
                   "`",
-                    rule = index -> "`` ` ``";
+                    (*
+                    escape backticks for Markdown
+                    *)
+                    rule = index -> "\\`";
                     AppendTo[rules, rule];
                     index++
                   ,
