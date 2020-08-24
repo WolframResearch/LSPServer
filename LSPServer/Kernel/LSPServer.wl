@@ -1007,8 +1007,12 @@ Module[{lints, lintsWithConfidence, shadowing, cst, entry},
   
   (*
   Make sure to sort lints before taking
+
+  Sort by severity, then sort by Source
+
+  severityToInteger maps "Remark" -> 1 and "Fatal" -> 4, so make sure to negate that
   *)
-  lints = SortBy[lints, #[[4, Key[Source]]]&];
+  lints = SortBy[lints, {-severityToInteger[#[[1]]]&, #[[4, Key[Source]]]&}];
 
   lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
 
