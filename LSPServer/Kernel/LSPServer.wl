@@ -1056,7 +1056,7 @@ Module[{inspectedFileObj, lines, cst, entry},
 
   cst = entry[[2]];
 
-  If[!CodeSyntaxCSTQ[cst],
+  If[!CodeStructuralSyntaxCSTQ[cst],
     Throw[publishImplicitTokensNotificationWithLines[uri, {}]]
   ];
 
@@ -1089,6 +1089,7 @@ Module[{inspectedFileObj, lines, cst, entry},
       LintNullCharacter -> "N",
       LintOneCharacter -> "1",
       LintTimesCharacter -> "x",
+      LintExpectedOperandCharacter -> "e",
       LintAllCloseCharacter -> "A",
       LintAllTimesCharacter -> "B",
       LintCloseCloseCharacter -> " ",
@@ -1096,6 +1097,9 @@ Module[{inspectedFileObj, lines, cst, entry},
       LintOpenOneCharacter -> "1",
       LintOpenOpenCharacter -> " ",
       LintTimesOneCharacter -> "y",
+      LintExpectedOperandTimesCharacter -> "f",
+      LintExpectedOperandCloseCharacter -> "e",
+      LintOpenExpectedOperandCharacter -> "e",
       LintAllTimesOneCharacter -> "C",
       LintCloseTimesOneCharacter -> "y"
     })& /@ ((# /. LintMarkup[content_, ___] :> content)& /@ #[[3, 2, 2;;]]))
