@@ -35,7 +35,7 @@ Module[{res},
 
   res = FindLibrary["LSPServer"];
   If[FailureQ[res],
-    Throw[Failure["LSPServerLibraryNotFound", <||>]]
+    Throw[Failure["LSPServerNativeLibraryNotFound", <||>]]
   ];
   res
 ]]
