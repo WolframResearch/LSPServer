@@ -9,10 +9,10 @@ LSPServer is a package that implements the Language Server Protocol for Wolfram 
 
 LSPServer depends on the CodeParser paclet and the CodeInspector paclet. Make sure that the paclets can be found on your system:
 ```
-In[1]:= Needs["CodeParser`"]
-	Needs["CodeInspector`"]
-      Needs["CodeFormatter`"]
-	Needs["LSPServer`"]
+Needs["CodeParser`"]
+Needs["CodeInspector`"]
+Needs["CodeFormatter`"]
+Needs["LSPServer`"]
 ```
 
 [CodeParser on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
@@ -22,15 +22,10 @@ In[1]:= Needs["CodeParser`"]
 
 Install LSPServer and dependencies from the CodeTools paclet server:
 ```
-In[1]:= PacletUpdate["CodeParser", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-      PacletUpdate["CodeInspector", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-      PacletUpdate["CodeFormatter", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-      PacletUpdate["LSPServer", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-
-Out[1]= PacletObject[CodeParser, 1.0, <>]
-Out[2]= PacletObject[CodeInspector, 1.0, <>]
-Out[3]= PacletObject[CodeFormatter, 1.0, <>]
-Out[4]= PacletObject[LSPServer, 1.0, <>]
+PacletUpdate["CodeParser", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
+PacletUpdate["CodeInspector", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
+PacletUpdate["CodeFormatter", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
+PacletUpdate["LSPServer", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
 ```
 
 
