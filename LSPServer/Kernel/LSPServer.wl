@@ -192,7 +192,9 @@ setup the REPL to handle traffic from client
 StartServer[logDir_String:""] :=
 Catch[
 Catch[
-Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream},
+Module[{logFile, res, bytes, bytess, logFileStream,
+  logFileName, logFileCounter
+  },
 
   (*
   Ensure that no messages are printed to stdout
@@ -224,7 +226,21 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
 
     Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
 
-    logFile = FileNameJoin[{logDir, "kernelLogFile.txt"}];
+    logFileName = "kernelLogFile";
+
+    logFile = FileNameJoin[{logDir, logFileName <> ".txt"}];
+    If[FileExistsQ[logFile],
+      logFileCounter = 1;
+      logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
+      While[True,
+        If[FileExistsQ[logFile],
+          logFileCounter++;
+          logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
+          ,
+          Break[]
+        ]
+      ]
+    ];
 
     logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
 
