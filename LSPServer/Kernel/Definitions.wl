@@ -10,7 +10,7 @@ Needs["CodeParser`Utils`"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/definition"]] :=
 Catch[
-Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, name, srcs, entry, cst, agg},
+Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, namePat, srcs, entry, cst, agg},
 
   id = content["id"];
   params = content["params"];
@@ -47,12 +47,22 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
 
   sym = cases[[1]];
 
-  name = sym["String"];
+  namePat = sym["String"];
+
+  (*
+  Remove contexts
+  *)
+  namePat = StringReplace[namePat, __ ~~ "`" -> ""];
+
+  (*
+  Definition may be specified with or without context
+  *)
+  namePat = (__ ~~ "`" ~~ namePat) | namePat;
 
   cases =
     Cases[
       ast,
-      CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {lhs_, rhs_}, KeyValuePattern["Definition" -> name]] :> lhs,
+      CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {lhs_, rhs_}, KeyValuePattern["Definition" -> name_ /; StringMatchQ[name, namePat]]] :> lhs,
       Infinity
     ];
 
