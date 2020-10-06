@@ -4,6 +4,8 @@ normalizeURI
 
 merge
 
+log
+
 Begin["`Private`"]
 
 (*
@@ -41,9 +43,10 @@ merge[line1_Association, line2_Association] :=
 
 
 
+timeString[] := DateString[{"Hour24", ":", "Minute", ":", "SecondExact", " "}]
 
 
-
+log[args___] := Write[$Messages, timeString[] //OutputForm, Sequence @@ (OutputForm /@ {args})]
 
 
 
