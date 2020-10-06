@@ -45,7 +45,7 @@ message(STATUS "BUG349779_PAUSE: ${BUG349779_PAUSE}")
 message(STATUS "BUG349779_TIMEOUT: ${BUG349779_TIMEOUT}")
 message(STATUS "CODEPARSER_EXE: ${CODEPARSER_EXE}")
 
-set(WL_PACLET_SOURCES
+set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Color.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Definitions.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Hover.wl
@@ -55,12 +55,31 @@ set(WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl
 )
 
+#
+# Used during the build process
+#
+set(WL_GENERATE_SOURCES_SOURCES
+	${PROJECT_SOURCE_DIR}/LSPServer/Generate/ReplacePUA.wl
+)
+
 set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
 	${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
 )
 
 set(PACLETINFO_SOURCE
 	${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.wl.in
+)
+
+set(WL_DATA_SOURCES
+	${PROJECT_SOURCE_DIR}/LSPServer/Data/LongNames.wl
+)
+
+set(GENERATED_WL_PACLET_KERNEL_SOURCES
+	${PROJECT_BINARY_DIR}/generated/wl/ReplacePUA.wl
+)
+
+set(GENERATED_SOURCES
+	${GENERATED_WL_PACLET_KERNEL_SOURCES}
 )
 
 set(DOCUMENTATION_NOTEBOOK_PATHS
@@ -122,7 +141,7 @@ add_custom_command(
 )
 list(APPEND COPIED_WL_PACLET_SOURCES ${COPIED_PACLETINFO})
 
-foreach(SRC ${WL_PACLET_SOURCES})
+foreach(SRC ${STATIC_WL_PACLET_SOURCES})
 	get_filename_component(BARE_SRC ${SRC} NAME)
 	add_custom_command(
 		OUTPUT
@@ -138,6 +157,52 @@ foreach(SRC ${WL_PACLET_SOURCES})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
 endforeach()
 
+foreach(SRC ${GENERATED_WL_PACLET_KERNEL_SOURCES})
+	get_filename_component(BARE_SRC ${SRC} NAME)
+	add_custom_command(
+		OUTPUT
+			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+		COMMAND
+			${CMAKE_COMMAND} -DSRC=${SRC} -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		COMMAND
+			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC}
+		DEPENDS
+			${SRC}
+			${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+	)
+	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${BARE_SRC})
+endforeach()
+
+
+
+#
+# generated-srcs target
+#
+add_custom_target(generated-srcs
+	DEPENDS
+		${GENERATED_SOURCES}
+)
+
+#
+# Generate source files
+#
+# Run the GenerateSources.wl script to generate additional required source files
+#
+add_custom_command(
+	OUTPUT
+		${GENERATED_SOURCES}
+	DEPENDS
+		${WL_DATA_SOURCES}
+		${WL_GENERATE_SOURCES_SOURCES}
+		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	COMMAND
+		${CMAKE_COMMAND} -E echo "GENERATED_WL_PACLET_SOURCES: ${GENERATED_WL_PACLET_SOURCES}"
+	COMMAND
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	VERBATIM
+	WORKING_DIRECTORY
+		${PROJECT_SOURCE_DIR}
+)
 
 
 
