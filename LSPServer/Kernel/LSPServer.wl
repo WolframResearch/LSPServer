@@ -271,6 +271,12 @@ Module[{logFile, res, line, numBytesStr, numBytes, bytes, bytess, logFileStream}
   Write[$Messages, "\n\n" //OutputForm];
 
   (*
+  Some simple thing to warm-up
+  *)
+  CodeParse["1+1"];
+
+
+  (*
   loop over:
     loop reading headers
     read content
@@ -652,6 +658,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   If[$BracketMatcher,
 
     Needs["ML4Code`"];
+
+    (*
+    Some simple thing to warm-up
+    *)
+    ML4Code`SuggestBracketEdits["f["]
 
   ];
 
