@@ -797,7 +797,7 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs},
   cases = Cases[cst, LeafNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
   If[cases == {},
-    Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
+    Throw[{<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}]
   ];
 
   sym = cases[[1]];
