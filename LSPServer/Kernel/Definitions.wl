@@ -28,9 +28,17 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
   char+=1;
 
   entry = $OpenFilesMap[uri];
-  cst = entry[[2]];
-  agg = CodeParser`Abstract`Aggregate[cst];
-  ast = CodeParser`Abstract`Abstract[agg];
+
+  ast = entry[[4]];
+
+  If[ast === Null,
+    
+    cst = entry[[2]];
+    agg = CodeParser`Abstract`Aggregate[cst];
+    ast = CodeParser`Abstract`Abstract[agg];
+    
+    $OpenFilesMap[[Key[uri], 4]] = ast;
+  ];
 
   If[FailureQ[ast],
     Throw[ast]

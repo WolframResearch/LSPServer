@@ -18,9 +18,17 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, agg, entry, cs
   uri = doc["uri"];
 
   entry = $OpenFilesMap[uri];
-  cst = entry[[2]];
-  agg = CodeParser`Abstract`Aggregate[cst];
-  ast = CodeParser`Abstract`Abstract[agg];
+
+  ast = entry[[4]];
+
+  If[ast === Null,
+    
+    cst = entry[[2]];
+    agg = CodeParser`Abstract`Aggregate[cst];
+    ast = CodeParser`Abstract`Abstract[agg];
+    
+    $OpenFilesMap[[Key[uri], 4]] = ast;
+  ];
 
   If[FailureQ[ast],
     Throw[ast]
@@ -85,7 +93,6 @@ Module[{hVal, sVal, bVal, aVal, src, rgba},
                     "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
     "color" -> <| "red" -> rgba[[1]], "green" -> rgba[[2]], "blue" -> rgba[[3]], "alpha" -> rgba[[4]] |> |>
 ]
-
 
 
 colorNodeToColorInformation[_] :=

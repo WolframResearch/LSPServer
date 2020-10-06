@@ -10,6 +10,41 @@
 #include <io.h> // for _setmode
 #include <fcntl.h> // for _O_BINARY
 #endif // _WIN32
+#include <memory>
+#include <queue>
+#include <string>
+#include <vector>
+#include <thread>
+#include <regex>
+#include <mutex>
+#include <algorithm>
+#include <cassert>
+
+
+int readLineFromStdIn(std::string& str);
+int readBytesFromStdIn(unsigned char *data, size_t numBytes);
+void threadBody();
+
+
+struct Message {
+    std::vector<std::string> Headers;
+    std::unique_ptr<unsigned char []> Body;
+    size_t Size;
+    
+    Message() {}
+    Message(std::vector<std::string> Headers, std::unique_ptr<unsigned char []> Body, size_t Size) : Headers(Headers), Body(std::move(Body)), Size(Size) {}
+};
+
+
+std::thread readerThread;
+
+int backgroundReaderThreadError;
+std::mutex bgMutex;
+
+std::queue<Message> q;
+std::mutex qMutex;
+
+std::regex ContentLengthRegEx("Content-Length: (\\d+)");
 
 
 DLLEXPORT mint WolframLibrary_getVersion() {
@@ -85,25 +120,201 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     return 0;
 }
 
-DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 
+DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
+    
 }
 
+
+DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    backgroundReaderThreadError = 0;
+    
+    readerThread = std::thread(threadBody);
+    
+    readerThread.detach();
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+void threadBody() {
+    
+    std::string str;
+    size_t numBytes;
+    
+    std::unique_ptr<unsigned char[]> body;
+    Message msg;
+    
+    int res;
+    
+    while (true) {
+        
+        //
+        // Read headers
+        //
+        
+        std::vector<std::string> headers;
+        
+        while (true) {
+            
+            str.clear();
+            
+            res = readLineFromStdIn(str);
+            
+            if (res) {
+                goto readThreadErr;
+            }
+            
+            std::smatch m;
+            
+            if (str.empty()) {
+                break;
+            } else if (std::regex_match(str, m, ContentLengthRegEx)) {
+                
+                auto capture1 = m.str(1);
+                
+                numBytes = std::stoi(capture1, nullptr);
+                
+                headers.push_back(str);
+                
+            } else {
+                
+                res = UNRECOGNIZED_HEADER;
+                
+                goto readThreadErr;
+            }
+            
+        }
+        
+        body = std::unique_ptr<unsigned char[]>(new unsigned char[numBytes]);
+        
+        res = readBytesFromStdIn(body.get(), numBytes);
+        
+        if (res) {
+            goto readThreadErr;
+        }
+        
+        msg = Message(headers, std::move(body), numBytes);
+        
+        qMutex.lock();
+        
+        q.push(std::move(msg));
+        
+        qMutex.unlock();
+    }
+    
+readThreadErr:
+    
+    bgMutex.lock();
+    
+    backgroundReaderThreadError = res;
+    
+    bgMutex.unlock();
+    
+}
+
+
+DLLEXPORT int LockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    qMutex.lock();
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int UnlockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    qMutex.unlock();
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int GetQueueSize_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    auto s = q.size();
+    
+    MArgument_setInteger(Res, s);
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int GetFrontMessageSize_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    const auto& msg = q.front();
+    
+    MArgument_setInteger(Res, msg.Size);
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int PopQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    const auto& msg = q.front();
+    
+    MNumericArray na;
+    na = MArgument_getMNumericArray(Args[0]);
+    
+    auto data = reinterpret_cast<unsigned char *>(libData->numericarrayLibraryFunctions->MNumericArray_getData(na));
+    
+    std::copy(msg.Body.get(), msg.Body.get() + msg.Size, data);
+    
+    q.pop();
+    
+    libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int GetBackgroundReaderThreadError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    int backgroundReaderThreadErrorCopy;
+    
+    bgMutex.lock();
+    
+    backgroundReaderThreadErrorCopy = backgroundReaderThreadError;
+    
+    bgMutex.unlock();
+    
+    MArgument_setInteger(Res, backgroundReaderThreadErrorCopy);
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int GetStdInFEOF_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    MArgument_setInteger(Res, feof(stdin));
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+DLLEXPORT int GetStdInFError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    MArgument_setInteger(Res, ferror(stdin));
+    
+    return LIBRARY_NO_ERROR;
+}
+
+
+//
+// Precondition: str is ready to be written to
 //
 // Lines always end with \r\n on all platforms, so just do simple loop here
 //
-DLLEXPORT int ReadLineFromStdIn_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
-
-    static std::string str;
-
-    str.clear();
+int readLineFromStdIn(std::string& str) {
 
     char c;
     while (true) {
-
+        
         auto r = fread(&c, sizeof(char), 1, stdin);
         if (r != 1) {
-            return LIBRARY_FUNCTION_ERROR;
+            return FREAD_FAILED;
         }
 
         if (c == '\r') {
@@ -114,53 +325,34 @@ DLLEXPORT int ReadLineFromStdIn_LibraryLink(WolframLibraryData libData, mint Arg
         //
         if (c == '\n') {
             
-            fprintf(stderr, "ReadLineFromStdIn: unexpected \\n character\n");
-            
-            return LIBRARY_FUNCTION_ERROR;
+            return UNEXPECTED_LINEFEED;
         }
         str += c;
     }
 
     auto r = fread(&c, sizeof(char), 1, stdin);
     if (r != 1) {
-        return LIBRARY_FUNCTION_ERROR;
+        return FREAD_FAILED;
     }
 
     if (c != '\n') {
-        return LIBRARY_FUNCTION_ERROR;
+        return EXPECTED_LINEFEED;
     }
-
-    MArgument_setUTF8String(Res, const_cast<char *>(str.c_str()));
-
-    return LIBRARY_NO_ERROR;
+    
+    return 0;
 }
 
-DLLEXPORT int ReadBytesFromStdIn_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
 
-    MNumericArray na;
-    na = MArgument_getMNumericArray(Args[0]);
-
-    size_t numBytes;
-    numBytes = libData->numericarrayLibraryFunctions->MNumericArray_getFlattenedLength(na);
-
-    auto data = reinterpret_cast<unsigned char *>(libData->numericarrayLibraryFunctions->MNumericArray_getData(na));
+int readBytesFromStdIn(unsigned char *data, size_t numBytes) {
 
     auto r = fread(data, sizeof(unsigned char), numBytes, stdin);
     if (r != numBytes) {
         
-        libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
-
-        return LIBRARY_FUNCTION_ERROR;
+        return FREAD_FAILED;
     }
 
-    libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
-
-    return LIBRARY_NO_ERROR;
+    return 0;
 }
-
-
-
-
 
 
 DLLEXPORT int WriteLineToStdOut_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
@@ -176,7 +368,9 @@ DLLEXPORT int WriteLineToStdOut_LibraryLink(WolframLibraryData libData, mint Arg
 
         libData->UTF8String_disown(line);
 
-        return LIBRARY_FUNCTION_ERROR;
+        MArgument_setInteger(Res, FWRITE_FAILED);
+        
+        return LIBRARY_NO_ERROR;
     }
 
     w = fwrite(newline, sizeof(char), 2, stdout);
@@ -184,23 +378,26 @@ DLLEXPORT int WriteLineToStdOut_LibraryLink(WolframLibraryData libData, mint Arg
 
         libData->UTF8String_disown(line);
 
-        return LIBRARY_FUNCTION_ERROR;
+        MArgument_setInteger(Res, FWRITE_FAILED);
+        
+        return LIBRARY_NO_ERROR;
     }
 
     if (fflush(stdout)) {
 
         libData->UTF8String_disown(line);
 
-        return LIBRARY_FUNCTION_ERROR;
+        MArgument_setInteger(Res, FFLUSH_FAILED);
+        
+        return LIBRARY_NO_ERROR;
     }
 
     libData->UTF8String_disown(line);
 
+    MArgument_setInteger(Res, 0);
+    
     return LIBRARY_NO_ERROR;
 }
-
-
-
 
 
 DLLEXPORT int WriteBytesToStdOut_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
@@ -218,22 +415,39 @@ DLLEXPORT int WriteBytesToStdOut_LibraryLink(WolframLibraryData libData, mint Ar
 
         libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
 
-        return LIBRARY_FUNCTION_ERROR;
+        MArgument_setInteger(Res, FWRITE_FAILED);
+        
+        return LIBRARY_NO_ERROR;
     }
 
     if (fflush(stdout)) {
 
         libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
 
-        return LIBRARY_FUNCTION_ERROR;
+        MArgument_setInteger(Res, FFLUSH_FAILED);
+        
+        return LIBRARY_NO_ERROR;
     }
 
     libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
 
+    MArgument_setInteger(Res, 0);
+    
     return LIBRARY_NO_ERROR;
 }
 
 
+DLLEXPORT int GetStdOutFEOF_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    MArgument_setInteger(Res, feof(stdout));
+    
+    return LIBRARY_NO_ERROR;
+}
 
 
-
+DLLEXPORT int GetStdOutFError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    MArgument_setInteger(Res, ferror(stdout));
+    
+    return LIBRARY_NO_ERROR;
+}

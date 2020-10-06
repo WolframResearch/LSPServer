@@ -4,6 +4,8 @@ normalizeURI
 
 merge
 
+stringLineTake
+
 log
 
 Begin["`Private`"]
@@ -13,11 +15,6 @@ input:  "file:///Users/brenton/development/stash/COD/ast/build/test.m"
 return:  "/Users/brenton/development/stash/COD/ast/build/test.m"
 *)
 normalizeURI[uri_String] := FileNameJoin[FileNameSplit[URL[uri]]]
-
-
-
-
-
 
 
 merge[line1_Association, line2_Association] :=
@@ -41,6 +38,25 @@ merge[line1_Association, line2_Association] :=
       })& /@ Transpose[{line1["characters"], line2["characters"]}]) |>
   ]
 
+
+stringLineTake[s_String, spec_] :=
+  Catch[
+  Module[{newlines, split},
+
+    newlines = StringCases[s, "\r\n" | "\n" | "\r"];
+
+    If[empty[newlines],
+      Throw[s]
+    ];
+
+    newlines = Take[newlines, spec];
+
+    split = StringSplit[s, "\r\n" | "\n" | "\r"];
+
+    split = Take[split, spec];
+
+    StringJoin[Riffle[split, newlines]]
+  ]]
 
 
 timeString[] := DateString[{"Hour24", ":", "Minute", ":", "SecondExact", " "}]

@@ -8,13 +8,20 @@ libraryFunctionWrapper
 (*
 library functions calling INTO lib
 *)
-readLineFromStdInFunc
-readBytesFromStdInFunc
-
 writeLineToStdOutFunc
 writeBytesToStdOutFunc
 
-
+startBackgroundReaderThreadFunc
+lockQueueFunc
+unlockQueueFunc
+getQueueSizeFunc
+getFrontMessageSizeFunc
+popQueueFunc
+getBackgroundReaderThreadError
+getStdInFEOF
+getStdInFError
+getStdOutFEOF
+getStdOutFError
 
 (*
 library functions coming FROM lib
@@ -101,13 +108,31 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
-readLineFromStdInFunc := readLineFromStdInFunc = loadFunc["ReadLineFromStdIn_LibraryLink", {}, "UTF8String"];
+startBackgroundReaderThreadFunc := startBackgroundReaderThreadFunc = loadFunc["StartBackgroundReaderThread_LibraryLink", {}, "Void"];
 
-readBytesFromStdInFunc := readBytesFromStdInFunc = loadFunc["ReadBytesFromStdIn_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, "Void"];
+lockQueueFunc := lockQueueFunc = loadFunc["LockQueue_LibraryLink", {}, "Void"];
 
-writeLineToStdOutFunc := writeLineToStdOutFunc = loadFunc["WriteLineToStdOut_LibraryLink", {"UTF8String"}, "Void"];
+unlockQueueFunc := unlockQueueFunc = loadFunc["UnlockQueue_LibraryLink", {}, "Void"];
 
-writeBytesToStdOutFunc := writeBytesToStdOutFunc = loadFunc["WriteBytesToStdOut_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, "Void"];
+getQueueSizeFunc := getQueueSizeFunc = loadFunc["GetQueueSize_LibraryLink", {}, Integer];
+
+getFrontMessageSizeFunc := getFrontMessageSizeFunc = loadFunc["GetFrontMessageSize_LibraryLink", {}, Integer];
+
+popQueueFunc := popQueueFunc = loadFunc["PopQueue_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, "Void"];
+
+getBackgroundReaderThreadError := getBackgroundReaderThreadError = loadFunc["GetBackgroundReaderThreadError_LibraryLink", {}, Integer];
+
+getStdInFEOF := getStdInFEOF = loadFunc["GetStdInFEOF_LibraryLink", {}, Integer];
+
+getStdInFError := getStdInFError = loadFunc["GetStdInFError_LibraryLink", {}, Integer];
+
+getStdOutFEOF := getStdOutFEOF = loadFunc["GetStdOutFEOF_LibraryLink", {}, Integer];
+
+getStdOutFError := getStdOutFError = loadFunc["GetStdOutFError_LibraryLink", {}, Integer];
+
+writeLineToStdOutFunc := writeLineToStdOutFunc = loadFunc["WriteLineToStdOut_LibraryLink", {"UTF8String"}, Integer];
+
+writeBytesToStdOutFunc := writeBytesToStdOutFunc = loadFunc["WriteBytesToStdOut_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, Integer];
 )
 
 

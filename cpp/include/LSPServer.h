@@ -41,21 +41,43 @@
 #endif
 
 
+constexpr int FREAD_FAILED = 1;
+constexpr int UNEXPECTED_LINEFEED = 2;
+constexpr int EXPECTED_LINEFEED = 3;
+constexpr int UNRECOGNIZED_HEADER = 4;
+constexpr int FWRITE_FAILED = 5;
+constexpr int FFLUSH_FAILED = 6;
+
+
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
 EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
 
-EXTERN_C DLLEXPORT int ReadLineFromStdIn_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
-
-EXTERN_C DLLEXPORT int ReadBytesFromStdIn_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
-
 EXTERN_C DLLEXPORT int WriteLineToStdOut_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
 EXTERN_C DLLEXPORT int WriteBytesToStdOut_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
 
+EXTERN_C DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
+EXTERN_C DLLEXPORT int LockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
+EXTERN_C DLLEXPORT int UnlockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
+EXTERN_C DLLEXPORT int GetQueueSize_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int GetFrontMessageSize_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int PopQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int GetBackgroundReaderThreadError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int GetStdInFEOF_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int GetStdInFError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int GetStdOutFEOF_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
+
+EXTERN_C DLLEXPORT int GetStdOutFError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);

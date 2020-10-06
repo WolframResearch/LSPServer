@@ -37,20 +37,11 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
+
 (*
 This uses func := func = def idiom and is fast
 *)
 loadAllFuncs[]
-
-
-
-ReadLineFromStdIn
-ReadBytesFromStdIn
-
-WriteLineToStdOut
-WriteBytesToStdOut
-
-LSPEvaluate
 
 
 
@@ -143,19 +134,71 @@ $TextDocumentSyncKind = <|
 
 
 
-
-
-ReadLineFromStdIn[] :=
+StartBackgroundReaderThread[] :=
 Module[{res},
-  res = libraryFunctionWrapper[readLineFromStdInFunc];
+  res = libraryFunctionWrapper[startBackgroundReaderThreadFunc];
   res
 ]
 
-ReadBytesFromStdIn[numBytes_Integer] :=
+LockQueue[] :=
+Module[{res},
+  res = libraryFunctionWrapper[lockQueueFunc];
+  res
+]
+
+UnlockQueue[] :=
+Module[{res},
+  res = libraryFunctionWrapper[unlockQueueFunc];
+  res
+]
+
+GetQueueSize[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getQueueSizeFunc];
+  res
+]
+
+GetFrontMessageSize[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getFrontMessageSizeFunc];
+  res
+]
+
+PopQueue[numBytes_Integer] :=
 Module[{bytes},
   bytes = ByteArray[Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}]];
-  libraryFunctionWrapper[readBytesFromStdInFunc, bytes];
+  libraryFunctionWrapper[popQueueFunc, bytes];
   bytes
+]
+
+GetBackgroundReaderThreadError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getBackgroundReaderThreadError];
+  res
+]
+
+GetStdInFEOF[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdInFEOF];
+  res
+]
+
+GetStdInFError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdInFError];
+  res
+]
+
+GetStdOutFEOF[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdOutFEOF];
+  res
+]
+
+GetStdOutFError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdOutFError];
+  res
 ]
 
 WriteLineToStdOut[line_String] :=
@@ -172,13 +215,11 @@ Module[{res},
 
 
 
-
 $Debug
 
 $Debug2
 
 $DebugBracketMatcher
-
 
 
 
@@ -193,8 +234,12 @@ StartServer[logDir_String:""] :=
 Catch[
 Catch[
 Module[{logFile, res, bytes, bytess, logFileStream,
-  logFileName, logFileCounter
-  },
+  logFileName, logFileCounter,
+  queueSize, frontMessageSize,
+  lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
+  content, contents,
+  bytessIn, contentsIn,
+  backgroundReaderThreadError, errStr, feof, ferror},
 
   (*
   Ensure that no messages are printed to stdout
@@ -257,8 +302,10 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   Off[General::stop];
 
 
-
   log["$CommandLine: ", $CommandLine];
+  log["\n\n"];
+
+  log["$ProcessID: ", $ProcessID];
   log["\n\n"];
 
   If[!StringStartsQ[ToLowerCase[FileBaseName[$CommandLine[[1]]]], "wolframkernel"],
@@ -283,8 +330,33 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   ];
 
 
-  log["Starting server... (If this is the last line you see, then there may be a problem and the server is hanging.)"];
-  log["\n\n"];
+  lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
+
+  codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
+
+  codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
+
+  codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
+
+  If[lspServerVersion =!= codeParserVersion,
+    log["WARNING: LSPServer and CodeParser do not have the same version."];
+    log["WARNING: LSPServer version: ", lspServerVersion];
+    log["WARNING: CodeParser version: ", codeParserVersion];
+    log["\n\n"];
+  ];
+  If[lspServerVersion =!= codeInspectorVersion,
+    log["WARNING: LSPServer and CodeInspector do not have the same version."];
+    log["WARNING: LSPServer version: ", lspServerVersion];
+    log["WARNING: CodeInspector version: ", codeInspectorVersion];
+    log["\n\n"];
+  ];
+  If[lspServerVersion =!= codeFormatterVersion,
+    log["WARNING: LSPServer and CodeFormatter do not have the same version."];
+    log["WARNING: LSPServer version: ", lspServerVersion];
+    log["WARNING: CodeFormatter version: ", codeFormatterVersion];
+    log["\n\n"];
+  ];
+
 
   (*
   Some simple thing to warm-up
@@ -292,149 +364,239 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   CodeParse["1+1"];
 
 
+  log["Starting server... (If this is the last line you see, then there may be a problem and the server is hanging.)"];
+  log["\n\n"];
+
+
+  StartBackgroundReaderThread[];
+
+
   (*
   loop over:
-    loop reading headers
     read content
     evaluate
     write content
   *)
   While[True,
 
-    (*
-    Headers loop
-    *)
-    While[True,
 
-      line = ReadLineFromStdIn[];
+    backgroundReaderThreadError = GetBackgroundReaderThreadError[];
 
-      If[FailureQ[line],
+    If[backgroundReaderThreadError != 0,
 
-        If[TrueQ[$ServerState == "shutdown"],
-          (*
-          some signal or something was sent to the kernel process to shut it down
-
-          Not a graceful exit, but also not a hard exit
-          *)
-
-          exitSemiGracefully[]
-        ];
-
-        log["\n\n"];
-        log["invalid line from stdin: ", line];
-        log["\n\n"];
-
-        exitHard[]
+      Switch[backgroundReaderThreadError,
+        (*FREAD_FAILED*)
+        1,
+          Which[
+            (feof = GetStdInFEOF[]) != 0,
+              errStr = "fread EOF"
+            ,
+            (ferror = GetStdInFError[]) != 0,
+              errStr = "fread error: " <> ToString[ferror]
+            ,
+            True,
+              errStr = "fread unknown error"
+          ]
+        ,
+        (*UNEXPECTED_LINEFEED*)
+        2,
+          errStr = "unexpected linefeed"
+        ,
+        (*EXPECTED_LINEFEED*)
+        3,
+          errStr = "expected linefeed"
+        ,
+        (*UNRECOGNIZED_HEADER*)
+        4,
+          errStr = "unrecognized header"
+        ,
+        _,
+          errStr = "UNKNOWN ERROR: " <> ToString[backgroundReaderThreadError]
       ];
 
-      If[$Debug2,
-        log["C-->S  ", line, "  (length:"<>ToString[StringLength[line]]<>")"];
-      ];
-
-      Which[
-        (*
-        Content-Length is the only recognized header so far
-        *)
-        StringMatchQ[line, RegularExpression["Content-Length: (\\d+)"]],
-          numBytesStr = StringCases[line, RegularExpression["Content-Length: (\\d+)"] :> "$1"][[1]];
-          numBytes = ToExpression[numBytesStr];
-        ,
-        line == "",
-          (*
-          break out of headers loop
-          *)
-          Break[]
-        ,
-        True,
-          log["\n\n"];
-          log["invalid Content-Length from stdin: ", line];
-          log["\n\n"];
-
-          exitHard[]
-      ]
-    ];(*While*)
-
-    (*Content*)
-
-    bytes = ReadBytesFromStdIn[numBytes];
-
-    If[FailureQ[bytes],
       log["\n\n"];
-      log["invalid bytes from stdin: ", bytes];
+      log["Background Reader Thread Error: ", errStr];
       log["\n\n"];
 
       exitHard[]
     ];
 
-    If[$Debug2,
-      log["C-->S " <> ToString[Length[bytes]] <> " bytes ", Normal[Take[bytes, UpTo[1000]]]];
+    LockQueue[];
+
+    queueSize = GetQueueSize[];
+
+    If[queueSize == 0,
+      
+      UnlockQueue[];
+
+      Pause[0.1];
+
+      Continue[];
     ];
 
-    bytess = LSPEvaluate[bytes];
+    If[$Debug2,
+      log["queueSize: ", queueSize];
+    ];
+
+    bytessIn = {};
+    Do[
+      
+      frontMessageSize = GetFrontMessageSize[];
+
+      bytes = PopQueue[frontMessageSize];
+
+      AppendTo[bytessIn, bytes]
+      ,
+      queueSize
+    ];
+
+    UnlockQueue[];
+
+
+    contentsIn = {};
+    Do[
+      If[FailureQ[bytesIn],
+        log["\n\n"];
+        log["invalid bytes from stdin: ", bytesIn];
+        log["\n\n"];
+
+        exitHard[]
+      ];
+
+      If[$Debug2,
+        log["C-->S " <> ToString[Length[bytesIn]] <> " bytes "];
+        log["C-->S " <> stringLineTake[FromCharacterCode[Normal[Take[bytesIn, UpTo[1000]]]], UpTo[20]]];
+        log["...\n"];
+      ];
+
+      content = ImportByteArray[bytesIn, "RawJSON"];
+
+      AppendTo[contentsIn, content]
+      ,
+      {bytesIn, bytessIn}
+    ];
+
+    bytessIn = {};
 
     (*
-    write out each byte array in bytess
+    Remove cancellations and redundant requests
     *)
+    contentsIn = filterContents[contentsIn];
+
+
     Do[
-    
-      If[!ByteArrayQ[bytes],
-        
-        log["\n\n"];
-        log["invalid bytes from stdin: ", bytes];
-        log["\n\n"];
 
-        exitHard[]
+      contents = LSPEvaluate[content];
+
+      Check[
+        bytess = ExportByteArray[#, "JSON"]& /@ contents;
+
+        ,
+        log["\n\n"];
+        log["message generated by contents: ", contents];
+        log["\n\n"];
+        ,
+        {Export::jsonstrictencoding}
       ];
 
-      If[$Debug2,
-        log["C<--S bytes ", Normal[Take[bytes, UpTo[1000]]]];
-      ];
+      (*
+      write out each byte array in bytess
+      *)
+      Do[
+      
+        If[!ByteArrayQ[bytes],
+          
+          log["\n\n"];
+          log["invalid bytes from stdin: ", bytes];
+          log["\n\n"];
 
-      line = "Content-Length: " <> ToString[Length[bytes]];
+          exitHard[]
+        ];
 
-      If[$Debug2,
-        log["C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")"];
-      ];
+        (*
+        Write the headers
+        *)
+        Do[
+          If[$Debug2,
+            log[""];
+            log["C<--S  ", line];
+          ];
 
-      res = WriteLineToStdOut[line];
-      If[res =!= Null,
-        log["\n\n"];
-        log["invalid result from stdout: ", res];
-        log["\n\n"];
+          res = WriteLineToStdOut[line];
+          If[res =!= 0,
 
-        exitHard[]
-      ];
+            Switch[res,
+              (*FWRITE_FAILED | FFLUSH_FAILED*)
+              5 | 6,
+                Which[
+                  (feof = GetStdOutFEOF[]) != 0,
+                    errStr = "fwrite EOF"
+                  ,
+                  (ferror = GetStdOutFError[]) != 0,
+                    errStr = "fwrite error: " <> ToString[ferror]
+                  ,
+                  True,
+                    errStr = "fwrite unknown error"
+                ]
+              ,
+              _,
+                errStr = "UNKNOWN ERROR: " <> ToString[res]
+            ];
 
-      line = "";
+            log["\n\n"];
+            log["StdOut error: ", errStr];
+            log["\n\n"];
 
-      If[$Debug2,
-        log["C<--S  ", line, "  (length:"<>ToString[StringLength[line]]<>")"];
-      ];
+            exitHard[]
+          ];
+          ,
+          {line, {"Content-Length: " <> ToString[Length[bytes]], ""}}
+        ];
 
-      res = WriteLineToStdOut[line];
-      If[res =!= Null,
-        log["\n\n"];
-        log["invalid result from stdout: ", res];
-        log["\n\n"];
+        (*
+        Write the body
+        *)
+        If[$Debug2,
+          log["C<--S  ", stringLineTake[FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], UpTo[20]]];
+          log["...\n"];
+        ];
 
-        exitHard[]
-      ];
+        res = WriteBytesToStdOut[bytes];
+        If[res =!= 0,
 
-      If[$Debug2,
-        log["C<--S  ", FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]]];
-      ];
+          Switch[res,
+            (*FWRITE_FAILED | FFLUSH_FAILED*)
+            5 | 6,
+              Which[
+                (feof = GetStdOutFEOF[]) != 0,
+                  errStr = "fwrite EOF"
+                ,
+                (ferror = GetStdOutFError[]) != 0,
+                  errStr = "fwrite error: " <> ToString[ferror]
+                ,
+                True,
+                  errStr = "fwrite unknown error"
+              ]
+            ,
+            _,
+              errStr = "UNKNOWN ERROR: " <> ToString[res]
+          ];
 
-      res = WriteBytesToStdOut[bytes];
-      If[res =!= Null,
-        log["\n\n"];
-        log["invalid result from stdout: ", res];
-        log["\n\n"];
+          log["\n\n"];
+          log["StdOut error: ", errStr];
+          log["\n\n"];
 
-        exitHard[]
-      ];
+          exitHard[]
+        ];
+        ,
+        {bytes, bytess}
+      ](*Do bytess*)
       ,
-      {bytes, bytess}
-    ](*Do*)
+      {content, contentsIn}
+    ];(*Do contentsIn*)
+
+    contentsIn = {};
+
   ](*While*)
 ]],(*Module*)
 _,
@@ -447,6 +609,177 @@ _,
 
   )&
 ]
+
+
+(*
+Remove cancelable requests (and the cancel requests themselves)
+
+Remove all redundant requests: in a group of batchable requests, remove everything before last didChange request
+*)
+filterContents[contentsIn_] :=
+  Catch[
+  Module[{contents, cancels, toCancel, contentsss},
+
+    contents = contentsIn;
+
+    (*
+    TODO: is 0 possible here?
+    *)
+    If[empty[contents],
+      Throw[contents]
+    ];
+
+    If[Length[contents] == 1,
+      
+      Switch[contents[[1]],
+        KeyValuePattern["method" -> "textDocument/didChange"],
+          (*
+          Clear diagnostics and snippets first
+          *)
+          Throw[clearBeforeChange[uri[contents[[1]]]] ~Join~ contents]
+        ,
+        _,
+          Throw[contents]
+      ]
+
+    ];
+
+    If[$Debug2,
+      log["\n"];
+      log["contents > 1. Here are the methods: ", #["method"]& /@ contents];
+      log["\n"];
+    ];
+
+    (*
+    First handle cancellations
+    *)
+    cancels = Cases[contents, KeyValuePattern["method" -> "$/cancelRequest"]];
+
+    toCancel = Flatten[handleCancelRequest[#, contents]& /@ cancels];
+
+    If[$Debug2,
+      log["cancels: ", cancels];
+      log["toCancel: ", toCancel];
+    ];
+
+    (*
+    Must preserve ordering, so do not use Complement
+    *)
+    contents = DeleteCases[contents, Alternatives @@ cancels];
+    
+    contents = DeleteCases[contents, Alternatives @@ toCancel];
+
+    If[$Debug2,
+      log["\n"];
+      log["Here are the NEW methods: ", #["method"]& /@ contents];
+      log["\n"];
+    ];
+
+    (*
+    Now remove redundant requests
+
+    First group together based on the same document
+
+    Then remove everything before the last didChange
+    *)
+    contentsss = SplitBy[contents, {uri, batchable}];
+
+    contentsss =
+      Map[
+        Function[{contentss1},
+          Map[
+            Function[{contents1},
+              Function[{contents2},
+                If[$Debug2,
+                  log["\n"];
+                  log["Here is the OLD contents: ", {#["method"], uri[#], batchable[#]}& /@ contents1];
+                  log["Here is the NEW contents: ", {#["method"], uri[#], batchable[#]}& /@ contents2];
+                  log["\n"];
+                ];
+                contents2
+              ][Function[{pos},
+                  If[pos == {},
+                    contents1
+                    ,
+                    (*
+                    If there is a didChange, then drop everything up to the last textDocument/didChange, but keeping the last textDocument/didChange
+                    Also clear diagnostics and snippets first
+                    *)
+                    clearBeforeChange[uri[contents1[[1]]]] ~Join~ Drop[contents1, Last[pos][[1]] - 1]
+                  ]
+                ][Position[contents1, KeyValuePattern["method" -> "textDocument/didChange"]]]
+              ]
+            ]
+            ,
+            contentss1
+          ]
+        ]
+        ,
+        contentsss
+      ];
+
+    contents = Flatten[contentsss];
+
+    If[$Debug2,
+      log["\n"];
+      log["Here are the NEW NEW methods: ", #["method"]& /@ contents];
+      log["\n"];
+    ];
+
+    contents
+  ]]
+
+
+(*
+HACK: rely on implementation detail of SplitBy calling SameQ internally
+
+provide a sentinal value that cannot be compared with itself
+*)
+incomparableSentinel /: SameQ[incomparableSentinel, incomparableSentinel] := False
+
+uri[KeyValuePattern["params" -> KeyValuePattern["textDocument" -> KeyValuePattern["uri" -> uri_]]]] := uri
+
+(*
+no uri, so always separate
+*)
+uri[_] := incomparableSentinel
+
+(*
+These are either:
+didChange, which is the source of changes, or
+other requests that depend on didChange and have no side-effects
+*)
+batchable[KeyValuePattern["method" -> "textDocument/definition"]] := True
+batchable[KeyValuePattern["method" -> "textDocument/didChange"]] := True
+batchable[KeyValuePattern["method" -> "textDocument/documentColor"]] := True
+batchable[KeyValuePattern["method" -> "textDocument/hover"]] := True
+batchable[KeyValuePattern["method" -> "textDocument/references"]] := True
+
+batchable[_] := incomparableSentinel
+
+
+clearBeforeChange[uri_] :=
+  Join[
+    publishDiagnosticsNotificationWithLints[uri, {}],
+    publishImplicitTokensNotificationWithLines[uri, {}],
+    publishHTMLSnippetWithLines[uri, {}]
+  ]
+
+
+
+(*
+Forward these to the client
+*)
+handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnostics"]] :=
+  {content}
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitTokens"]] :=
+  {content}
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/publishHTMLSnippet"]] :=
+  {content}
+
+
 
 
 
@@ -466,19 +799,13 @@ RunDiagnostic[command:{_String...}] :=
 
 
 (*
-input string: ByteArray representing an RPC-JSON string
+input: JSON RPC assoc
 
-returns: a list of ByteArray (possibly empty), each ByteArray represents an RPC-JSON string
+returns: a list of JSON RPC assocs
 *)
-LSPEvaluate[bytes_ByteArray] :=
+LSPEvaluate[content_(*no Association here, allow everything*)] :=
 Catch[
-Module[{content, contents, bytess, str, escapes, surrogates},
-
-  If[$Debug2,
-    log["C-->S LSPEvaluate content ", FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]]];
-  ];
-
-  content = ImportByteArray[bytes, "RawJSON"];
+Module[{contents},
 
   (*
   (*  
@@ -520,28 +847,13 @@ Module[{content, contents, bytess, str, escapes, surrogates},
 
   If[!MatchQ[contents, {_Association...}],
     log["\n\n"];
-    log["invalid contents result: ", contents];
+    log["invalid contents result (should match {_Association...}): ", contents];
     log["\n\n"];
 
     exitHard[]
   ];
 
-  Check[
-    bytess = ExportByteArray[#, "JSON"]& /@ contents;
-
-    If[$Debug2,
-      log["C<--S LSPEvaluate content ", FromCharacterCode[Normal[Take[#, UpTo[1000]]]]& /@ bytess];
-    ];
-
-    bytess
-    ,
-    log["\n\n"];
-    log["message generated by contents: ", contents];
-    log["\n\n"];
-    bytess
-    ,
-    {Export::jsonstrictencoding}
-  ]
+  contents
 ]]
 
 
@@ -722,6 +1034,16 @@ handleContent[content:KeyValuePattern["method" -> "exit"]] := (
 )
 
 
+handleCancelRequest[content:KeyValuePattern["method" -> "$/cancelRequest"], contents_] :=
+Module[{params, id},
+
+  params = content["params"];
+
+  id = params["id"];
+
+  Cases[contents, KeyValuePattern["id" -> id]]
+]
+
 (*
 $ Notifications and Requests
 
@@ -858,7 +1180,8 @@ Module[{params, doc, uri, cst, text},
   text = doc["text"];
 
   If[$Debug2,
-    log["text: ", ToString[text, InputForm]];
+    log["text: ", stringLineTake[StringTake[ToString[text, InputForm], UpTo[1000]], UpTo[20]]];
+    log["...\n"];
   ];
 
   cst = CodeConcreteParse[text, "TabWidth" -> 1];
@@ -891,7 +1214,7 @@ Module[{params, doc, uri, cst, text},
   (*
   Structure of entries is:
 
-  { text, cst, cstTabs }
+  { text, cst, cstTabs, ast, lints from CodeInspectCST }
 
   text: String that is the text of the file
   
@@ -904,7 +1227,7 @@ Module[{params, doc, uri, cst, text},
       rendering down to HTML and cannot rely on \t characters displaying properly, need to convert to spaces
     this is parsed lazily, on demand
   *)
-  $OpenFilesMap[uri] = {text, cst, Null};
+  $OpenFilesMap[uri] = {text, cst, Null, Null, Null};
 
   (*
   save time if the file has no tabs
@@ -966,7 +1289,12 @@ Module[{params, doc, uri, cst, text, lastChange},
   *)
   cst[[1]] = File;
 
-  $OpenFilesMap[uri] = {text, cst, Null};
+  (*
+  entries are: {text, cst, cstTabs, ast, lints from CodeInspectCST}
+
+  Null represents a stale value
+  *)
+  $OpenFilesMap[uri] = {text, cst, Null, Null, Null};
 
   (*
   save time if the file has no tabs
@@ -1000,11 +1328,30 @@ Switch[severity,
 publishDiagnosticsNotification[uri_String] :=
 Module[{lints, lintsWithConfidence, shadowing, cst, entry},
 
+  If[$Debug2,
+    log["enter publishDiagnosticsNotification"];
+  ];
+
   entry = $OpenFilesMap[uri];
 
-  cst = entry[[2]];
+  lints = entry[[5]];
 
-  lints = CodeInspectCST[cst];
+  If[lints === Null,
+
+    cst = entry[[2]];
+    
+    If[$Debug2,
+      log["before CodeInspectCST"];
+    ];
+
+    lints = CodeInspectCST[cst];
+
+    If[$Debug2,
+      log["after CodeInspectCST"];
+    ];
+
+    $OpenFilesMap[[Key[uri], 5]] = lints;
+  ];
 
   (*
   Might get something like FileTooLarge
@@ -1044,7 +1391,12 @@ Module[{lints, lintsWithConfidence, shadowing, cst, entry},
   lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
 
   If[$Debug2,
-   log["lints: ", ToString[lints, InputForm]];
+    log["lints: ", stringLineTake[StringTake[ToString[lints, InputForm], UpTo[1000]], UpTo[20]]];
+    log["...\n"];
+  ];
+
+  If[$Debug2,
+    log["exit publishDiagnosticsNotification"];
   ];
 
   publishDiagnosticsNotificationWithLints[uri, lints]
@@ -1153,6 +1505,10 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
   badChunkLines, badChunk, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
   line1Map, line2Map, line3Map, line4Map, cstTabs},
   
+  If[$Debug2,
+    log["enter publishBracketMismatchesNotification"];
+  ];
+
   If[!$BracketMatcher,
     Throw[publishHTMLSnippetWithLinesAndActions[uri, {}, {}]]
   ];
@@ -1179,7 +1535,8 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
   mismatches = CodeInspectBracketMismatchesCST[cstTabs];
 
   If[$Debug2,
-    log["mismatches: ", mismatches];
+    log["mismatches: ", stringLineTake[StringTake[ToString[mismatches], UpTo[1000]], UpTo[20]]];
+    log["...\n"];
   ];
 
   lines = {};
@@ -1209,7 +1566,9 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
 
     If[$Debug2,
       log["badChunkLineNums: ", badChunkLineNums];
-      log["badChunk: ", badChunk];
+      log["badChunk: ", stringLineTake[StringTake[ToString[badChunk], UpTo[1000]], UpTo[20]]];
+      log["...\n"];
+
       log["suggestions: ", suggestions];
     ];
     confidenceMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
@@ -1277,6 +1636,10 @@ Module[{lines, entry, cst, text, mismatches, actions, textLines, action, suggest
     lines = Merge[<|#["line"] -> #|>& /@ lines, ({StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ #, "<br>"], "</div>"], #[[1]]["characterCount"]})&];
     
     lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|> &, lines]
+  ];
+
+  If[$Debug2,
+    log["exit publishBracketMismatchesNotification"];
   ];
 
   publishHTMLSnippetWithLinesAndActions[uri, lines, actions]
@@ -1546,12 +1909,20 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   entry = $OpenFilesMap[uri];
 
-  cst = entry[[2]];
+  lints = entry[[5]];
 
-  lints = CodeInspectCST[cst];
+  If[lints === Null,
+
+    cst = entry[[2]];
+    
+    lints = CodeInspectCST[cst];
+    
+    $OpenFilesMap[[Key[uri], 5]] = lints;
+  ];
 
   If[$Debug2,
-    log["lints: ", ToString[lints, InputForm]];
+    log["lints: ", stringLineTake[StringTake[ToString[lints, InputForm], UpTo[1000]], UpTo[20]]];
+    log["...\n"];
   ];
 
   (*
