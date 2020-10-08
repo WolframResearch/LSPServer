@@ -37,6 +37,16 @@ Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
+Needs["PacletManager`"] (* for PacletInformation *)
+
+(*
+TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "LongNames"]
+*)
+location = "Location" /. PacletInformation["LSPServer"];
+
+processedSymbolsFile = FileNameJoin[{location, "Resources", "Generated", "processedSymbols.mx"}];
+
+Get[processedSymbolsFile]
 
 
 (*

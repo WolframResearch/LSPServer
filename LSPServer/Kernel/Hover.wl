@@ -316,16 +316,39 @@ Module[{lines, line, result, syms, usage, a1},
         LeafNode[_, s_, _] :> escapeMarkdown[replacePUA[s]],
         ErrorNode[_, s_, _] :> escapeMarkdown[replacePUA[s]]
       };
+
       line = StringJoin[a1];
 
-      If[StringQ[line],
-        line
-        ,
-        "INVALID"
-      ]
+      If[!StringQ[line],
+        line = "INVALID"
+      ];
       ,
-      Nothing
-    ]
+      
+      line = "No usage message"
+    ];
+
+    (*
+    
+    Do not care about CONSTANT
+
+    If[MemberQ[LSPInfra`Generate`$constants, sym],
+      line = line <> "\n\nCONSTANT"
+    ];
+    *)
+
+    If[MemberQ[LSPInfra`Generate`$undocumentedSymbols, sym],
+      line = line <> "\n\nUNDOCUMENTED"
+    ];
+
+    If[MemberQ[LSPInfra`Generate`$experimentalSymbols, sym],
+      line = line <> "\n\nEXPERIMENTAL"
+    ];
+
+    If[MemberQ[LSPInfra`Generate`$obsoleteSymbols, sym],
+      line = line <> "\n\nOBSOLETE"
+    ];
+
+    line
 
   ] /@ syms;
 
