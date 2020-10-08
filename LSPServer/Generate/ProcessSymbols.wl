@@ -72,56 +72,56 @@ LSPInfra`Generate`$constants =
 "DefaultFrameStyle", "DefaultFrameTicksStyle", \
 "DefaultGridLinesStyle", "DefaultLabelStyle", "DefaultMenuStyle", \
 "DefaultTicksStyle", "DefaultTooltipStyle", "Degree", "Delimiter", \
-"DigitCharacter", "DotDashed", "Dotted", "DragAndDrop", "E", \
-"EndOfBuffer", "EndOfFile", "EndOfLine", "EndOfString", "EulerGamma", \
-"Expression", "False", "Flat", "FontProperties", "Forward", \
-"ForwardBackward", "Friday", "Front", "FrontEndDynamicExpression", \
-"Full", "General", "Generic", "Glaisher", "GoldenAngle", \
-"GoldenRatio", "Gray", "Green", "Here", "HexadecimalCharacter", \
-"HoldAll", "HoldAllComplete", "HoldFirst", "HoldRest", "I", \
-"Indeterminate", "Infinity", "Inherited", "Integer", "Italic", "K", \
-"Khinchin", "Large", "Larger", "Launch", "Left", "LetterCharacter", \
-"LightBlue", "LightBrown", "LightCyan", "LightGray", "LightGreen", \
-"LightMagenta", "LightOrange", "LightPink", "LightPurple", \
-"LightRed", "LightYellow", "Listable", "Listen", "Locked", \
-"Loopback", "MachinePrecision", "Magenta", "Manual", "Medium", \
-"MeshCellCentroid", "MeshCellMeasure", "MeshCellQuality", "Modular", \
-"Monday", "NHoldAll", "NHoldFirst", "NHoldRest", "NonAssociative", \
-"None", "Now", "NoWhitespace", "Null", "Number", "NumberString", \
-"Orange", "ParentForm", "Pi", "Pink", "Plain", "Protected", \
-"PunctuationCharacter", "Purple", "ReadProtected", "Real", "Record", \
-"Red", "Right", "Saturday", "SequenceHold", "Small", "Smaller", \
-"SpanFromAbove", "SpanFromBoth", "SpanFromLeft", "StartOfLine", \
-"StartOfString", "String", "Stub", "Sunday", "Temporary", "Thick", \
-"Thin", "ThisLink", "Thursday", "Tiny", "Today", "Tomorrow", "Top", \
-"Transparent", "True", "Tuesday", "Undefined", "Underlined", \
-"Wednesday", "White", "Whitespace", "WhitespaceCharacter", "Word", \
-"WordBoundary", "WordCharacter", "Yellow", "Yesterday", "$Aborted", \
-"$AllowExternalChannelFunctions", "$AssertFunction", "$Assumptions", \
-"$AsynchronousTask", "$AudioInputDevices", "$AudioOutputDevices", \
-"$BaseDirectory", "$BatchInput", "$BatchOutput", "$BlockchainBase", \
-"$BoxForms", "$ByteOrdering", "$CacheBaseDirectory", "$Canceled", \
-"$ChannelBase", "$CharacterEncoding", "$CharacterEncodings", \
-"$CloudBase", "$CloudConnected", "$CloudCreditsAvailable", \
-"$CloudEvaluation", "$CloudExpressionBase", "$CloudRootDirectory", \
-"$CloudSymbolBase", "$CloudUserID", "$CloudUserUUID", \
-"$CloudVersion", "$CommandLine", "$CompilationTarget", \
-"$ConfiguredKernels", "$Context", "$ContextPath", \
-"$ControlActiveSetting", "$Cookies", "$CookieStore", "$CreationDate", \
-"$CurrentLink", "$DateStringFormat", "$DefaultAudioInputDevice", \
-"$DefaultAudioOutputDevice", "$DefaultFont", "$DefaultImagingDevice", \
-"$DefaultLocalBase", "$DefaultNetworkInterface", "$DefaultPath", \
-"$Display", "$DisplayFunction", "$DistributedContexts", \
-"$DynamicEvaluation", "$Echo", "$EmbedCodeEnvironments", \
-"$EmbeddableServices", "$EntityStores", "$Epilog", \
-"$EvaluationCloudBase", "$EvaluationCloudObject", \
-"$EvaluationEnvironment", "$ExportFormats", "$Failed", \
-"$FontFamilies", "$FormatType", "$FrontEnd", "$FrontEndSession", \
-"$GeoLocation", "$GeoLocationCity", "$GeoLocationCountry", \
-"$GeoLocationSource", "$HistoryLength", "$HomeDirectory", \
-"$HTTPCookies", "$IgnoreEOF", "$ImageFormattingWidth", \
-"$ImagingDevice", "$ImagingDevices", "$ImportFormats", \
-"$IncomingMailSettings", "$InitialDirectory", \
+"DigitCharacter", "DirectedInfinity", "DotDashed", "Dotted", \
+"DragAndDrop", "E", "EndOfBuffer", "EndOfFile", "EndOfLine", \
+"EndOfString", "EulerGamma", "Expression", "False", "Flat", \
+"FontProperties", "Forward", "ForwardBackward", "Friday", "Front", \
+"FrontEndDynamicExpression", "Full", "General", "Generic", \
+"Glaisher", "GoldenAngle", "GoldenRatio", "Gray", "Green", "Here", \
+"HexadecimalCharacter", "HoldAll", "HoldAllComplete", "HoldFirst", \
+"HoldRest", "I", "Indeterminate", "Infinity", "Inherited", "Integer", \
+"Italic", "K", "Khinchin", "Large", "Larger", "Launch", "Left", \
+"LetterCharacter", "LightBlue", "LightBrown", "LightCyan", \
+"LightGray", "LightGreen", "LightMagenta", "LightOrange", \
+"LightPink", "LightPurple", "LightRed", "LightYellow", "Listable", \
+"Listen", "Locked", "Loopback", "MachinePrecision", "Magenta", \
+"Manual", "Medium", "MeshCellCentroid", "MeshCellMeasure", \
+"MeshCellQuality", "Modular", "Monday", "NHoldAll", "NHoldFirst", \
+"NHoldRest", "NonAssociative", "None", "Now", "NoWhitespace", "Null", \
+"Number", "NumberString", "Orange", "ParentForm", "Pi", "Pink", \
+"Plain", "Protected", "PunctuationCharacter", "Purple", \
+"ReadProtected", "Real", "Record", "Red", "Right", "Saturday", \
+"SequenceHold", "Small", "Smaller", "SpanFromAbove", "SpanFromBoth", \
+"SpanFromLeft", "StartOfLine", "StartOfString", "String", "Stub", \
+"Sunday", "Temporary", "Thick", "Thin", "ThisLink", "Thursday", \
+"Tiny", "Today", "Tomorrow", "Top", "Transparent", "True", "Tuesday", \
+"Undefined", "Underlined", "Wednesday", "White", "Whitespace", \
+"WhitespaceCharacter", "Word", "WordBoundary", "WordCharacter", \
+"Yellow", "Yesterday", "$Aborted", "$AllowExternalChannelFunctions", \
+"$AssertFunction", "$Assumptions", "$AsynchronousTask", \
+"$AudioInputDevices", "$AudioOutputDevices", "$BaseDirectory", \
+"$BatchInput", "$BatchOutput", "$BlockchainBase", "$BoxForms", \
+"$ByteOrdering", "$CacheBaseDirectory", "$Canceled", "$ChannelBase", \
+"$CharacterEncoding", "$CharacterEncodings", "$CloudBase", \
+"$CloudConnected", "$CloudCreditsAvailable", "$CloudEvaluation", \
+"$CloudExpressionBase", "$CloudRootDirectory", "$CloudSymbolBase", \
+"$CloudUserID", "$CloudUserUUID", "$CloudVersion", "$CommandLine", \
+"$CompilationTarget", "$ConfiguredKernels", "$Context", \
+"$ContextPath", "$ControlActiveSetting", "$Cookies", "$CookieStore", \
+"$CreationDate", "$CurrentLink", "$DateStringFormat", \
+"$DefaultAudioInputDevice", "$DefaultAudioOutputDevice", \
+"$DefaultFont", "$DefaultImagingDevice", "$DefaultLocalBase", \
+"$DefaultNetworkInterface", "$DefaultPath", "$Display", \
+"$DisplayFunction", "$DistributedContexts", "$DynamicEvaluation", \
+"$Echo", "$EmbedCodeEnvironments", "$EmbeddableServices", \
+"$EntityStores", "$Epilog", "$EvaluationCloudBase", \
+"$EvaluationCloudObject", "$EvaluationEnvironment", "$ExportFormats", \
+"$Failed", "$FontFamilies", "$FormatType", "$FrontEnd", \
+"$FrontEndSession", "$GeoLocation", "$GeoLocationCity", \
+"$GeoLocationCountry", "$GeoLocationSource", "$HistoryLength", \
+"$HomeDirectory", "$HTTPCookies", "$IgnoreEOF", \
+"$ImageFormattingWidth", "$ImagingDevice", "$ImagingDevices", \
+"$ImportFormats", "$IncomingMailSettings", "$InitialDirectory", \
 "$InitializationContexts", "$Input", "$InputFileName", \
 "$InputStreamMethods", "$Inspector", "$InstallationDate", \
 "$InstallationDirectory", "$InterpreterTypes", "$IterationLimit", \
