@@ -22,6 +22,7 @@ Begin["`Private`"]
 
 Needs["LSPServer`Color`"]
 Needs["LSPServer`Definitions`"]
+Needs["LSPServer`DocumentSymbol`"]
 Needs["LSPServer`Library`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`Utils`"]
@@ -1006,7 +1007,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "definitionProvider" -> True,
                                          "documentFormattingProvider" -> True,
                                          "documentRangeFormattingProvider" -> True,
-                                         "executeCommandProvider" -> $ExecuteCommandProvider
+                                         "executeCommandProvider" -> $ExecuteCommandProvider,
+                                         "documentSymbolProvider" -> True
                                      |>
                  |>
   |>}

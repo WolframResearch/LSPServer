@@ -48,6 +48,7 @@ message(STATUS "CODEPARSER_EXE: ${CODEPARSER_EXE}")
 set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Color.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Definitions.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/DocumentSymbol.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Hover.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Library.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
