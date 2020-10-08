@@ -272,19 +272,16 @@ Module[{logFile, res, bytes, bytess, logFileStream,
 
     Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
 
-    logFileName = "kernelLogFile";
+    logFileCounter = 1;
+    logFileName = "kernelLog-ppid" <> ToString[$ParentProcessID] <> "-pid" <> ToString[$ProcessID] <> "-";
+    logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
 
-    logFile = FileNameJoin[{logDir, logFileName <> ".txt"}];
-    If[FileExistsQ[logFile],
-      logFileCounter = 1;
-      logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
-      While[True,
-        If[FileExistsQ[logFile],
-          logFileCounter++;
-          logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
-          ,
-          Break[]
-        ]
+    While[True,
+      If[FileExistsQ[logFile],
+        logFileCounter++;
+        logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
+        ,
+        Break[]
       ]
     ];
 
