@@ -170,8 +170,9 @@ LSPInfra`Generate`$constants =
 
 
 setupSystemSymbols[] :=
+Catch[
 Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
-  experimentalNames, obsoleteString, experimentalString},
+  experimentalNames, obsoleteString, experimentalString, res},
 
   allSymbols = Names["System`*"];
 
@@ -179,7 +180,11 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
 
   Print["There are ", Length[allASCIISymbols], " System` symbols."];
 
-  SetDirectory[FileNameJoin[{$InstallationDirectory, "Documentation/English/System/ReferencePages/Symbols"}]];
+  res = SetDirectory[FileNameJoin[{$InstallationDirectory, "Documentation/English/System/ReferencePages/Symbols"}]];
+
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
   Print["scanning Documented symbols..."];
 
@@ -247,7 +252,7 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
       LSPInfra`Generate`$experimentalSymbols];
 
   ResetDirectory[];
-]
+]]
 
 dumpSystemSymbols[] :=
 Module[{dumpFile},
