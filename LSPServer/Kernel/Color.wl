@@ -2,33 +2,90 @@ BeginPackage["LSPServer`Color`"]
 
 Begin["`Private`"]
 
-
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
 
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/documentColor"]] :=
+expandContent[content:KeyValuePattern["method" -> "textDocument/documentColor"], pos_] :=
+  Catch[
+  Module[{params, id, doc, uri},
+
+    If[$Debug2,
+      log["textDocument/documentColor: enter expand"]
+    ];
+
+    id = content["id"];
+
+    If[Lookup[$CancelMap, id, False],
+
+      $CancelMap[id] =.;
+
+      If[$Debug2,
+        log["canceled"]
+      ];
+      
+      Throw[{<| "method" -> "textDocument/documentColorFencepost", "id" -> id, "params" -> params |>}]
+    ];
+
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+    
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{<| "method" -> "textDocument/documentColorFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+    ];
+
+    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+       "textDocument/concreteParse",
+       "textDocument/aggregateParse",
+       "textDocument/abstractParse",
+       "textDocument/documentColorFencepost"
+    }
+  ]]
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/documentColorFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, colorInformations, ast, colorNodes, agg, entry, cst},
+Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
+
+  If[$Debug2,
+    log["textDocument/documentColor: enter"]
+  ];
 
   id = content["id"];
+
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
+
+    If[$Debug2,
+      log["canceled"]
+    ];
+    
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+  
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
 
+  If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
+    
+    If[$Debug2,
+      log["stale"]
+    ];
+
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+
   entry = $OpenFilesMap[uri];
 
-  ast = entry[[4]];
-
-  If[ast === Null,
-    
-    cst = entry[[2]];
-    agg = CodeParser`Abstract`Aggregate[cst];
-    ast = CodeParser`Abstract`Abstract[agg];
-    
-    $OpenFilesMap[[Key[uri], 4]] = ast;
-  ];
+  ast = entry["AST"];
 
   If[FailureQ[ast],
     Throw[ast]
@@ -40,7 +97,7 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, agg, entry, cs
 
   colorInformations = DeleteCases[colorInformations, Null];
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> colorInformations |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> colorInformations |>}
 ]]
 
 
@@ -60,9 +117,12 @@ Module[{rVal, gVal, bVal, aVal, src},
 
   src-=1;
 
-  <|"range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-                    "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
-    "color" -> <| "red" -> rVal, "green" -> gVal, "blue" -> bVal, "alpha" -> aVal |> |>
+  <| "range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+                   "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
+     "color" -> <| "red" -> rVal,
+                   "green" -> gVal,
+                   "blue" -> bVal,
+                   "alpha" -> aVal |> |>
 ]
 
 
@@ -89,9 +149,12 @@ Module[{hVal, sVal, bVal, aVal, src, rgba},
 
   src-=1;
 
-  <|"range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-                    "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
-    "color" -> <| "red" -> rgba[[1]], "green" -> rgba[[2]], "blue" -> rgba[[3]], "alpha" -> rgba[[4]] |> |>
+  <| "range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+                   "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
+     "color" -> <| "red" -> rgba[[1]],
+                   "green" -> rgba[[2]],
+                   "blue" -> rgba[[3]],
+                   "alpha" -> rgba[[4]] |> |>
 ]
 
 

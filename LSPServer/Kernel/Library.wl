@@ -1,39 +1,135 @@
 BeginPackage["LSPServer`Library`"]
 
+StartBackgroundReaderThread
+
+LockQueue
+
+UnlockQueue
+
+GetQueueSize
+
+GetFrontMessageSize
+
+PopQueue
+
+GetBackgroundReaderThreadError
+
+GetStdInFEOF
+
+GetStdInFError
+
+GetStdOutFEOF
+
+GetStdOutFError
+
+WriteLineToStdOut
+
+WriteBytesToStdOut
+
+
+$LSPServerLibraryError
+
+
 loadAllFuncs
-
-libraryFunctionWrapper
-
-
-(*
-library functions calling INTO lib
-*)
-writeLineToStdOutFunc
-writeBytesToStdOutFunc
-
-startBackgroundReaderThreadFunc
-lockQueueFunc
-unlockQueueFunc
-getQueueSizeFunc
-getFrontMessageSizeFunc
-popQueueFunc
-getBackgroundReaderThreadError
-getStdInFEOF
-getStdInFError
-getStdOutFEOF
-getStdOutFError
-
-(*
-library functions coming FROM lib
-*)
-
-
 
 
 Begin["`Private`"]
 
+Needs["LSPServer`"]
+Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
 Needs["PacletManager`"] (* for PacletInformation *)
+
+
+$LSPServerLibraryError = <|
+  "FREAD_FAILED" -> 1,
+  "UNEXPECTED_LINEFEED" -> 2,
+  "EXPECTED_LINEFEED" -> 3,
+  "UNRECOGNIZED_HEADER" -> 4,
+  "FWRITE_FAILED" -> 5,
+  "FFLUSH_FAILED" -> 6
+|>
+
+
+StartBackgroundReaderThread[] :=
+Module[{res},
+  res = libraryFunctionWrapper[startBackgroundReaderThreadFunc];
+  res
+]
+
+LockQueue[] :=
+Module[{res},
+  res = libraryFunctionWrapper[lockQueueFunc];
+  res
+]
+
+UnlockQueue[] :=
+Module[{res},
+  res = libraryFunctionWrapper[unlockQueueFunc];
+  res
+]
+
+GetQueueSize[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getQueueSizeFunc];
+  res
+]
+
+GetFrontMessageSize[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getFrontMessageSizeFunc];
+  res
+]
+
+PopQueue[numBytes_Integer] :=
+Module[{bytes},
+  bytes = ByteArray[Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}]];
+  libraryFunctionWrapper[popQueueFunc, bytes];
+  bytes
+]
+
+GetBackgroundReaderThreadError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getBackgroundReaderThreadError];
+  res
+]
+
+GetStdInFEOF[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdInFEOF];
+  res
+]
+
+GetStdInFError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdInFError];
+  res
+]
+
+GetStdOutFEOF[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdOutFEOF];
+  res
+]
+
+GetStdOutFError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStdOutFError];
+  res
+]
+
+WriteLineToStdOut[line_String] :=
+Module[{res},
+  res = libraryFunctionWrapper[writeLineToStdOutFunc, line];
+  res
+]
+
+WriteBytesToStdOut[bytes_ByteArray] :=
+Module[{res},
+  res = libraryFunctionWrapper[writeBytesToStdOutFunc, bytes];
+  res
+]
+
 
 
 $LSPServerLib := $LSPServerLib =
@@ -46,8 +142,6 @@ Module[{res},
   ];
   res
 ]]
-
-
 
 
 

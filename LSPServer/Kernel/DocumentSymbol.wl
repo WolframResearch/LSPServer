@@ -2,11 +2,11 @@ BeginPackage["LSPServer`DocumentSymbol`"]
 
 Begin["`Private`"]
 
-
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
+
 
 $SymbolKind = <|
   "File" -> 1,
@@ -41,22 +41,60 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
 Catch[
 Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
 
+  If[$Debug2,
+    log["textDocument/documentSymbol: enter"]
+  ];
+
   id = content["id"];
+
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
+
+    If[$Debug2,
+      log["canceled"]
+    ];
+    
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
 
+  If[isStale[$ContentQueue, uri],
+    
+    If[$Debug2,
+      log["stale"]
+    ];
+
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+    
   entry = $OpenFilesMap[uri];
 
-  ast = entry[[4]];
+  ast = Lookup[entry, "AST", Null];
 
   If[ast === Null,
     
-    cst = entry[[2]];
-    agg = CodeParser`Abstract`Aggregate[cst];
+    agg = Lookup[entry, "Agg", Null];
+
+    If[agg === Null,
+      
+      cst = entry["CST"];
+
+      agg = CodeParser`Abstract`Aggregate[cst];
+      
+      entry["Agg"] = agg;
+
+      $OpenFilesMap[uri] = entry
+    ];
+    
     ast = CodeParser`Abstract`Abstract[agg];
     
-    $OpenFilesMap[[Key[uri], 4]] = ast;
+    entry["AST"] = ast;
+
+    $OpenFilesMap[uri] = entry
   ];
 
   If[FailureQ[ast],
@@ -64,10 +102,10 @@ Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
   ];
 
   defs = Cases[
-      ast,
-      CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {_, _}, KeyValuePattern["Definition" -> _]],
-      Infinity
-    ];
+    ast,
+    CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {_, _}, KeyValuePattern["Definition" -> _]],
+    Infinity
+  ];
     
   symbolInfo = <| "name" -> #[[1]]["String"],
                   "kind" -> $SymbolKind[#[[2]]],
@@ -77,7 +115,7 @@ Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
                   "selectionRange" -> <|
                     "start" -> <| "line" -> #[[1]][[3, Key[Source], 1, 1]] - 1, "character" -> #[[1]][[3, Key[Source], 1, 2]] - 1 |>,
                     "end" -> <| "line" -> #[[1]][[3, Key[Source], 2, 1]] - 1, "character" -> #[[1]][[3, Key[Source], 2, 2]] - 1 |> |>
-               |>& /@ (findDefSymbol[#[[2, 1]]]& /@ defs);
+               |>& /@ DeleteCases[findDefSymbol[#[[2, 1]]]& /@ defs, $Failed];
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> symbolInfo |>}
 ]]
@@ -85,24 +123,39 @@ Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
 
 
 
-findDefSymbol[n:LeafNode[Symbol, _, _]] := {n, "Variable"}
+findDefSymbol[n:LeafNode[Symbol, _, KeyValuePattern[Source -> _]]] :=
+  {n, "Variable"}
 
-findDefSymbol[CallNode[LeafNode[Symbol, "HoldPattern", _], {GroupNode[GroupSquare, {_, node_, _}, _]}, _]] := findDefSymbol[node]
+findDefSymbol[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, KeyValuePattern[Source -> _]]] :=
+  findDefSymbol[node]
 
-findDefSymbol[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, _]] := findDefSymbol[node]
-findDefSymbol[CallNode[LeafNode[Symbol, "Pattern", _], {_, node_}, _]] := findDefSymbol[node]
-findDefSymbol[CallNode[LeafNode[Symbol, "PatternTest", _], {node_, _}, _]] := findDefSymbol[node]
-findDefSymbol[CallNode[LeafNode[Symbol, "HoldPattern", _], {node_}, _]] := findDefSymbol[node]
+findDefSymbol[CallNode[LeafNode[Symbol, "Pattern", _], {_, node_}, KeyValuePattern[Source -> _]]] :=
+  findDefSymbol[node]
+
+findDefSymbol[CallNode[LeafNode[Symbol, "PatternTest", _], {node_, _}, KeyValuePattern[Source -> _]]] :=
+  findDefSymbol[node]
+
+findDefSymbol[CallNode[LeafNode[Symbol, "HoldPattern", _], {node_}, KeyValuePattern[Source -> _]]] :=
+  findDefSymbol[node]
 
 (*
 just give the first arg here
 *)
-findDefSymbol[CallNode[LeafNode[Symbol, "MessageName", _], {node_, ___}, _]] := {findDefSymbol[node][[1]], "Constant"}
+findDefSymbol[CallNode[LeafNode[Symbol, "MessageName", _], {node_, ___}, KeyValuePattern[Source -> _]]] :=
+  (If[FailureQ[#], #, {#[[1]], "Constant"}])&[findDefSymbol[node]]
 
+findDefSymbol[CallNode[node_, _, KeyValuePattern[Source -> _]]] :=
+  (If[FailureQ[#], #, {#[[1]], "Function"}])&[findDefSymbol[node]]
+
+(*
+findDefSymbol[CallNode[LeafNode[Symbol, "HoldPattern", _], {GroupNode[GroupSquare, {_, node_, _}, _]}, _]] := findDefSymbol[node]
+*)
+
+(*
 findDefSymbol[CallNode[{node_, ___}, _, _]] := {findDefSymbol[node][[1]], "Function"}
+*)
 
-findDefSymbol[CallNode[node_, _, _]] := {findDefSymbol[node][[1]], "Function"}
-
+(*
 findDefSymbol[BinaryNode[Condition, {node_, _, _}, _]] := findDefSymbol[node]
 findDefSymbol[BinaryNode[Pattern, {_, _, node_}, _]] := findDefSymbol[node]
 findDefSymbol[BinaryNode[BinaryAt, {node_, _, _}, _]] := findDefSymbol[node]
@@ -117,8 +170,10 @@ findDefSymbol[GroupNode[GroupParen, {_, node_, _}, _]] := findDefSymbol[node]
 
 findDefSymbol[CompoundNode[PatternBlank, {_, node_}, _]] := findDefSymbol[node]
 findDefSymbol[CompoundNode[Blank, {_, node_}, _]] := findDefSymbol[node]
+*)
 
-findDefSymbol[args___] := Failure["InternalUnhandled", <|"Function"->findDefSymbol, "Arguments"->{args}|>]
+findDefSymbol[_] :=
+  $Failed
 
 
 

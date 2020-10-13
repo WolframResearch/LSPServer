@@ -13,13 +13,37 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
 Catch[
 Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLine, positionColumn, pre, cstTabs, syms, toks, nums},
 
+  If[$Debug2,
+    log["textDocument/hover: enter"]
+  ];
+
   id = content["id"];
+
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
+
+    If[$Debug2,
+      log["canceled"]
+    ];
+    
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+  
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
-  position = params["position"];
 
-  entry = $OpenFilesMap[uri];
+  If[isStale[$ContentQueue, uri],
+    
+    If[$Debug2,
+      log["stale"]
+    ];
+
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+  
+  position = params["position"];
 
   positionLine = position["line"];
   positionColumn = position["character"];
@@ -30,8 +54,15 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
   positionLine++;
   positionColumn++;
 
-  text = entry[[1]];
-  cstTabs = entry[[3]];
+  
+  If[$Debug2,
+    log["hover: before parse"]
+  ];
+
+  entry = $OpenFilesMap[uri];
+  
+  text = entry["Text"];
+  cstTabs = Lookup[entry, "CSTTabs", Null];
 
   If[cstTabs === Null,
     (*
@@ -40,7 +71,13 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
     *)
     cstTabs = CodeConcreteParse[text, "TabWidth" -> 4];
     
-    $OpenFilesMap[[Key[uri], 3]] = cstTabs;
+    entry["CSTTabs"] = cstTabs;
+
+    $OpenFilesMap[uri] = entry
+  ];
+
+  If[$Debug2,
+    log["hover: after parse"]
   ];
 
   If[StringContainsQ[text, "\t"],
@@ -65,19 +102,26 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
 
   nums = Cases[toks, LeafNode[Integer | Real | Rational, _, _], Infinity];
 
-  Which[
-    strs != {},
-      handleStrings[id, strs]
-    ,
-    syms != {},
-      handleSymbols[id, syms]
-    ,
-    nums != {},
-      handleNumbers[id, nums]
-    ,
-    True,
-      {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
-  ]
+  res =
+    Which[
+      strs != {},
+        handleStrings[id, strs]
+      ,
+      syms != {},
+        handleSymbols[id, syms]
+      ,
+      nums != {},
+        handleNumbers[id, nums]
+      ,
+      True,
+        {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
+    ];
+
+  If[$Debug2,
+    log["hover: exiting"]
+  ];
+
+  res
 ]]
 
 
@@ -436,10 +480,10 @@ containsUnicodeCharacterQ[str_String] :=
   StringContainsQ[str, RegularExpression[
         "(?<!\\\\)\\\\(?:\\\\\\\\)*(?# odd number of leading backslashes)(?:\
 (?:\\[[a-zA-Z0-9]+\\])|(?# \\[Alpha] long name)\
-(?::[0-9a-fA-F]{4})|(?# \\:xxxx hex)\
-(?:\\.[0-9a-fA-F]{2})|(?# \\.xx hex)\
+(?::[0-9a-fA-F]{4})|(?# \\:xxxx 4 hex)\
+(?:\\.[0-9a-fA-F]{2})|(?# \\.xx 2 hex)\
 (?:[0-7]{3})|(?# \\xxx octal)\
-(?:\\|[0-9a-fA-F]{6})(?# \\|xxxxxx hex)\
+(?:\\|[0-9a-fA-F]{6})(?# \\|xxxxxx 6 hex)\
 )"]]
 
 
@@ -486,6 +530,8 @@ interpretBox[RowBox[children_]] :=
 
 (*
 HACK: BeginPackage::usage has typos
+
+TR symbol instead of "TR"
 *)
 (* interpretBox[StyleBox[a_, TR]] :=
   interpretBox[a] *)
@@ -602,10 +648,10 @@ interpretBox[s_Symbol] := (
 (*
 HACK: BeginPackage::usage has typos
 *)
-interpretBox[i_Integer] := (
+(* interpretBox[i_Integer] := (
   Message[interpretBox::unhandled, Integer];
   "\[UnknownGlyph]"
-)
+) *)
 
 (*
 HACK: Riffle::usage has a Cell expression
@@ -624,18 +670,18 @@ interpretBox[Cell[TextData[a_], _String, ___Rule]] := (
 HACK: RandomImage::usage has a typos (missing comma) and creates this expression:
 ("")^2 (", ")^2 type
 *)
-interpretBox[_Times] := (
+(* interpretBox[_Times] := (
   Message[interpretBox::unhandled, "strange Times (probably missing a comma)"];
   "\[UnknownGlyph]"
-)
+) *)
 
 (*
 HACK: NeuralFunctions`Private`MaskAudio::usage has weird typos
 *)
-interpretBox[_PatternTest] := (
+(* interpretBox[_PatternTest] := (
   Message[interpretBox::unhandled, "strange PatternTest"];
   "\[UnknownGlyph]"
-)
+) *)
 
 interpretBox[b_] := (
   Message[interpretBox::unhandled2, b];
@@ -674,6 +720,8 @@ escapeMarkdown[s_String] :=
 
 (*
 Fix the terrible, terrible design mistake that prevents linear syntax embedded in strings from round-tripping
+
+TODO: dump explanation about terrible, terrible design mistake here
 *)
 reassembleEmbeddedLinearSyntax[toks_] :=
   Module[{embeddedLinearSyntax, openerPoss, closerPoss},

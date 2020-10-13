@@ -2,20 +2,87 @@ BeginPackage["LSPServer`Definitions`"]
 
 Begin["`Private`"]
 
-
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/definition"]] :=
+
+expandContent[content:KeyValuePattern["method" -> "textDocument/definition"], pos_] :=
+  Catch[
+  Module[{params, id},
+
+    If[$Debug2,
+      log["textDocument/definition: enter expand"]
+    ];
+    
+    id = content["id"];
+
+    If[Lookup[$CancelMap, id, False],
+
+      $CancelMap[id] =.;
+
+      If[$Debug2,
+        log["canceled"]
+      ];
+      
+      Throw[{<| "method" -> "textDocument/definitionFencepost", "id" -> id, "params" -> params |>}]
+    ];
+
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+    
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{<| "method" -> "textDocument/definitionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+    ];
+
+    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+       "textDocument/concreteParse",
+       "textDocument/aggregateParse",
+       "textDocument/abstractParse",
+       "textDocument/definitionFencepost"
+    }
+  ]]
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/definitionFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, namePat, srcs, entry, cst, agg},
+Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, namePat, srcs, entry},
+
+  If[$Debug2,
+    log["textDocument/definition: enter"]
+  ];
 
   id = content["id"];
+
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
+
+    If[$Debug2,
+      log["canceled"]
+    ];
+    
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+  
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
+
+  If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
+    
+    If[$Debug2,
+      log["stale"]
+    ];
+
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
 
   position = params["position"];
   line = position["line"];
@@ -29,16 +96,7 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
 
   entry = $OpenFilesMap[uri];
 
-  ast = entry[[4]];
-
-  If[ast === Null,
-    
-    cst = entry[[2]];
-    agg = CodeParser`Abstract`Aggregate[cst];
-    ast = CodeParser`Abstract`Abstract[agg];
-    
-    $OpenFilesMap[[Key[uri], 4]] = ast;
-  ];
+  ast = entry["AST"];
 
   If[FailureQ[ast],
     Throw[ast]
@@ -50,7 +108,7 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
   cases = Cases[ast, LeafNode[Symbol, _, KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
   If[cases == {},
-    Throw[<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}]
   ];
 
   sym = cases[[1]];
@@ -76,16 +134,13 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
 
   srcs = #[[3, Key[Source]]]& /@ cases;
 
-  locations = (<|   "uri" -> uri,
+  locations = (<| "uri" -> uri,
                   "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
-                                  "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
+                                "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
                |>&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs;
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>}
 ]]
-
-
-
 
 
 End[]

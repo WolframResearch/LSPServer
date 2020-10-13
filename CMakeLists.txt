@@ -46,12 +46,19 @@ message(STATUS "BUG349779_TIMEOUT: ${BUG349779_TIMEOUT}")
 message(STATUS "CODEPARSER_EXE: ${CODEPARSER_EXE}")
 
 set(STATIC_WL_PACLET_SOURCES
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/BracketMismatches.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/CodeAction.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Color.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Definitions.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Diagnostics.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/DocumentSymbol.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Formatting.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Hover.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/ImplicitTokens.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Library.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/References.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/ServerDiagnostics.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl
 )

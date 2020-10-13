@@ -8,7 +8,27 @@ stringLineTake
 
 log
 
+logFull
+
+lintToDiagnostics
+
+isStale
+
 Begin["`Private`"]
+
+Needs["LSPServer`"]
+Needs["CodeInspector`"]
+Needs["CodeInspector`Utils`"]
+Needs["CodeParser`"]
+
+
+$DiagnosticSeverity = <|
+  "Error" -> 1,
+  "Warning" -> 2,
+  "Information" -> 3,
+  "Hint" -> 4
+|>
+
 
 (*
 input:  "file:///Users/brenton/development/stash/COD/ast/build/test.m"
@@ -63,6 +83,65 @@ timeString[] := DateString[{"Hour24", ":", "Minute", ":", "SecondExact", " "}]
 
 
 log[args___] := Write[$Messages, timeString[] //OutputForm, Sequence @@ (OutputForm /@ {args})]
+
+logFull[args___] := Write[$Messages, timeString[] //OutputForm, Sequence @@ {args}]
+
+
+
+lintToDiagnostics[InspectionObject[tag_, message_, severity_, data_]] :=
+Catch[
+Module[{srcs},
+
+  If[!KeyExistsQ[data, Source],
+    (*
+    It is possible that abstracted problems may not have Source
+
+    An example would be  a < b > c  being abstracted as an Inequality expression
+
+    Inequality is an undocumented symbol, but it does not actually show up in the source code
+
+    So it would be wrong to report "Inequality is an undocumented symbol" for  a < b > c
+    *)
+    Throw[{}]
+  ];
+
+  srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
+
+  ((<| "code" -> tag,
+       "message" -> plainify[message],
+       "severity" -> lintSeverityToLSPSeverity[severity],
+       "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                     "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
+       "source" -> "wolfram lint" |>)&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs
+]]
+
+
+(*
+convert from CodeTools Lint severities to LSP severities
+*)
+lintSeverityToLSPSeverity[severity_String] :=
+Switch[severity,
+  "Formatting" | "ImplicitTimes", $DiagnosticSeverity["Hint"],
+  "Remark", $DiagnosticSeverity["Information"],
+  "Warning", $DiagnosticSeverity["Warning"],
+  "Error" | "Fatal", $DiagnosticSeverity["Error"]
+]
+
+
+
+(*
+
+Are there any didChangeFenceposts or didCloseFenceposts in the queue with the same uri?
+
+Then we know that this current message is stale
+
+*)
+
+isStale[contents_, uri_] :=
+  AnyTrue[contents,
+      MatchQ[#, KeyValuePattern[{
+        "method" -> "textDocument/didChangeFencepost" | "textDocument/didCloseFencepost",
+        "params" -> KeyValuePattern["textDocument" -> KeyValuePattern["uri" -> uri]]}]]&]
 
 
 
