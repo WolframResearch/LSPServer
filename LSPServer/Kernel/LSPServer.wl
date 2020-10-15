@@ -1234,6 +1234,8 @@ Module[{params, doc, uri, cst, text, entry},
     Throw[cst]
   ];
 
+  cst[[1]] = File;
+
   entry["CST"] = cst;
 
   (*
@@ -1309,6 +1311,8 @@ Module[{params, doc, uri, text, entry, cstTabs},
 
     Throw[cstTabs]
   ];
+
+  cstTabs[[1]] = File;
 
   entry["CSTTabs"] = cstTabs;
 

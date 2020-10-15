@@ -74,6 +74,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
     cst = entry["CST"];
 
     If[$Debug2,
+      log["cst: ", stringLineTake[StringTake[ToString[cst], UpTo[1000]], UpTo[20]]];
       log["before CodeInspectCST"]
     ];
 
@@ -126,6 +127,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiag
     agg = entry["Agg"];
 
     If[$Debug2,
+      log["agg: ", stringLineTake[StringTake[ToString[agg], UpTo[1000]], UpTo[20]]];
       log["before CodeInspectAgg"]
     ];
 
@@ -178,6 +180,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
     ast = entry["AST"];
 
     If[$Debug2,
+      log["ast: ", stringLineTake[StringTake[ToString[ast], UpTo[1000]], UpTo[20]]];
       log["before CodeInspectAST"]
     ];
 
@@ -317,8 +320,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnosti
     lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
 
     If[$Debug2,
-      log["lints: ", stringLineTake[StringTake[ToString[lints, InputForm], UpTo[1000]], UpTo[20]]];
-      log["...\n"]
+      log["lints: ", #["Tag"]& /@ lints]
     ];
 
     diagnostics = lintToDiagnostics /@ lints;
