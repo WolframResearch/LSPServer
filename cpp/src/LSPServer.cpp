@@ -31,8 +31,9 @@ struct Message {
     std::unique_ptr<unsigned char []> Body;
     size_t Size;
     
-    Message() {}
-    Message(std::vector<std::string> Headers, std::unique_ptr<unsigned char []> Body, size_t Size) : Headers(Headers), Body(std::move(Body)), Size(Size) {}
+    Message() : Headers(), Body(), Size() {}
+    Message(std::vector<std::string> Headers, std::unique_ptr<unsigned char []> Body, size_t Size) :
+        Headers(Headers), Body(std::move(Body)), Size(Size) {}
 };
 
 
