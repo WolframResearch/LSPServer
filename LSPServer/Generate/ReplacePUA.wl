@@ -6,10 +6,6 @@ Begin["`Private`"]
 Needs["LSPServer`Generate`GenerateSources`"]
 
 
-
-Print["Generating ReplacePUA..."]
-
-
 puaChars = Select[importedLongNames, (16^^e000 <= #[[2]] <= 16^^f8ff)&]
 
 replacements = Select[puaChars, MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]]&]
@@ -51,6 +47,10 @@ replacePUARules =
 	]
 
 
+generate[] := (
+
+Print["Generating ReplacePUA..."];
+
 replacePUAWL = {
 "
 (*
@@ -75,16 +75,22 @@ End[]
 
 EndPackage[]
 "
-}
+};
 
-Print["exporting ReplacePUA.wl"]
-res = Export[FileNameJoin[{generatedWLDir, "ReplacePUA.wl"}], Column[replacePUAWL], "String"]
+Print["exporting ReplacePUA.wl"];
+res = Export[FileNameJoin[{generatedWLDir, "ReplacePUA.wl"}], Column[replacePUAWL], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
-]
+];
 
+Print["Done ReplacePUA..."];
+)
+
+If[script === $InputFileName,
+generate[]
+]
 
 End[]
 

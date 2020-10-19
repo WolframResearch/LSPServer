@@ -2,23 +2,7 @@ BeginPackage["LSPInfra`Generate`ProcessSymbols`"]
 
 Begin["`Private`"]
 
-
-Print["Processing Symbols..."]
-
-buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
-
-If[MissingQ[buildDirFlagPosition],
-  Print["Cannot proceed; Unsupported build directory"];
-  Quit[1]
-]
-
-buildDir = $CommandLine[[buildDirFlagPosition[[1]] + 1]]
-
-If[!DirectoryQ[buildDir],
-  Print["Cannot proceed; Unsupported build directory"];
-  Quit[1]
-]
-
+Needs["LSPServer`Generate`GenerateSources`"]
 
 
 LSPInfra`Generate`$constants =
@@ -267,11 +251,19 @@ Module[{dumpFile},
     LSPInfra`Generate`$obsoleteSymbols}]
 ]
 
-setupSystemSymbols[]
+generate[] := (
+Print["Processing Symbols..."];
 
-dumpSystemSymbols[]
+setupSystemSymbols[];
+
+dumpSystemSymbols[];
 
 Print["Done Processing Symbols"]
+)
+
+If[script === $InputFileName,
+generate[]
+]
 
 End[]
 

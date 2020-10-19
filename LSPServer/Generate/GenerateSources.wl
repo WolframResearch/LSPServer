@@ -8,6 +8,8 @@ srcDirFlagPosition
 
 srcDir
 
+script
+
 generatedWLDir
 
 dataDir
@@ -29,8 +31,6 @@ Begin["`Private`"]
 
 longNameToCharacterCode[name_] := importedLongNames[name][[2]]
 
-
-Print["Generating additional required source files..."]
 
 
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
@@ -61,27 +61,21 @@ If[!DirectoryQ[srcDir],
   Quit[1]
 ]
 
+scriptPosition = FirstPosition[$CommandLine, "-script"]
+
+If[MissingQ[scriptPosition],
+  Print["Cannot proceed; Unsupported script"];
+  Quit[1]
+]
+
+script = $CommandLine[[scriptPosition[[1]] + 1]]
+
 
 
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
 
 
 dataDir = FileNameJoin[{srcDir, "LSPServer", "Data"}]
-
-PrependTo[$Path, srcDir]
-
-If[FailureQ[FindFile["LSPServer`Generate`GenerateSources`"]],
-  Print["LSPServer`Generate`GenerateSources` could not be found."];
-  Quit[1]
-]
-
-Print["Clean..."]
-
-Quiet[DeleteDirectory[generatedWLDir, DeleteContents -> True], DeleteDirectory::nodir]
-
-Quiet[CreateDirectory[generatedWLDir], CreateDirectory::filex]
-
-Print["Done Clean"]
 
 
 
@@ -90,10 +84,6 @@ importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]]
 
 
-Get["LSPServer`Generate`ReplacePUA`"]
-
-
-Print["Done generating additional required source files"]
 
 End[]
 

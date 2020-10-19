@@ -61,34 +61,14 @@ set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl
 )
 
-#
-# Used during the build process
-#
-set(WL_GENERATE_SOURCES_SOURCES
-	${PROJECT_SOURCE_DIR}/LSPServer/Generate/GenerateSources.wl
-	${PROJECT_SOURCE_DIR}/LSPServer/Generate/ReplacePUA.wl
-)
-
 set(PROCESSED_SYMBOLS_DUMP ${PROJECT_BINARY_DIR}/processedSymbols.mx)
-
-set(WL_GENERATE_CREATEPACLETARCHIVE_SOURCES
-	${PROJECT_SOURCE_DIR}/${PACLET}/Generate/CreatePacletArchive.wl
-)
 
 set(PACLETINFO_SOURCE
 	${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.wl.in
 )
 
-set(WL_DATA_SOURCES
-	${PROJECT_SOURCE_DIR}/LSPServer/Data/LongNames.wl
-)
-
 set(GENERATED_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_BINARY_DIR}/generated/wl/ReplacePUA.wl
-)
-
-set(GENERATED_SOURCES
-	${GENERATED_WL_PACLET_KERNEL_SOURCES}
 )
 
 
@@ -170,34 +150,23 @@ endforeach()
 
 
 #
-# generated-srcs target
+# generated srcs
 #
-add_custom_target(generated-srcs
-	DEPENDS
-		${GENERATED_SOURCES}
-)
 
-#
-# Generate source files
-#
-# Run the GenerateSources.wl script to generate additional required source files
-#
 add_custom_command(
 	OUTPUT
-		${GENERATED_SOURCES}
+		${PROJECT_BINARY_DIR}/generated/wl/ReplacePUA.wl
 	DEPENDS
-		${WL_DATA_SOURCES}
-		${WL_GENERATE_SOURCES_SOURCES}
+		${PROJECT_SOURCE_DIR}/LSPServer/Data/LongNames.wl
+		${PROJECT_SOURCE_DIR}/LSPServer/Generate/ReplacePUA.wl
+		${PROJECT_SOURCE_DIR}/LSPServer/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -E echo "GENERATED_WL_PACLET_SOURCES: ${GENERATED_WL_PACLET_SOURCES}"
-	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/GenerateSources.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ReplacePUA.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	VERBATIM
 	WORKING_DIRECTORY
 		${PROJECT_SOURCE_DIR}
 )
-
 
 add_custom_command(
 	OUTPUT
@@ -206,7 +175,11 @@ add_custom_command(
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/LSPServer/Generate/ProcessSymbols.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/LSPServer/Generate/ProcessSymbols.wl
+		${PROJECT_SOURCE_DIR}/LSPServer/Generate/GenerateSources.wl
 		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+	VERBATIM
+	WORKING_DIRECTORY
+		${PROJECT_SOURCE_DIR}
 )
 
 set(COPIED_PROCESSED_SYMBOLS_DUMP ${PROJECT_BINARY_DIR}/paclet/LSPServer/Resources/Generated/processedSymbols.mx)
@@ -312,23 +285,15 @@ endif(MSVC)
 
 
 
-
+#
+# paclet target
+#
 
 set(PACLET_SOURCES
 	${COPIED_WL_PACLET_SOURCES}
 	${COPIED_PROCESSED_SYMBOLS_DUMP}
 	lspserver-lib
-	${WL_GENERATE_CREATEPACLETARCHIVE_SOURCES}
 )
-
-
-
-
-
-
-#
-# paclet target
-#
 
 if(LOCAL_BUILD)
 set(PACLET_OUTPUT ${PROJECT_BINARY_DIR}/paclet/${PACLET}-${LOCAL_BUILD_VERSION}.paclet)
