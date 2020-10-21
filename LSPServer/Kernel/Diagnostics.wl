@@ -33,12 +33,12 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
     params = content["params"];
 
     <| "method" -> #, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/runConcreteDiagnostics",
-      "textDocument/aggregateParse",
-      "textDocument/runAggregateDiagnostics",
-      "textDocument/abstractParse",
-      "textDocument/runAbstractDiagnostics"
+       "textDocument/concreteParse",
+       "textDocument/runConcreteDiagnostics",
+       "textDocument/aggregateParse",
+       "textDocument/runAggregateDiagnostics",
+       "textDocument/abstractParse",
+       "textDocument/runAbstractDiagnostics"
     }
   ]]
 

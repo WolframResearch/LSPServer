@@ -32,9 +32,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismat
     params = content["params"];
 
     <| "method" -> #, "params" -> params |>& /@ {
-      "textDocument/concreteTabsParse",
-      "textDocument/aggregateTabsParse",
-      "textDocument/runBracketMismatchesFencepost"
+       "textDocument/concreteTabsParse",
+       "textDocument/aggregateTabsParse",
+       "textDocument/runBracketMismatchesFencepost"
     }
   ]]
 

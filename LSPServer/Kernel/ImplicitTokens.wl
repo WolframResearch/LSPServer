@@ -33,9 +33,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
     params = content["params"];
 
     <| "method" -> #, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/aggregateParse",
-      "textDocument/runImplicitTokensFencepost"
+       "textDocument/concreteParse",
+       "textDocument/aggregateParse",
+       "textDocument/runImplicitTokensFencepost"
     }
   ]]
 
