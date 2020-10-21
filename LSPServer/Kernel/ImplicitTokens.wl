@@ -90,20 +90,21 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
     ];
 
     If[$Debug2,
-      log["before CodeInspectImplicitTokensCSTSummarize"]
+      log["before CodeInspectImplicitTokensAgg"]
     ];
 
     implicitTokens = CodeInspectImplicitTokensAgg[agg];
 
     If[$Debug2,
-      log["after CodeInspectImplicitTokensCSTSummarize"]
+      log["after CodeInspectImplicitTokensAgg"];
+      log["implicitTokens (up to 20): ", Take[implicitTokens, UpTo[20]]]
     ];
 
     If[$Debug2,
       log["before CodeInspectImplicitTokensCSTSummarize"]
     ];
 
-    inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst, implicitTokens, "TabWidth" -> 1];
+    inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst, implicitTokens];
 
     If[$Debug2,
       log["after CodeInspectImplicitTokensCSTSummarize"]
@@ -169,7 +170,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitT
       Throw[{}]
     ];
     
-    entry = Lookup[$OpenFilesMap, url, Null];
+    entry = Lookup[$OpenFilesMap, uri, Null];
 
     (*
     Possibly cleared

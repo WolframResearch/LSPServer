@@ -1213,7 +1213,7 @@ Module[{params, doc, uri, cst, text, entry},
     log["before CodeConcreteParse"]
   ];
 
-  cst = CodeConcreteParse[text, "TabWidth" -> 1];
+  cst = CodeConcreteParse[text];
 
   If[$Debug2,
     log["after CodeConcreteParse"]
