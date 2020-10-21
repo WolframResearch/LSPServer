@@ -144,7 +144,23 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEd
           log["before ML4Code`SuggestBracketEdits"]
         ];
 
-        suggestions = TimeConstrained[ML4Code`SuggestBracketEdits[badChunk], $ML4CodeTimeLimit, {}] /. $Failed -> {};
+        (*
+        Using $DefaultTabWidth of 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
+
+        I do not feel like going and changing the ML4Code code to properly call CodeConcreteParse with "TabWidth" -> 4
+
+        FIXME: Must use the tab width from the editor
+        *)
+        Block[{CodeParser`Private`$DefaultTabWidth = 4},
+          suggestions =
+            TimeConstrained[
+              ML4Code`SuggestBracketEdits[badChunk]
+              ,
+              $ML4CodeTimeLimit
+              ,
+              {}
+            ] /. $Failed -> {};
+        ];
 
         If[$Debug2,
           log["after ML4Code`SuggestBracketEdits"]
