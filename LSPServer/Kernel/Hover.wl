@@ -375,20 +375,20 @@ Module[{lines, line, result, syms, usage, a1},
     
     Do not care about CONSTANT
 
-    If[MemberQ[LSPInfra`Generate`$constants, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$constants, sym],
       line = line <> "\n\nCONSTANT"
     ];
     *)
 
-    If[MemberQ[LSPInfra`Generate`$undocumentedSymbols, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, sym],
       line = line <> "\n\nUNDOCUMENTED"
     ];
 
-    If[MemberQ[LSPInfra`Generate`$experimentalSymbols, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, sym],
       line = line <> "\n\nEXPERIMENTAL"
     ];
 
-    If[MemberQ[LSPInfra`Generate`$obsoleteSymbols, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, sym],
       line = line <> "\n\nOBSOLETE"
     ];
 

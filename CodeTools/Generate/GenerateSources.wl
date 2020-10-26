@@ -1,4 +1,4 @@
-BeginPackage["LSPServer`Generate`GenerateSources`"]
+BeginPackage["CodeTools`Generate`GenerateSources`"]
 
 buildDirFlagPosition
 
@@ -12,26 +12,7 @@ script
 
 generatedWLDir
 
-dataDir
-
-
-importedLongNames
-
-importedUnsupportedLongNames
-
-
-longNameToCharacterCode
-
-longNameToHexDigits
-
-codePointToHexDigits
-
-
 Begin["`Private`"]
-
-longNameToCharacterCode[name_] := importedLongNames[name][[2]]
-
-
 
 buildDirFlagPosition = FirstPosition[$CommandLine, "-buildDir"]
 
@@ -70,20 +51,7 @@ If[MissingQ[scriptPosition],
 
 script = $CommandLine[[scriptPosition[[1]] + 1]]
 
-
-
 generatedWLDir = FileNameJoin[{buildDir, "generated", "wl"}]
-
-
-dataDir = FileNameJoin[{srcDir, "LSPServer", "Data"}]
-
-
-
-importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
-
-importedUnsupportedLongNames = Keys[Select[importedLongNames, #[[1]] === UnsupportedCharacter &]]
-
-
 
 End[]
 

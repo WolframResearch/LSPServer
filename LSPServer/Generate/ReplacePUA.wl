@@ -3,7 +3,12 @@ BeginPackage["LSPServer`Generate`ReplacePUA`"]
 
 Begin["`Private`"]
 
-Needs["LSPServer`Generate`GenerateSources`"]
+Needs["CodeTools`Generate`GenerateSources`"]
+
+
+dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
+
+importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 
 
 puaChars = Select[importedLongNames, (16^^e000 <= #[[2]] <= 16^^f8ff)&]

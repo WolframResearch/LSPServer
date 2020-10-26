@@ -1,11 +1,12 @@
-BeginPackage["LSPInfra`Generate`ProcessSymbols`"]
+BeginPackage["WolframLanguageSyntax`Generate`ProcessSymbols`"]
 
 Begin["`Private`"]
 
-Needs["LSPServer`Generate`GenerateSources`"]
+Needs["CodeTools`Generate`GenerateSources`"]
 
 
-LSPInfra`Generate`$constants =
+
+WolframLanguageSyntax`Generate`$constants =
 {
 
 "\\[FormalA]", "\\[FormalB]", "\\[FormalC]", "\\[FormalD]", "\\[FormalE]",
@@ -178,9 +179,9 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
 
   Print["There are ", Length[documentedSymbols], " documented symbols in System`. (there are also ", Length[Complement[documentedSymbols, allASCIISymbols]], " documented symbols not in System`)"];
 
-  LSPInfra`Generate`$undocumentedSymbols = Complement[allASCIISymbols, documentedSymbols];
+  WolframLanguageSyntax`Generate`$undocumentedSymbols = Complement[allASCIISymbols, documentedSymbols];
 
-  Print["There are ", Length[LSPInfra`Generate`$undocumentedSymbols], " undocumented symbols in System`."];
+  Print["There are ", Length[WolframLanguageSyntax`Generate`$undocumentedSymbols], " undocumented symbols in System`."];
 
   Print["scanning Obsolete symbols... \[WatchIcon]"];
 
@@ -198,12 +199,12 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
 
   obsoleteNames = Select[names, FindList[#, obsoleteString, 100] != {}&];
 
-  LSPInfra`Generate`$obsoleteSymbols = StringDrop[#, -3]& /@ obsoleteNames;
+  WolframLanguageSyntax`Generate`$obsoleteSymbols = StringDrop[#, -3]& /@ obsoleteNames;
 
-  Print["There are ", Length[LSPInfra`Generate`$obsoleteSymbols], " obsolete symbols in System`."];
+  Print["There are ", Length[WolframLanguageSyntax`Generate`$obsoleteSymbols], " obsolete symbols in System`."];
 
-  If[LSPInfra`Generate`$obsoleteSymbols == {},
-    LSPInfra`Generate`$obsoleteSymbols = {"ObsoletePlaceholderXXX"}
+  If[WolframLanguageSyntax`Generate`$obsoleteSymbols == {},
+    WolframLanguageSyntax`Generate`$obsoleteSymbols = {"ObsoletePlaceholderXXX"}
   ];
 
   Print["scanning Experimental symbols... \[WatchIcon]"];
@@ -221,19 +222,19 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
   *)
   experimentalNames = Select[names, FindList[#, experimentalString, 1000] != {}&];
 
-  LSPInfra`Generate`$experimentalSymbols = StringDrop[#, -3]& /@ experimentalNames;
+  WolframLanguageSyntax`Generate`$experimentalSymbols = StringDrop[#, -3]& /@ experimentalNames;
 
-  Print["There are ", Length[LSPInfra`Generate`$experimentalSymbols], " experimental symbols in System`."];
+  Print["There are ", Length[WolframLanguageSyntax`Generate`$experimentalSymbols], " experimental symbols in System`."];
 
-  If[LSPInfra`Generate`$experimentalSymbols == {},
-    LSPInfra`Generate`$experimentalSymbols = {"ExperimentalPlaceholderXXX"}
+  If[WolframLanguageSyntax`Generate`$experimentalSymbols == {},
+    WolframLanguageSyntax`Generate`$experimentalSymbols = {"ExperimentalPlaceholderXXX"}
   ];
 
-  LSPInfra`Generate`$builtInFunctions =
+  WolframLanguageSyntax`Generate`$builtInFunctions =
     Complement[documentedSymbols,
-      LSPInfra`Generate`$constants,
-      LSPInfra`Generate`$obsoleteSymbols,
-      LSPInfra`Generate`$experimentalSymbols];
+      WolframLanguageSyntax`Generate`$constants,
+      WolframLanguageSyntax`Generate`$obsoleteSymbols,
+      WolframLanguageSyntax`Generate`$experimentalSymbols];
 
   ResetDirectory[];
 ]]
@@ -244,12 +245,13 @@ Module[{dumpFile},
   dumpFile = FileNameJoin[{buildDir, "processedSymbols.mx"}];
 
   DumpSave[dumpFile, {
-    LSPInfra`Generate`$builtInFunctions,
-    LSPInfra`Generate`$constants,
-    LSPInfra`Generate`$undocumentedSymbols,
-    LSPInfra`Generate`$experimentalSymbols,
-    LSPInfra`Generate`$obsoleteSymbols}]
+    WolframLanguageSyntax`Generate`$builtInFunctions,
+    WolframLanguageSyntax`Generate`$constants,
+    WolframLanguageSyntax`Generate`$undocumentedSymbols,
+    WolframLanguageSyntax`Generate`$experimentalSymbols,
+    WolframLanguageSyntax`Generate`$obsoleteSymbols}]
 ]
+
 
 generate[] := (
 Print["Processing Symbols..."];
