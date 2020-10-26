@@ -217,17 +217,6 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   *)
   $Output = Streams["stderr"];
 
-  (*
-  res = RunServerDiagnostic[];
-  If[!TrueQ[res],
-    Write[$Messages, "\n\n" //OutputForm];
-    Write[$Messages, "RunDiagnostic[] did not return True: " //OutputForm, res //OutputForm];
-    Write[$Messages, "KERNEL IS EXITING" //OutputForm];
-    Write[$Messages, "\n\n" //OutputForm];
-    Pause[1];Exit[1]
-  ];
-  *)
-
   $Debug = (logDir != "");
 
   If[$Debug,
@@ -953,7 +942,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "textDocumentSync" -> <| "openClose" -> True,
                                                                   "save" -> <| "includeText" -> False |>,
                                                                   "change" -> $TextDocumentSyncKind["Full"]
-                                                              |>,
+                                                               |>,
                                          "codeActionProvider" -> codeActionProviderValue,
                                          "colorProvider" -> $ColorProvider,
                                          "hoverProvider" -> True,
@@ -1175,7 +1164,7 @@ Module[{params, doc, uri, text, entry},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/concreteParse"]] :=
 Catch[
-Module[{params, doc, uri, cst, text, entry},
+Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
 
   If[$Debug2,
     log["textDocument/concreteParse: enter"]
@@ -1213,7 +1202,14 @@ Module[{params, doc, uri, cst, text, entry},
     log["before CodeConcreteParse"]
   ];
 
-  cst = CodeConcreteParse[text];
+  fileName = normalizeURI[uri];
+
+  fileFormat = Automatic;
+  If[FileExtension[fileName] == "wls",
+    fileFormat = "Script"
+  ];
+
+  cst = CodeConcreteParse[text, "FileFormat" -> fileFormat];
 
   If[$Debug2,
     log["after CodeConcreteParse"]
@@ -1253,7 +1249,7 @@ Module[{params, doc, uri, cst, text, entry},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/concreteTabsParse"]] :=
 Catch[
-Module[{params, doc, uri, text, entry, cstTabs},
+Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
 
   If[$Debug2,
     log["textDocument/concreteTabsParse: enter"]
@@ -1291,7 +1287,14 @@ Module[{params, doc, uri, text, entry, cstTabs},
     log["before CodeConcreteParse (TabWidth 4)"]
   ];
 
-  cstTabs = CodeConcreteParse[text, "TabWidth" -> 4];
+  fileName = normalizeURI[uri];
+
+  fileFormat = Automatic;
+  If[FileExtension[fileName] == "wls",
+    fileFormat = "Script"
+  ];
+
+  cstTabs = CodeConcreteParse[text, "TabWidth" -> 4, "FileFormat" -> fileFormat];
 
   If[$Debug2,
     log["after CodeConcreteParse (TabWidth 4)"]
