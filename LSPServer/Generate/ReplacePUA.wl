@@ -93,7 +93,7 @@ If[FailureQ[res],
 Print["Done ReplacePUA..."];
 )
 
-If[script === $InputFileName,
+If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]
 

@@ -263,7 +263,7 @@ dumpSystemSymbols[];
 Print["Done Processing Symbols"]
 )
 
-If[script === $InputFileName,
+If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]
 
