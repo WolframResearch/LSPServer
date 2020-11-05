@@ -1,8 +1,9 @@
 <?xml version="1.0"?>
-<project name='lspserver' basedir='.'>
+<project name='lspserver' basedir='..'>
 
   <property name='component' value='lspserver' />
-
+  <property name='app.name' value='LSPServer' />
+  <property name='inputDir' value='${basedir}/${app.name}/Documentation' />
   <property environment='env' />
   <import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
 
