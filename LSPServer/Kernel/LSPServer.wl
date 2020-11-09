@@ -184,7 +184,7 @@ $CancelMap = <||>
 
 
 Options[StartServer] = {
-	ConfidenceLevel :> Automatic
+	ConfidenceLevel -> Automatic
 }
 
 (*

@@ -30,8 +30,6 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
       Throw[{}]
     ];
 
-    params = content["params"];
-
     <| "method" -> #, "params" -> params |>& /@ {
        "textDocument/concreteParse",
        "textDocument/aggregateParse",

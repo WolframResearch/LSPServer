@@ -29,8 +29,6 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismat
       Throw[{}]
     ];
 
-    params = content["params"];
-
     <| "method" -> #, "params" -> params |>& /@ {
        "textDocument/concreteTabsParse",
        "textDocument/aggregateTabsParse",
