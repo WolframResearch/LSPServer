@@ -194,7 +194,7 @@ StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
 Module[{logFile, res, bytes, bytess, logFileStream,
-  logFileName, logFileCounter,
+  logFileName, logFileCounter, oldLogFiles, now, quantity30days,
   lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
   content, contents,
   errStr, ferror},
@@ -222,6 +222,23 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   If[$Debug,
 
     Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
+
+    (*
+    Cleanup existing log files
+    *)
+    oldLogFiles = FileNames["kernelLog*", logDir];
+    now = Now;
+    quantity30days = Quantity[30, "Days"];
+    Do[
+      (*
+      Delete oldLogFile if not modified for 30 days
+      *)
+      If[(now - Information[File[oldLogFile]]["LastModificationDate"]) > quantity30days,
+        DeleteFile[oldLogFile]
+      ]
+      ,
+      {oldLogFile, oldLogFiles}
+    ];
 
     logFileCounter = 1;
     logFileName = "kernelLog-ppid" <> ToString[$ParentProcessID] <> "-pid" <> ToString[$ProcessID] <> "-";
