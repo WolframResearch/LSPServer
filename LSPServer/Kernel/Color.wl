@@ -7,6 +7,13 @@ Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
 
 
+fractionPat = CallNode[LeafNode[Symbol, "Times", _], {
+  LeafNode[Integer, _, _],
+  CallNode[LeafNode[Symbol, "Power", _], {
+    LeafNode[Integer, _, _], LeafNode[Integer, "-1", _]}, _]}, _]
+
+
+
 expandContent[content:KeyValuePattern["method" -> "textDocument/documentColor"], pos_] :=
   Catch[
   Module[{params, id, doc, uri},
@@ -106,16 +113,16 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {
-  r:LeafNode[Integer|Real, _, _],
-  g:LeafNode[Integer|Real, _, _],
-  b:LeafNode[Integer|Real, _, _],
-  a:LeafNode[Integer|Real, _, _]:LeafNode[Integer, "1", <||>]}, data_]] :=
+  r:LeafNode[Integer|Real, _, _]|fractionPat,
+  g:LeafNode[Integer|Real, _, _]|fractionPat,
+  b:LeafNode[Integer|Real, _, _]|fractionPat,
+  a:LeafNode[Integer|Real, _, _]|fractionPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{rVal, gVal, bVal, aVal, src},
 
-  rVal = FromNode[r];
-  gVal = FromNode[g];
-  bVal = FromNode[b];
-  aVal = FromNode[a];
+  rVal = fromNode[r];
+  gVal = fromNode[g];
+  bVal = fromNode[b];
+  aVal = fromNode[a];
 
   src = data[Source];
 
@@ -165,16 +172,16 @@ colorNodeToColorInformation[CallNode[LeafNode[Symbol, "Hue", _], {h:LeafNode[Int
   colorNodeToColorInformation[CallNode[LeafNode[Symbol, "Hue", <||>], {h, LeafNode[Integer, "1", <||>], LeafNode[Integer, "1", <||>]}, data]]
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "Hue", _], {
-  h:LeafNode[Integer|Real, _, _],
-  s:LeafNode[Integer|Real, _, _],
-  b:LeafNode[Integer|Real, _, _],
-  a:LeafNode[Integer|Real, _, _]:LeafNode[Integer, "1", <||>]}, data_]] :=
+  h:LeafNode[Integer|Real, _, _]|fractionPat,
+  s:LeafNode[Integer|Real, _, _]|fractionPat,
+  b:LeafNode[Integer|Real, _, _]|fractionPat,
+  a:LeafNode[Integer|Real, _, _]|fractionPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{hVal, sVal, bVal, aVal, src, rgba},
 
-  hVal = FromNode[h];
-  sVal = FromNode[s];
-  bVal = FromNode[b];
-  aVal = FromNode[a];
+  hVal = fromNode[h];
+  sVal = fromNode[s];
+  bVal = fromNode[b];
+  aVal = fromNode[a];
 
   rgba = ColorConvert[Hue[hVal, sVal, bVal, aVal], "RGB"];
 
@@ -192,12 +199,12 @@ Module[{hVal, sVal, bVal, aVal, src, rgba},
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "GrayLevel", _], {
-  g:LeafNode[Integer|Real, _, _],
-  a:LeafNode[Integer|Real, _, _]:LeafNode[Integer, "1", <||>]}, data_]] :=
+  g:LeafNode[Integer|Real, _, _]|fractionPat,
+  a:LeafNode[Integer|Real, _, _]|fractionPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{gVal, aVal, src},
 
-  gVal = FromNode[g];
-  aVal = FromNode[a];
+  gVal = fromNode[g];
+  aVal = fromNode[a];
 
   src = data[Source];
 
@@ -284,6 +291,18 @@ Module[{id, params, doc, uri, color, range, rVal, gVal, bVal, aVal, label},
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> colorPresentations |>}
 ]]
+
+
+
+fromNode[l:LeafNode[Integer|Real, _, _]] := FromNode[l]
+
+fromNode[CallNode[LeafNode[Symbol, "Times", _], {
+  n:LeafNode[Integer, _, _],
+  CallNode[LeafNode[Symbol, "Power", _], {
+    d:LeafNode[Integer, _, _], LeafNode[Integer, "-1", _]}, _]}, _]] := N[FromNode[n]/FromNode[d]]
+
+
+
 
 End[]
 
