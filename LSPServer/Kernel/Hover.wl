@@ -428,7 +428,10 @@ Module[{lines, result, nums, dec},
 
     dec = ToExpression[num];
 
-    dec = ToString[dec];
+    (*
+    Need to use InputForm because Reals and Rationals can format as 2D if using the default OutputForm
+    *)
+    dec = ToString[dec, InputForm];
 
     dec
 
