@@ -112,7 +112,9 @@ $BracketMatcherDisplayInsertionText = False
 
 (*
 Bracket suggestions from ML4Code can take O(n^2) time in the size of the chunk, so make sure to
-have a time limit 
+have a time limit
+
+Related issues: CODETOOLS-71
 *)
 $ML4CodeTimeLimit = 0.4
 
@@ -194,7 +196,7 @@ StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
 Module[{logFile, res, bytes, bytess, logFileStream,
-  logFileName, logFileCounter, oldLogFiles, now, quantity30days,
+  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr,
   lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
   content, contents,
   errStr, ferror},
@@ -228,6 +230,7 @@ Module[{logFile, res, bytes, bytess, logFileStream,
     *)
     oldLogFiles = FileNames["kernelLog*", logDir];
     now = Now;
+    dateStr = DateString[now, {"Year", "-", "Month", "-", "Day", "-", "Hour24", ":", "Minute", ":", "Second"}];
     quantity30days = Quantity[30, "Days"];
     Do[
       (*
@@ -240,14 +243,14 @@ Module[{logFile, res, bytes, bytess, logFileStream,
       {oldLogFile, oldLogFiles}
     ];
 
-    logFileCounter = 1;
-    logFileName = "kernelLog-ppid" <> ToString[$ParentProcessID] <> "-pid" <> ToString[$ProcessID] <> "-";
-    logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}];
+    logFileName = "kernelLog-" <> dateStr;
+    logFile = FileNameJoin[{logDir, logFileName <> ".txt"}];
 
+    logFileCounter = 1;
     While[True,
       If[FileExistsQ[logFile],
+        logFile = FileNameJoin[{logDir, logFileName <> "-" <> ToString[logFileCounter] <> ".txt"}];
         logFileCounter++;
-        logFile = FileNameJoin[{logDir, logFileName <> ToString[logFileCounter] <> ".txt"}]
         ,
         Break[]
       ]
@@ -279,6 +282,9 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   log["\n\n"];
 
   log["$ProcessID: ", $ProcessID];
+  log["\n\n"];
+
+  log["$ParentProcessID: ", $ParentProcessID];
   log["\n\n"];
 
   If[!StringStartsQ[ToLowerCase[FileBaseName[$CommandLine[[1]]]], "wolframkernel"],
@@ -712,7 +718,9 @@ Module[{contents},
   (*  
   Figuring out what to with UTF-16 surrogates...
 
-  Related bugs: 382744
+  Related bugs: 382744, 397941
+
+  Related issues: https://github.com/microsoft/language-server-protocol/issues/376
   *)
 
   (*
