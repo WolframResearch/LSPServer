@@ -1,0 +1,247 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 12.2' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[      9187,        239]
+NotebookOptionsPosition[      4837,        156]
+NotebookOutlinePosition[      5751,        184]
+CellTagsIndexPosition[      5708,        181]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[TextData[{
+ "New in: ",
+ Cell["12.2", "HistoryData",
+  CellTags->"New",ExpressionUUID->"c9d9a8d8-2a0e-4802-9c13-9c77190c3016"],
+ " | Modified in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Modified",ExpressionUUID->"4444524e-d731-4442-a4c7-840cd1ebe39b"],
+ " | Obsolete in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Obsolete",ExpressionUUID->"5cc82bb5-ee87-4a59-bba0-c7fcbd1f2d3e"],
+ " | Excised in: ",
+ Cell[" ", "HistoryData",
+  CellTags->"Excised",ExpressionUUID->"ee89ff20-866b-432c-93e2-e13e1943349e"]
+}], "History",
+ CellID->73904180,ExpressionUUID->"ac3f95c1-e11a-4b84-8737-d14bdbd38857"],
+
+Cell[CellGroupData[{
+
+Cell["Categorization", "CategorizationSection",ExpressionUUID->"9d834c47-aa7e-4345-b3bc-4e0659d0bcf6"],
+
+Cell["Workflow Guide", "Categorization",
+ CellLabel->
+  "Entity Type",ExpressionUUID->"de0f4f87-01db-40fc-87d6-222796a4eb80"],
+
+Cell["", "Categorization",
+ CellLabel->
+  "Paclet Name",ExpressionUUID->"c2357746-a629-4caa-8dad-8d5b79c94565"],
+
+Cell["", "Categorization",
+ CellLabel->"Context",ExpressionUUID->"eba23850-795f-45d4-935e-183fbc90325b"],
+
+Cell["", "Categorization",
+ CellLabel->"URI",ExpressionUUID->"28e28662-c9d2-4210-adc3-f9cfd1036d65"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Synonyms", "SynonymsSection",ExpressionUUID->"d18c3e8f-41ff-4466-b10b-60285908c30f"],
+
+Cell["XXXX", "Synonyms",ExpressionUUID->"a12cd4b4-b212-4234-919f-b7ea9fe5354a"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Keywords", "KeywordsSection",ExpressionUUID->"41c71295-ee82-4148-bd66-82777b7a7717"],
+
+Cell["XXXX", "Keywords",ExpressionUUID->"1f74907f-fff6-465b-8f29-669041d00429"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Details", "DetailsSection",ExpressionUUID->"6355c370-ca85-4756-86df-081a04b9eef1"],
+
+Cell["XXXX", "Details",
+ CellLabel->"Lead",ExpressionUUID->"13c618ee-41bd-41b3-8ef0-f0260d196acf"],
+
+Cell["XXXX", "Details",
+ CellLabel->
+  "Developers",ExpressionUUID->"797c14c6-9b20-41eb-a7b8-5b557f97b05d"],
+
+Cell["XXXX", "Details",
+ CellLabel->"Authors",ExpressionUUID->"c5d8a9a6-819c-4600-826b-f97b3a098d7b"],
+
+Cell["XXXX", "Details",
+ CellLabel->
+  "Feature Name",ExpressionUUID->"552cf1b4-4b6c-4004-8bea-23be4424dcbc"],
+
+Cell["XXXX", "Details",
+ CellLabel->"QA",ExpressionUUID->"5736803f-37a5-47e8-be3f-3c942b526cb8"],
+
+Cell["XXXX", "Details",
+ CellLabel->"DA",ExpressionUUID->"83ec6e9c-5ef2-42e8-b3f0-0dac046dbab2"],
+
+Cell["XXXX", "Details",
+ CellLabel->"Docs",ExpressionUUID->"ddda911e-1158-4587-8a55-74735c6327d2"],
+
+Cell["XXXX", "Details",
+ CellLabel->
+  "Features Page \
+Notes",ExpressionUUID->"6df118c4-7bcf-4058-8ceb-2e8011970093"],
+
+Cell["XXXX", "Details",
+ CellLabel->"Comments",ExpressionUUID->"2372f196-8479-4b51-b1d2-50c8f5c4a785"]
+}, Closed]]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Setup LSPServer", "WorkflowGuideTitle",
+ GeneratedCell->False,
+ CellAutoOverwrite->
+  False,ExpressionUUID->"2cc1b2a2-663c-4908-9aea-845a5dd63968"],
+
+Cell["", "WorkflowGuideDelimiter",
+ CellID->1367213010,ExpressionUUID->"21772e4c-5e6d-4cdf-aace-8cfd808bf3a9"],
+
+Cell[CellGroupData[{
+
+Cell["Setup Sublime Text", "WorkflowGuideSection",
+ CellID->1585312664,ExpressionUUID->"a8c2f791-53ec-4cd0-862b-f21da9514faa"],
+
+Cell[TextData[ButtonBox["Setup Sublime Text on MacOSX",
+ BaseStyle->"Link",
+ ButtonData->
+  "paclet:workflow/SetupSublimeTextOnMacOSX"]], "WorkflowGuideEntry",
+ CellID->901931436,ExpressionUUID->"80af505c-a529-4fb3-9227-1d20b3651a8a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Related Workflow Guides", "WorkflowGuideRelatedWorkflowGuidesSection",ExpressionUUID->"06b61cdc-e627-431f-ac0c-3b3ef6c1adde"],
+
+Cell["XXXX", "WorkflowGuideRelatedWorkflowGuide",ExpressionUUID->"f752b8a7-2640-4d73-bc27-fc945e4e8c60"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Related Guides", "WorkflowGuideRelatedGuidesSection",
+ CellID->579497806,ExpressionUUID->"15f18710-93c4-4467-9827-7c1bdadca5d0"],
+
+Cell["XXXX", "WorkflowGuideRelatedGuide",
+ CellID->155524191,ExpressionUUID->"cc6f9d73-ca15-4e31-b178-e32e69d86215"]
+}, Closed]],
+
+Cell[CellGroupData[{
+
+Cell["Related Links", "WorkflowGuideRelatedLinksSection",
+ CellID->400277405,ExpressionUUID->"ae853ba0-2238-4cb9-9538-b4fda554656f"],
+
+Cell["XXXX", "WorkflowGuideRelatedLink",
+ CellID->1543563431,ExpressionUUID->"4c2e15b4-7013-4c06-9523-8778d645cc18"]
+}, Closed]]
+}, Open  ]]
+},
+WindowSize->{750, 755},
+WindowMargins->{{248, Automatic}, {152, Automatic}},
+TaggingRules->{
+ "SaveDialogDataSavesBlog" -> False, 
+  "WelcomeScreenSettings" -> {"FEStarting" -> False}, 
+  "Metadata" -> {"WorkflowDockedCell" -> ""}, "LinkTrails" -> "", 
+  "SearchTextTranslated" -> ""},
+FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (November 13, 2020)",
+StyleDefinitions->Notebook[{
+   Cell[
+    StyleData[
+    StyleDefinitions -> 
+     FrontEnd`FileName[{"Wolfram"}, "WorkflowGuidePageStyles.nb", 
+       CharacterEncoding -> "UTF-8"]]]}, Visible -> False, FrontEndVersion -> 
+  "12.2 for Mac OS X x86 (64-bit) (November 13, 2020)", StyleDefinitions -> 
+  "PrivateStylesheetFormatting.nb"],
+ExpressionUUID->"18b25373-5666-4b2c-b787-d2fe86ee76d4"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 599, 14, 24, "History",ExpressionUUID->"ac3f95c1-e11a-4b84-8737-d14bdbd38857",
+ CellID->73904180],
+Cell[CellGroupData[{
+Cell[1204, 40, 102, 0, 29, "CategorizationSection",ExpressionUUID->"9d834c47-aa7e-4345-b3bc-4e0659d0bcf6"],
+Cell[1309, 42, 125, 2, 70, "Categorization",ExpressionUUID->"de0f4f87-01db-40fc-87d6-222796a4eb80"],
+Cell[1437, 46, 111, 2, 70, "Categorization",ExpressionUUID->"c2357746-a629-4caa-8dad-8d5b79c94565"],
+Cell[1551, 50, 104, 1, 70, "Categorization",ExpressionUUID->"eba23850-795f-45d4-935e-183fbc90325b"],
+Cell[1658, 53, 100, 1, 70, "Categorization",ExpressionUUID->"28e28662-c9d2-4210-adc3-f9cfd1036d65"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[1795, 59, 90, 0, 19, "SynonymsSection",ExpressionUUID->"d18c3e8f-41ff-4466-b10b-60285908c30f"],
+Cell[1888, 61, 79, 0, 70, "Synonyms",ExpressionUUID->"a12cd4b4-b212-4234-919f-b7ea9fe5354a"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[2004, 66, 90, 0, 19, "KeywordsSection",ExpressionUUID->"41c71295-ee82-4148-bd66-82777b7a7717"],
+Cell[2097, 68, 79, 0, 70, "Keywords",ExpressionUUID->"1f74907f-fff6-465b-8f29-669041d00429"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[2213, 73, 88, 0, 19, "DetailsSection",ExpressionUUID->"6355c370-ca85-4756-86df-081a04b9eef1"],
+Cell[2304, 75, 98, 1, 70, "Details",ExpressionUUID->"13c618ee-41bd-41b3-8ef0-f0260d196acf"],
+Cell[2405, 78, 107, 2, 70, "Details",ExpressionUUID->"797c14c6-9b20-41eb-a7b8-5b557f97b05d"],
+Cell[2515, 82, 101, 1, 70, "Details",ExpressionUUID->"c5d8a9a6-819c-4600-826b-f97b3a098d7b"],
+Cell[2619, 85, 109, 2, 70, "Details",ExpressionUUID->"552cf1b4-4b6c-4004-8bea-23be4424dcbc"],
+Cell[2731, 89, 96, 1, 70, "Details",ExpressionUUID->"5736803f-37a5-47e8-be3f-3c942b526cb8"],
+Cell[2830, 92, 96, 1, 70, "Details",ExpressionUUID->"83ec6e9c-5ef2-42e8-b3f0-0dac046dbab2"],
+Cell[2929, 95, 98, 1, 70, "Details",ExpressionUUID->"ddda911e-1158-4587-8a55-74735c6327d2"],
+Cell[3030, 98, 118, 3, 70, "Details",ExpressionUUID->"6df118c4-7bcf-4058-8ceb-2e8011970093"],
+Cell[3151, 103, 102, 1, 70, "Details",ExpressionUUID->"2372f196-8479-4b51-b1d2-50c8f5c4a785"]
+}, Closed]]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[3302, 110, 153, 3, 45, "WorkflowGuideTitle",ExpressionUUID->"2cc1b2a2-663c-4908-9aea-845a5dd63968"],
+Cell[3458, 115, 110, 1, 21, "WorkflowGuideDelimiter",ExpressionUUID->"21772e4c-5e6d-4cdf-aace-8cfd808bf3a9",
+ CellID->1367213010],
+Cell[CellGroupData[{
+Cell[3593, 120, 126, 1, 56, "WorkflowGuideSection",ExpressionUUID->"a8c2f791-53ec-4cd0-862b-f21da9514faa",
+ CellID->1585312664],
+Cell[3722, 123, 234, 4, 36, "WorkflowGuideEntry",ExpressionUUID->"80af505c-a529-4fb3-9227-1d20b3651a8a",
+ CellID->901931436]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[3993, 132, 131, 0, 52, "WorkflowGuideRelatedWorkflowGuidesSection",ExpressionUUID->"06b61cdc-e627-431f-ac0c-3b3ef6c1adde"],
+Cell[4127, 134, 104, 0, 30, "WorkflowGuideRelatedWorkflowGuide",ExpressionUUID->"f752b8a7-2640-4d73-bc27-fc945e4e8c60"]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[4268, 139, 134, 1, 52, "WorkflowGuideRelatedGuidesSection",ExpressionUUID->"15f18710-93c4-4467-9827-7c1bdadca5d0",
+ CellID->579497806],
+Cell[4405, 142, 116, 1, 30, "WorkflowGuideRelatedGuide",ExpressionUUID->"cc6f9d73-ca15-4e31-b178-e32e69d86215",
+ CellID->155524191]
+}, Closed]],
+Cell[CellGroupData[{
+Cell[4558, 148, 132, 1, 52, "WorkflowGuideRelatedLinksSection",ExpressionUUID->"ae853ba0-2238-4cb9-9538-b4fda554656f",
+ CellID->400277405],
+Cell[4693, 151, 116, 1, 30, "WorkflowGuideRelatedLink",ExpressionUUID->"4c2e15b4-7013-4c06-9523-8778d645cc18",
+ CellID->1543563431]
+}, Closed]]
+}, Open  ]]
+}
+]
+*)
+
