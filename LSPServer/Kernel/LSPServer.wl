@@ -43,9 +43,6 @@ $BracketMatcherUseDesignColors
 $ConfidenceLevel
 
 
-$HTMLSnippets
-
-
 $ML4CodeTimeLimit
 
 
@@ -128,8 +125,6 @@ $ExecuteCommandProvider = <|
     "enable_bracket_matcher_display_insertion_text",
     "disable_bracket_matcher_display_insertion_text"
   } |>
-
-$HTMLSnippets = False
 
 
 
@@ -805,7 +800,7 @@ returns: a list of associations (possibly empty), each association represents JS
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
   codeActionProviderValue, initializationOptions, implicitTokens,
-  bracketMatcher, debugBracketMatcher, htmlSnippets, clientName},
+  bracketMatcher, debugBracketMatcher, clientName},
 
   If[$Debug2,
     log["initialize: enter"];
@@ -844,11 +839,6 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
       $DebugBracketMatcher = debugBracketMatcher
     ];
-    If[KeyExistsQ[initializationOptions, "htmlSnippets"],
-      htmlSnippets = initializationOptions["htmlSnippets"];
-
-      $HTMLSnippets = htmlSnippets
-    ]
   ];
 
 
