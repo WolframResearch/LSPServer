@@ -98,7 +98,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismat
 handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEdits"]] :=
   Catch[
   Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badChunkLineNums,
-    badChunkLines, badChunk, data},
+    badChunkLines, badChunk, data, res},
     
     If[$Debug2,
       log["textDocument/suggestBracketEdits: enter"]
@@ -131,6 +131,10 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEd
 
     textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
 
+    If[$Debug2,
+      log["mismatches: ", mismatches]
+    ];
+
     data =
       Function[{mismatch},
 
@@ -139,7 +143,8 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEd
         badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
 
         If[$Debug2,
-          log["before ML4Code`SuggestBracketEdits"]
+          log["before ML4Code`SuggestBracketEdits"];
+          log["badChunk: ", badChunk]
         ];
 
         (*
@@ -150,14 +155,18 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEd
         FIXME: Must use the tab width from the editor
         *)
         Block[{CodeParser`Private`$DefaultTabWidth = 4},
-          suggestions =
+          res =
             TimeConstrained[
               ML4Code`SuggestBracketEdits[badChunk]
               ,
               $ML4CodeTimeLimit
               ,
-              {}
-            ] /. $Failed -> {};
+              $timeOut
+            ];
+            If[$Debug2,
+              log["res: ", res]
+            ];
+            suggestions = res /. {$timeOut -> {}, $Failed -> {}};
         ];
 
         If[$Debug2,
