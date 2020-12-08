@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     14968,        384]
-NotebookOptionsPosition[      7982,        242]
-NotebookOutlinePosition[      9321,        276]
-CellTagsIndexPosition[      9278,        273]
+NotebookDataLength[     14988,        385]
+NotebookOptionsPosition[      8003,        243]
+NotebookOutlinePosition[      9341,        277]
+CellTagsIndexPosition[      9298,        274]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -216,7 +216,8 @@ Cell["Workflow Guides", "GuideWorkflowGuidesSection",
 
 Cell[TextData[ButtonBox["Setup LSPServer",
  BaseStyle->"Link",
- ButtonData->"paclet:guide/SetupLSPServer"]], "GuideWorkflowGuide",
+ ButtonData->
+  "paclet:LSPServer/workflowguide/SetupLSPServer"]], "GuideWorkflowGuide",
  CellChangeTimes->{{3.814700494751338*^9, 3.814700497797171*^9}, {
   3.814700878677643*^9, 3.8147008787106*^9}},
  CellID->672144280,ExpressionUUID->"289696a3-54cc-4ce1-91ae-b2c1ab1748e8"],
@@ -259,7 +260,7 @@ Documentation/English/"},
 Documentation/English/", "$UseNewPageDialog" -> "", "$PacletVersion" -> 
     "0.10.2225"}, "Author" -> "brenton", "CreationDate" -> 
   "03-24-2020 12:44:43"},
-FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (November 13, 2020)",
+FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (December 2, 2020)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "GuidePageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"5f7ae079-5fec-4778-856d-ac0e915f94ff"
@@ -371,20 +372,20 @@ Cell[6767, 207, 105, 1, 22, "GuideTutorial",ExpressionUUID->"80f6ab1a-9d69-46bf-
 Cell[CellGroupData[{
 Cell[6909, 213, 127, 1, 72, "GuideWorkflowGuidesSection",ExpressionUUID->"a98cd77d-7b04-4134-b3dd-d36151cff9b0",
  CellID->25329611],
-Cell[7039, 216, 318, 5, 22, "GuideWorkflowGuide",ExpressionUUID->"289696a3-54cc-4ce1-91ae-b2c1ab1748e8",
+Cell[7039, 216, 339, 6, 22, "GuideWorkflowGuide",ExpressionUUID->"289696a3-54cc-4ce1-91ae-b2c1ab1748e8",
  CellID->672144280],
-Cell[7360, 223, 108, 1, 22, "GuideWorkflowGuide",ExpressionUUID->"d9846a6d-176d-4744-aa8d-6ab8061f3e10",
+Cell[7381, 224, 108, 1, 22, "GuideWorkflowGuide",ExpressionUUID->"d9846a6d-176d-4744-aa8d-6ab8061f3e10",
  CellID->79611718]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[7505, 229, 117, 1, 72, "GuideMoreAboutSection",ExpressionUUID->"85046e26-a7a1-4d48-82a2-74e2badc4739",
+Cell[7526, 230, 117, 1, 72, "GuideMoreAboutSection",ExpressionUUID->"85046e26-a7a1-4d48-82a2-74e2badc4739",
  CellID->23220180],
-Cell[7625, 232, 106, 1, 22, "GuideMoreAbout",ExpressionUUID->"362370b0-b051-4d92-8553-4e9f0fcee460",
+Cell[7646, 233, 106, 1, 22, "GuideMoreAbout",ExpressionUUID->"362370b0-b051-4d92-8553-4e9f0fcee460",
  CellID->1567025153],
-Cell[7734, 235, 105, 1, 22, "GuideMoreAbout",ExpressionUUID->"531b2dce-25dc-42ae-83a3-d40eeb672aa3",
+Cell[7755, 236, 105, 1, 22, "GuideMoreAbout",ExpressionUUID->"531b2dce-25dc-42ae-83a3-d40eeb672aa3",
  CellID->252299663]
 }, Open  ]],
-Cell[7854, 239, 124, 1, 72, "GuideRelatedLinksSection",ExpressionUUID->"45594b4f-2eba-4476-ad05-14c00c017cbc",
+Cell[7875, 240, 124, 1, 72, "GuideRelatedLinksSection",ExpressionUUID->"45594b4f-2eba-4476-ad05-14c00c017cbc",
  CellID->415694148]
 }
 ]

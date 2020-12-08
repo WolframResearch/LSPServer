@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[      9187,        239]
-NotebookOptionsPosition[      4837,        156]
-NotebookOutlinePosition[      5751,        184]
-CellTagsIndexPosition[      5708,        181]
+NotebookDataLength[      9938,        259]
+NotebookOptionsPosition[      5278,        170]
+NotebookOutlinePosition[      6214,        198]
+CellTagsIndexPosition[      6171,        195]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -124,8 +124,22 @@ Cell["Setup Sublime Text", "WorkflowGuideSection",
 Cell[TextData[ButtonBox["Setup Sublime Text on MacOSX",
  BaseStyle->"Link",
  ButtonData->
-  "paclet:workflow/SetupSublimeTextOnMacOSX"]], "WorkflowGuideEntry",
+  "paclet:LSPServer/workflow/SetupSublimeTextOnMacOSX"]], "WorkflowGuideEntry",\
+
  CellID->901931436,ExpressionUUID->"80af505c-a529-4fb3-9227-1d20b3651a8a"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Setup Visual Studio Code", "WorkflowGuideSection",
+ CellID->115705799,ExpressionUUID->"4ddcdf09-ec47-4350-a0f7-0f516e1b71c4"],
+
+Cell[TextData[ButtonBox["Setup Visual Studio Code on MacOSX",
+ BaseStyle->"Link",
+ ButtonData->
+  "paclet:LSPServer/workflow/SetupVisualStudioCodeOnMacOSX"]], \
+"WorkflowGuideEntry",
+ CellID->1194663258,ExpressionUUID->"653b5c26-e46c-4b7d-a5cb-0a5c1855c156"]
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -160,15 +174,15 @@ TaggingRules->{
  "SaveDialogDataSavesBlog" -> False, 
   "WelcomeScreenSettings" -> {"FEStarting" -> False}, 
   "Metadata" -> {"WorkflowDockedCell" -> ""}, "LinkTrails" -> "", 
-  "SearchTextTranslated" -> ""},
-FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (November 13, 2020)",
+  "SearchTextTranslated" -> "", "TryRealOnly" -> False},
+FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (December 2, 2020)",
 StyleDefinitions->Notebook[{
    Cell[
     StyleData[
     StyleDefinitions -> 
      FrontEnd`FileName[{"Wolfram"}, "WorkflowGuidePageStyles.nb", 
        CharacterEncoding -> "UTF-8"]]]}, Visible -> False, FrontEndVersion -> 
-  "12.2 for Mac OS X x86 (64-bit) (November 13, 2020)", StyleDefinitions -> 
+  "12.2 for Mac OS X x86 (64-bit) (December 2, 2020)", StyleDefinitions -> 
   "PrivateStylesheetFormatting.nb"],
 ExpressionUUID->"18b25373-5666-4b2c-b787-d2fe86ee76d4"
 ]
@@ -221,23 +235,29 @@ Cell[3458, 115, 110, 1, 21, "WorkflowGuideDelimiter",ExpressionUUID->"21772e4c-5
 Cell[CellGroupData[{
 Cell[3593, 120, 126, 1, 56, "WorkflowGuideSection",ExpressionUUID->"a8c2f791-53ec-4cd0-862b-f21da9514faa",
  CellID->1585312664],
-Cell[3722, 123, 234, 4, 36, "WorkflowGuideEntry",ExpressionUUID->"80af505c-a529-4fb3-9227-1d20b3651a8a",
+Cell[3722, 123, 246, 5, 36, "WorkflowGuideEntry",ExpressionUUID->"80af505c-a529-4fb3-9227-1d20b3651a8a",
  CellID->901931436]
 }, Open  ]],
 Cell[CellGroupData[{
-Cell[3993, 132, 131, 0, 52, "WorkflowGuideRelatedWorkflowGuidesSection",ExpressionUUID->"06b61cdc-e627-431f-ac0c-3b3ef6c1adde"],
-Cell[4127, 134, 104, 0, 30, "WorkflowGuideRelatedWorkflowGuide",ExpressionUUID->"f752b8a7-2640-4d73-bc27-fc945e4e8c60"]
+Cell[4005, 133, 131, 1, 56, "WorkflowGuideSection",ExpressionUUID->"4ddcdf09-ec47-4350-a0f7-0f516e1b71c4",
+ CellID->115705799],
+Cell[4139, 136, 258, 5, 36, "WorkflowGuideEntry",ExpressionUUID->"653b5c26-e46c-4b7d-a5cb-0a5c1855c156",
+ CellID->1194663258]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[4434, 146, 131, 0, 52, "WorkflowGuideRelatedWorkflowGuidesSection",ExpressionUUID->"06b61cdc-e627-431f-ac0c-3b3ef6c1adde"],
+Cell[4568, 148, 104, 0, 30, "WorkflowGuideRelatedWorkflowGuide",ExpressionUUID->"f752b8a7-2640-4d73-bc27-fc945e4e8c60"]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[4268, 139, 134, 1, 52, "WorkflowGuideRelatedGuidesSection",ExpressionUUID->"15f18710-93c4-4467-9827-7c1bdadca5d0",
+Cell[4709, 153, 134, 1, 52, "WorkflowGuideRelatedGuidesSection",ExpressionUUID->"15f18710-93c4-4467-9827-7c1bdadca5d0",
  CellID->579497806],
-Cell[4405, 142, 116, 1, 30, "WorkflowGuideRelatedGuide",ExpressionUUID->"cc6f9d73-ca15-4e31-b178-e32e69d86215",
+Cell[4846, 156, 116, 1, 30, "WorkflowGuideRelatedGuide",ExpressionUUID->"cc6f9d73-ca15-4e31-b178-e32e69d86215",
  CellID->155524191]
 }, Closed]],
 Cell[CellGroupData[{
-Cell[4558, 148, 132, 1, 52, "WorkflowGuideRelatedLinksSection",ExpressionUUID->"ae853ba0-2238-4cb9-9538-b4fda554656f",
+Cell[4999, 162, 132, 1, 52, "WorkflowGuideRelatedLinksSection",ExpressionUUID->"ae853ba0-2238-4cb9-9538-b4fda554656f",
  CellID->400277405],
-Cell[4693, 151, 116, 1, 30, "WorkflowGuideRelatedLink",ExpressionUUID->"4c2e15b4-7013-4c06-9523-8778d645cc18",
+Cell[5134, 165, 116, 1, 30, "WorkflowGuideRelatedLink",ExpressionUUID->"4c2e15b4-7013-4c06-9523-8778d645cc18",
  CellID->1543563431]
 }, Closed]]
 }, Open  ]]
