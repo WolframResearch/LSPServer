@@ -194,7 +194,6 @@ Catch[
 Catch[
 Module[{logFile, res, bytes, bytess, logFileStream,
   logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr,
-  lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
   content, contents,
   errStr, ferror},
 
@@ -288,55 +287,6 @@ Module[{logFile, res, bytes, bytess, logFileStream,
 
   log["$ParentProcessID: ", $ParentProcessID];
   log["\n\n"];
-
-  If[!StringStartsQ[ToLowerCase[FileBaseName[$CommandLine[[1]]]], "wolframkernel"],
-    log["WARNING: Command for Wolfram Language Server does not start with 'WolframKernel': ", $CommandLine[[1]]];
-    log["\n\n"]
-  ];
-  If[!MemberQ[$CommandLine, "-noinit"],
-    log["WARNING: -noinit is not in $CommandLine"];
-    log["\n\n"]
-  ];
-  If[!MemberQ[$CommandLine, "-noprompt"],
-    log["WARNING: -noprompt is not in $CommandLine"];
-    log["\n\n"]
-  ];
-  If[!MemberQ[$CommandLine, "-nopaclet"],
-    log["WARNING: -nopaclet is not in $CommandLine"];
-    log["\n\n"]
-  ];
-  If[!MemberQ[$CommandLine, "-noicon"],
-    log["WARNING: -noicon is not in $CommandLine"];
-    log["\n\n"]
-  ];
-
-
-  lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
-
-  codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
-
-  codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
-
-  codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
-
-  If[lspServerVersion =!= codeParserVersion,
-    log["WARNING: LSPServer and CodeParser do not have the same version."];
-    log["WARNING: LSPServer version: ", lspServerVersion];
-    log["WARNING: CodeParser version: ", codeParserVersion];
-    log["\n\n"]
-  ];
-  If[lspServerVersion =!= codeInspectorVersion,
-    log["WARNING: LSPServer and CodeInspector do not have the same version."];
-    log["WARNING: LSPServer version: ", lspServerVersion];
-    log["WARNING: CodeInspector version: ", codeInspectorVersion];
-    log["\n\n"]
-  ];
-  If[lspServerVersion =!= codeFormatterVersion,
-    log["WARNING: LSPServer and CodeFormatter do not have the same version."];
-    log["WARNING: LSPServer version: ", lspServerVersion];
-    log["WARNING: CodeFormatter version: ", codeFormatterVersion];
-    log["\n\n"]
-  ];
 
 
   (*
