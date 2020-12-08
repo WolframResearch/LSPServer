@@ -149,7 +149,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearImplicitTok
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitTokens"]] :=
   Catch[
-  Module[{params, doc, uri, entry, inspectedFileObj, lines},
+  Module[{params, doc, uri, entry, inspectedFileObj, tokens},
 
     If[$Debug2,
       log["textDocument/publishImplicitTokens: enter"]
@@ -177,7 +177,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitT
       Throw[{<| "jsonrpc" -> "2.0",
                 "method" -> "textDocument/publishImplicitTokens",
                 "params" -> <| "uri" -> uri,
-                               "lines" -> {} |> |>}]
+                               "tokens" -> {} |> |>}]
     ];
 
     inspectedFileObj = Lookup[entry, "InspectedFileObject", Null];
@@ -189,7 +189,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitT
       Throw[{<| "jsonrpc" -> "2.0",
                 "method" -> "textDocument/publishImplicitTokens",
                 "params" -> <| "uri" -> uri,
-                               "lines" -> {} |> |>}]
+                               "tokens" -> {} |> |>}]
     ];
 
     (*
@@ -200,7 +200,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitT
       Throw[{<| "jsonrpc" -> "2.0",
                 "method" -> "textDocument/publishImplicitTokens",
                 "params" -> <| "uri" -> uri,
-                               "lines" -> {} |> |>}]
+                               "tokens" -> {} |> |>}]
     ];
 
     (*
@@ -209,40 +209,54 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitT
 
     we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
     *)
-    
-    lines = <|
-      "line" -> #[[2]],
-      "characters" -> ((# /. {
-        (*
-        convert characters to the little markup language described in notes.md
 
-        Openers and closers are dropped here
-        *)
-        LintAllCharacter -> "A",
-        LintNullCharacter -> "N",
-        LintOneCharacter -> "1",
-        LintTimesCharacter -> "x",
-        LintExpectedOperandCharacter -> "e",
-        LintAllCloseCharacter -> "A",
-        LintAllTimesCharacter -> "B",
-        LintCloseCloseCharacter -> " ",
-        LintCloseTimesCharacter -> "x",
-        LintOpenOneCharacter -> "1",
-        LintOpenOpenCharacter -> " ",
-        LintTimesOneCharacter -> "y",
-        LintExpectedOperandTimesCharacter -> "f",
-        LintExpectedOperandCloseCharacter -> "e",
-        LintOpenExpectedOperandCharacter -> "e",
-        LintAllTimesOneCharacter -> "C",
-        LintCloseTimesOneCharacter -> "y"
-      })& /@ ((# /. LintMarkup[content1_, ___] :> content1)& /@ #[[3, 2, 2;;]]))
-    |>& /@ inspectedFileObj[[2]];
+    tokens = Flatten[
+      Function[{ignored1, line, content1(*, ignore rest of args*)},
+        MapIndexed[
+          Function[{sym, columnList},
+            <|"character" -> markupSymbolToChar[sym], "line" -> line, "column" -> columnList[[1]]|>]
+          ,
+          content1[[2, 2;;]]
+        ]
+      ] @@@ inspectedFileObj[[2]]
+    ];
+
+    tokens = DeleteCases[tokens, KeyValuePattern["character" -> " "]];
 
     {<| "jsonrpc" -> "2.0",
         "method" -> "textDocument/publishImplicitTokens",
         "params" -> <| "uri" -> uri,
-                       "lines" -> lines |> |>}
+                       "tokens" -> tokens |> |>}
   ]]
+
+
+(*
+convert characters to the little markup language described in notes.md
+
+Openers and closers are dropped here
+*)
+markupSymbolToChar[LintMarkup[LintAllCharacter, ___]] := "A"
+markupSymbolToChar[LintMarkup[LintNullCharacter, ___]] := "N"
+markupSymbolToChar[LintMarkup[LintOneCharacter, ___]] := "1"
+markupSymbolToChar[LintMarkup[LintTimesCharacter, ___]] := "x"
+markupSymbolToChar[LintMarkup[LintExpectedOperandCharacter, ___]] := "e"
+markupSymbolToChar[LintMarkup[LintAllCloseCharacter, ___]] := "A"
+markupSymbolToChar[LintMarkup[LintAllTimesCharacter, ___]] := "B"
+markupSymbolToChar[LintMarkup[LintCloseCloseCharacter, ___]] := " "
+markupSymbolToChar[LintMarkup[LintCloseTimesCharacter, ___]] := "x"
+markupSymbolToChar[LintMarkup[LintOpenOneCharacter, ___]] := "1"
+markupSymbolToChar[LintMarkup[LintOpenOpenCharacter, ___]] := " "
+markupSymbolToChar[LintMarkup[LintTimesOneCharacter, ___]] := "y"
+markupSymbolToChar[LintMarkup[LintExpectedOperandTimesCharacter, ___]] := "f"
+markupSymbolToChar[LintMarkup[LintExpectedOperandCloseCharacter, ___]] := "e"
+markupSymbolToChar[LintMarkup[LintOpenExpectedOperandCharacter, ___]] := "e"
+markupSymbolToChar[LintMarkup[LintAllTimesOneCharacter, ___]] := "C"
+markupSymbolToChar[LintMarkup[LintCloseTimesOneCharacter, ___]] := "y"
+
+markupSymbolToChar[" "] := " "
+markupSymbolToChar[LintMarkup["(", ___]] := " "
+markupSymbolToChar[LintMarkup[")", ___]] := " "
+
 
 
 End[]
