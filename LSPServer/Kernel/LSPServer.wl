@@ -180,6 +180,8 @@ $CancelMap = <||>
 
 
 
+StartServer::notebooks = "LSPServer cannot be started inside of a notebook session."
+
 Options[StartServer] = {
 	ConfidenceLevel -> Automatic
 }
@@ -195,6 +197,11 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
   content, contents,
   errStr, ferror},
+
+  If[$Notebooks,
+    Message[StartServer::notebooks];
+    Throw[$Failed]
+  ];
 
   $ConfidenceLevelOption = OptionValue[ConfidenceLevel];
 
