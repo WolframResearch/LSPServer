@@ -174,7 +174,16 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     (*
     Need to filter the actions that match the cursor
     *)
-    actions = Cases[lint, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberIntersectingQ[src, cursor]]], Infinity];
+    actions = Cases[lint, CodeAction[_, _, _], Infinity];
+
+    If[$Debug2,
+      log["actions: ", ToString[actions]]
+    ];
+
+    (*
+    Need to filter the actions that match the cursor
+    *)
+    actions = Cases[actions, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberIntersectingQ[src, cursor]]]];
 
     If[$Debug2,
       log["actions: ", ToString[actions]]
