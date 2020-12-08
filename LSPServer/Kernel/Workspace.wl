@@ -30,30 +30,37 @@ Module[{params, id, command},
 
   Switch[command,
     "enable_bracket_matcher_debug_mode",
-      $DebugBracketMatcher = True
+      $DebugBracketMatcher = True;
+      (*
+      TODO: trigger bracket matcher here
+      *)
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
     "disable_bracket_matcher_debug_mode",
-      $DebugBracketMatcher = False
+      $DebugBracketMatcher = False;
+      (*
+      TODO: trigger bracket matcher here
+      *)
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
-    "enable_bracket_matcher_design_colors",
+    (* "enable_bracket_matcher_design_colors",
       $BracketMatcherUseDesignColors = True
     ,
     "disable_bracket_matcher_design_colors",
       $BracketMatcherUseDesignColors = False
-    ,
-    "enable_bracket_matcher_display_insertion_text",
+    , *)
+    (* "enable_bracket_matcher_display_insertion_text",
       $BracketMatcherDisplayInsertionText = True
     ,
     "disable_bracket_matcher_display_insertion_text",
       $BracketMatcherDisplayInsertionText = False
-    ,
+    , *)
     _,
       If[$Debug,
         log["UNSUPPORTED COMMAND: ", command]
-      ]
-  ];
-
-  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
+      ];
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
+  ]
 ]]
 
 

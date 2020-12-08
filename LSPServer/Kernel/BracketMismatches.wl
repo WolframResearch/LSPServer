@@ -323,7 +323,10 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
           (*
           if debug, then keep all lines separated
           *)
-          AppendTo[lines, line1]
+          AppendTo[lines, line1];
+          (* AppendTo[lines, line2];
+          AppendTo[lines, line3];
+          AppendTo[lines, line4]; *)
           ,
           (*
           if not debug, then merge lines together
@@ -370,6 +373,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
     ];
 
     If[$Debug2,
+      log["lines: ", lines];
       log["textDocument/publishBracketMismatches: exit"]
     ];
 
@@ -381,10 +385,10 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
   ]]
 
 
-suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, confidence_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
-  Module[{escaped, confidenceStr},
+suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, prob_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
+  Module[{escaped, probStr},
     escaped = StringReplace[Characters[insertionText], {"<" -> "&lt;", ">" -> "&gt;"}];
-    confidenceStr = " confidence: " <> ToString[PercentForm[confidence]];
+    probStr = " probability: " <> ToString[PercentForm[prob]];
 
     $hrefIdCounter++;
     
@@ -394,17 +398,17 @@ suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column
       *)
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2|3, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> confidenceStr]}]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2|3, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
       |>
       ,
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> confidenceStr]}]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
       |>
       ,
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> confidenceStr]}]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
       |>
       ,
       (*
@@ -413,7 +417,7 @@ suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column
       <|
         "line" -> line + chunkOffset,
         "characters" ->
-          If[$BracketMatcherDisplayInsertionText,
+          If[TrueQ[$DebugBracketMatcher],
             ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {
               column -> makeHTML[blueRank[rank], escaped[[1]], ToString[$hrefIdCounter], ""],
               column + 1 -> If[Length[escaped] == 2, makeHTML[blueRank[rank], escaped[[2]], ToString[$hrefIdCounter], ""], "&nbsp;"]
@@ -435,9 +439,10 @@ suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column
     }
   ]
 
-suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_Integer}}, completed_String, probability_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
-  Module[{escaped},
+suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_Integer}}, completed_String, prob_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
+  Module[{escaped, probStr},
     escaped = StringReplace[deletionText, {"<" -> "&lt;", ">" -> "&gt;"}];
+    probStr = " probability: " <> ToString[PercentForm[prob]];
 
     $hrefIdCounter++;
     
@@ -447,17 +452,17 @@ suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_
       *)
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2|3, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2|3, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
       |>
       ,
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
       |>
       ,
       <|
         "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> ToString[PercentForm[probability]]]]
+        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
       |>
       ,
       (*
@@ -536,17 +541,15 @@ $downArrow = "\:25bc"
 
 (*
 FIXME: Use the same font as the editor
+style = font-family: xxx;
 *)
-$fontFamily = "Fira Code"
-
-
 makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; TrueQ[$DebugBracketMatcher] :=
   Module[{colorHex},
     colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
 "\
 <span style=\"" <> "margin: 0;border: 0;padding: 0;" <> "\">\
-<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a><br>\
-<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> debugStr <> "</a>\
+<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a><br>\
+<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> debugStr <> "</a>\
 </span>\
 "
   ]
@@ -556,7 +559,7 @@ makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; !TrueQ[$
     colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
 "\
 <span style=\"" <> "margin: 0;border: 0;padding: 0;" <> "\">\
-<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "font-family:" <> $fontFamily <> ";color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a>\
+<a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a>\
 </span>\
 "
   ]

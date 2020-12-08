@@ -35,7 +35,9 @@ $ImplicitTokens
 
 $BracketMatcher
 
+(*
 $BracketMatcherDisplayInsertionText
+*)
 
 $BracketMatcherUseDesignColors
 
@@ -105,7 +107,9 @@ $BracketMatcher = False
 
 $BracketMatcherUseDesignColors = True
 
+(*
 $BracketMatcherDisplayInsertionText = False
+*)
 
 (*
 Bracket suggestions from ML4Code can take O(n^2) time in the size of the chunk, so make sure to
@@ -117,14 +121,8 @@ $ML4CodeTimeLimit = 0.4
 
 
 $ExecuteCommandProvider = <|
-  "commands" -> {
-    "enable_bracket_matcher_debug_mode",
-    "disable_bracket_matcher_debug_mode",
-    "enable_bracket_matcher_design_colors",
-    "disable_bracket_matcher_design_colors",
-    "enable_bracket_matcher_display_insertion_text",
-    "disable_bracket_matcher_display_insertion_text"
-  } |>
+  "commands" -> {}
+|>
 
 
 
@@ -439,7 +437,7 @@ Module[{logFile, res, bytes, bytess, logFileStream,
     ](*Do bytess*)
 
   ](*While*)
-]],(*Module*)
+]],(*Module, 1-arg Catch*)
 _,
 (
   log["\n\n"];
@@ -768,7 +766,12 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   params = content["params"];
 
   If[KeyExistsQ[params, "initializationOptions"],
+
     initializationOptions = params["initializationOptions"];
+
+    If[$Debug2,
+      log["initializationOptions: ", initializationOptions]
+    ];
 
     (*
 
@@ -798,7 +801,6 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     ];
   ];
 
-
   (*
   Only use confidenceLevel from initializationOptions if no ConfidenceLevel option was passed to StartServer[]
   *)
@@ -813,7 +815,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       $ConfidenceLevel = $DefaultConfidenceLevel
   ];
 
+
   If[$Debug2,
+    log["$ImplicitTokens: ", $ImplicitTokens];
+    log["$BracketMatcher: ", $BracketMatcher];
+    log["$DebugBracketMatcher: ", $DebugBracketMatcher];
     log["$ConfidenceLevel: ", $ConfidenceLevel]
   ];
 
@@ -906,7 +912,19 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       "textDocument/runBracketMismatches",
       "textDocument/suggestBracketEdits",
       "textDocument/publishBracketMismatches"
-    }]
+    }];
+
+    $ExecuteCommandProvider =
+      Merge[{$ExecuteCommandProvider, <|
+        "commands" -> {
+          "enable_bracket_matcher_debug_mode",
+          "disable_bracket_matcher_debug_mode"(* ,
+          "enable_bracket_matcher_design_colors",
+          "disable_bracket_matcher_design_colors" *)(* ,
+          "enable_bracket_matcher_display_insertion_text",
+          "disable_bracket_matcher_display_insertion_text" *)
+        }
+      |>}, Flatten]
   ];
 
   {<| "jsonrpc" -> "2.0", "id" -> id,
