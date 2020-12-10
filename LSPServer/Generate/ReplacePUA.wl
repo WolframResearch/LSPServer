@@ -1,3 +1,6 @@
+
+If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
+
 BeginPackage["LSPServer`Generate`ReplacePUA`"]
 
 
