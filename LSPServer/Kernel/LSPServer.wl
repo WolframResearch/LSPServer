@@ -30,7 +30,7 @@ $CancelMap
 $hrefIdCounter
 
 
-$ImplicitTokens
+$AllowedImplicitTokens
 
 
 $BracketMatcher
@@ -98,7 +98,7 @@ $DefaultConfidenceLevel = 0.95
 
 $CodeActionLiteralSupport = False
 
-$ImplicitTokens = False
+$AllowedImplicitTokens = {}
 
 (*
 if $BracketMatcher, then load ML4Code` and use ML bracket matching tech
@@ -787,7 +787,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     If[KeyExistsQ[initializationOptions, "implicitTokens"],
       implicitTokens = initializationOptions["implicitTokens"];
 
-      $ImplicitTokens = implicitTokens
+      $AllowedImplicitTokens = implicitTokens
     ];
     If[KeyExistsQ[initializationOptions, "bracketMatcher"],
       bracketMatcher = initializationOptions["bracketMatcher"];
@@ -817,7 +817,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
 
   If[$Debug2,
-    log["$ImplicitTokens: ", $ImplicitTokens];
+    log["$AllowedImplicitTokens: ", $AllowedImplicitTokens];
     log["$BracketMatcher: ", $BracketMatcher];
     log["$DebugBracketMatcher: ", $DebugBracketMatcher];
     log["$ConfidenceLevel: ", $ConfidenceLevel]
@@ -868,7 +868,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     codeActionProviderValue = True
   ];
 
-  If[$ImplicitTokens,
+  If[$AllowedImplicitTokens != {},
 
     RegisterDidOpenMethods[{
       "textDocument/runImplicitTokens",

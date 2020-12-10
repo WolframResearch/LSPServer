@@ -91,7 +91,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
       log["before CodeInspectImplicitTokensAgg"]
     ];
 
-    implicitTokens = CodeInspectImplicitTokensAgg[agg];
+    implicitTokens = CodeInspectImplicitTokensAgg[agg, "AllowedImplicitTokens" -> $AllowedImplicitTokens];
 
     If[$Debug2,
       log["after CodeInspectImplicitTokensAgg"];
@@ -240,8 +240,11 @@ markupSymbolToChar[LintMarkup[LintNullCharacter, ___]] := "N"
 markupSymbolToChar[LintMarkup[LintOneCharacter, ___]] := "1"
 markupSymbolToChar[LintMarkup[LintTimesCharacter, ___]] := "x"
 markupSymbolToChar[LintMarkup[LintExpectedOperandCharacter, ___]] := "e"
+
 markupSymbolToChar[LintMarkup[LintAllCloseCharacter, ___]] := "A"
 markupSymbolToChar[LintMarkup[LintAllTimesCharacter, ___]] := "B"
+markupSymbolToChar[LintMarkup[LintAllOneCharacter, ___]] := "D"
+
 markupSymbolToChar[LintMarkup[LintCloseCloseCharacter, ___]] := " "
 markupSymbolToChar[LintMarkup[LintCloseTimesCharacter, ___]] := "x"
 markupSymbolToChar[LintMarkup[LintOpenOneCharacter, ___]] := "1"
