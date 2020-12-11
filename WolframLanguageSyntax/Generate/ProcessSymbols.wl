@@ -457,6 +457,14 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
   experimentalNames, obsoleteString, experimentalString, res,
   builtInDollarFunctions, actuallyNonSystemConstants},
 
+  WolframLanguageSyntax`Generate`$builtInFunctions = {};
+  WolframLanguageSyntax`Generate`$constants = {};
+  WolframLanguageSyntax`Generate`$undocumentedSymbols = {};
+  WolframLanguageSyntax`Generate`$experimentalSymbols = {};
+  WolframLanguageSyntax`Generate`$obsoleteSymbols = {};
+  WolframLanguageSyntax`Generate`$systemLongNames = {};
+  WolframLanguageSyntax`Generate`$systemCharacters = {};
+
   Print["Setting up symbols for version: ", $Version];
 
   (*
@@ -573,6 +581,10 @@ Module[{dumpFile},
 
   dumpFile = FileNameJoin[{buildDir, "processedSymbols.mx"}];
 
+  If[FileExistsQ[dumpFile],
+    DeleteFile[dumpFile]
+  ];
+
   DumpSave[dumpFile, {
     WolframLanguageSyntax`Generate`$builtInFunctions,
     WolframLanguageSyntax`Generate`$constants,
@@ -580,7 +592,12 @@ Module[{dumpFile},
     WolframLanguageSyntax`Generate`$experimentalSymbols,
     WolframLanguageSyntax`Generate`$obsoleteSymbols,
     WolframLanguageSyntax`Generate`$systemLongNames,
-    WolframLanguageSyntax`Generate`$systemCharacters}]
+    WolframLanguageSyntax`Generate`$systemCharacters}];
+
+  If[!FileExistsQ[dumpFile],
+    Print["processedSymbols.mx was not generated"];
+    Quit[1]
+  ];
 ]
 
 
@@ -594,6 +611,9 @@ dumpSystemSymbols[];
 Print["Done Processing Symbols"]
 )
 
+If[!StringQ[script],
+  Quit[1]
+]
 If[AbsoluteFileName[script] === AbsoluteFileName[$InputFileName],
 generate[]
 ]
