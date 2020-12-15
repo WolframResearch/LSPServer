@@ -102,7 +102,8 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
     CallNode[LeafNode[Symbol, "RGBColor" | "Hue" | "GrayLevel", _], _, _] |
     LeafNode[Symbol, "Red" | "Green" | "Blue" | "Black" | "White" | "Gray" | "Cyan" | "Magenta" | "Yellow" | "Brown" | "Orange" | "Pink" | "Purple" |
       "LightRed" | "LightGreen" | "LightBlue" | "LightGray" | "LightCyan" | "LightMagenta" | "LightYellow" | "LightBrown" | "LightOrange" | "LightPink" | "LightPurple" |
-      "Transparent", _], Infinity];
+      "Transparent", _] |
+    CallNode[LeafNode[Symbol, "Darker" | "Lighter", _], _, _], Infinity];
 
   colorInformations = colorNodeToColorInformation /@ colorNodes;
 
@@ -235,6 +236,50 @@ Module[{},
 ]
 
 
+colorNodeToColorInformation[CallNode[head:LeafNode[Symbol, "Darker" | "Lighter", _], {n_}, data_]] :=
+Catch[
+Module[{rVal, gVal, bVal, aVal, src, info, c},
+
+  info = colorNodeToColorInformation[n];
+
+  If[info === Null,
+    Throw[info]
+  ];
+
+  c = info["color"];
+
+  rVal = c["red"];
+  gVal = c["green"];
+  bVal = c["blue"];
+  aVal = c["alpha"];
+
+  c = RGBColor[rVal, gVal, bVal, aVal];
+  Switch[head,
+    LeafNode[Symbol, "Darker", _],
+      c = N[Darker[c]]
+    ,
+    LeafNode[Symbol, "Lighter", _],
+      c = N[Lighter[c]]
+  ];
+
+  rVal = c[[1]];
+  gVal = c[[2]];
+  bVal = c[[3]];
+  aVal = c[[4]];
+
+  src = data[Source];
+
+  src-=1;
+
+  <| "range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+                   "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
+     "color" -> <| "red" -> rVal,
+                   "green" -> gVal,
+                   "blue" -> bVal,
+                   "alpha" -> aVal |> |>
+]]
+
+
 colorNodeToColorInformation[_] :=
   Null
 
@@ -296,6 +341,9 @@ Module[{id, params, doc, uri, color, range, rVal, gVal, bVal, aVal, label},
 
 fromNode[l:LeafNode[Integer|Real, _, _]] := FromNode[l]
 
+(*
+Make sure to do N with Rational
+*)
 fromNode[CallNode[LeafNode[Symbol, "Times", _], {
   n:LeafNode[Integer, _, _],
   CallNode[LeafNode[Symbol, "Power", _], {
