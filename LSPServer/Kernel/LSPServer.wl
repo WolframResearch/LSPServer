@@ -1635,6 +1635,18 @@ exitGracefully[] := (
 )
 
 exitSemiGracefully[] := (
+  log["Language Server kernel did not shutdown properly."];
+  log[""];
+  log["This is the command that was used:"];
+  log[$CommandLine];
+  log[""];
+  log["To help diagnose the problem, run this in a notebook:\n" <>
+  "Needs[\"LSPServer`\"]\n" <>
+  "LSPServer`RunServerDiagnostic[{" <>
+    StringJoin[Riffle[("\"" <> # <> "\"")& /@ StringReplace[$CommandLine, "\"" -> "\\\""], ", "]] <>
+    "}]"];
+  log[""];
+  log["Fix any problems then restart and try again."];
   log["\n\n"];
   log["KERNEL IS EXITING SEMI-GRACEFULLY"];
   log["\n\n"];
@@ -1642,6 +1654,18 @@ exitSemiGracefully[] := (
 )
 
 exitHard[] := (
+  log["Language Server kernel did not shutdown properly."];
+  log[""];
+  log["This is the command that was used:"];
+  log[$CommandLine];
+  log[""];
+  log["To help diagnose the problem, run this in a notebook:\n" <>
+  "Needs[\"LSPServer`\"]\n" <>
+  "LSPServer`RunServerDiagnostic[{" <>
+    StringJoin[Riffle[("\"" <> # <> "\"")& /@ StringReplace[$CommandLine, "\"" -> "\\\""], ", "]] <>
+    "}]"];
+  log[""];
+  log["Fix any problems then restart and try again."];
   log["\n\n"];
   log["KERNEL IS EXITING HARD"];
   log["\n\n"];
