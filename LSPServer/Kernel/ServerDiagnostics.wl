@@ -69,6 +69,10 @@ RunServerDiagnostic[command:{_String...}] :=
     Print["Starting Language Server kernel with command: ", command];
     proc = StartProcess[command];
 
+    Print[];
+    Print["If any messages are printed below, they must be fixed."];
+    Print[];
+    
     If[FailureQ[proc],
       Throw[proc]
     ];
