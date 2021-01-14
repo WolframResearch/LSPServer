@@ -717,9 +717,12 @@ Module[{openFilesMapCopy, entryCopy, jobs, res, methods, contents, toRemove, job
     openFilesMapCopy
   ];
 
-  contents = expandContents[contents];
+  If[!empty[contents],
+  
+    contents = expandContents[contents];
 
-  $ContentQueue = $ContentQueue ~Join~ contents;
+    $ContentQueue = $ContentQueue ~Join~ contents;
+  ]
 ]
 
 
@@ -1238,7 +1241,10 @@ Module[{params, doc, uri, text, entry},
   uri = doc["uri"];
   text = doc["text"];
 
-  entry = <| "Text" -> text |>;
+  entry = <|
+    "Text" -> text,
+    "LastChange" -> Now
+  |>;
 
   $OpenFilesMap[uri] = entry;
 

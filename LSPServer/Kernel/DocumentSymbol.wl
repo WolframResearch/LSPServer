@@ -37,9 +37,13 @@ $SymbolKind = <|
   "TypeParameter" -> 26
 |>
 
+(*
+no expandContent here because textDocument/documentSymbol is a request
+*)
+
 handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]] :=
 Catch[
-Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
+Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs, text, fileName, fileFormat},
 
   If[$Debug2,
     log["textDocument/documentSymbol: enter"]
@@ -81,7 +85,25 @@ Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
 
     If[agg === Null,
       
-      cst = entry["CST"];
+      cst = Lookup[entry, "CST", Null];
+
+      If[cst === Null,
+
+        text = entry["Text"];
+
+        fileName = normalizeURI[uri];
+
+        fileFormat = Automatic;
+        If[FileExtension[fileName] == "wls",
+          fileFormat = "Script"
+        ];
+
+        cst = CodeConcreteParse[text, "FileFormat" -> fileFormat];
+      ];
+
+      If[FailureQ[cst],
+        Throw[cst]
+      ];
 
       agg = CodeParser`Abstract`Aggregate[cst];
       
@@ -90,6 +112,10 @@ Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs},
       $OpenFilesMap[uri] = entry
     ];
     
+    If[FailureQ[agg],
+      Throw[agg]
+    ];
+
     ast = CodeParser`Abstract`Abstract[agg];
     
     entry["AST"] = ast;

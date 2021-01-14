@@ -8,9 +8,13 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
+(*
+no expandContent here because textDocument/references is a request
+*)
+
 handleContent[content:KeyValuePattern["method" -> "textDocument/references"]] :=
 Catch[
-Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entry, locations},
+Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entry, locations, text, fileName, fileFormat},
 
   id = content["id"];
 
@@ -50,7 +54,21 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
 
   entry = $OpenFilesMap[uri];
 
-  cst = entry["CST"];
+  cst = Look[entry, "CST", Null];
+
+  If[cst === Null,
+    
+    text = entry["Text"];
+
+    fileName = normalizeURI[uri];
+
+    fileFormat = Automatic;
+    If[FileExtension[fileName] == "wls",
+      fileFormat = "Script"
+    ];
+
+    cst = CodeConcreteParse[text, "FileFormat" -> fileFormat];
+  ];
 
   If[FailureQ[cst],
     Throw[cst]
