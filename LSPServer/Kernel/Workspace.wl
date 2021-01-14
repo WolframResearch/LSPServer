@@ -12,6 +12,10 @@ handleContent[content:KeyValuePattern["method" -> "workspace/executeCommand"]] :
 Catch[
 Module[{params, id, command},
 
+  If[$Debug2,
+    log["workspace/executeCommand: enter"]
+  ];
+
   id = content["id"];
 
   If[Lookup[$CancelMap, id, False],
@@ -66,6 +70,11 @@ Module[{params, id, command},
 
 handleContent[content:KeyValuePattern["method" -> "workspace/didChangeWatchedFiles"]] :=
   Module[{},
+
+    If[$Debug2,
+      log["workspace/didChangeWatchedFiles: enter"]
+    ];
+  
     {}
   ]
 

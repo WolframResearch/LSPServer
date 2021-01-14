@@ -55,7 +55,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
         log["canceled"]
       ];
       
-      Throw[{<| "method" -> "textDocument/documentSymbol", "id" -> id, "params" -> params |>}]
+      Throw[{<| "method" -> "textDocument/documentSymbolFencepost", "id" -> id, "params" -> params |>}]
     ];
 
     params = content["params"];
@@ -68,7 +68,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
         log["stale"]
       ];
 
-      Throw[{<| "method" -> "textDocument/documentSymbol", "id" -> id, "params" -> params, "stale" -> True |>}]
+      Throw[{<| "method" -> "textDocument/documentSymbolFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
@@ -84,7 +84,7 @@ Catch[
 Module[{id, params, doc, uri, ast, entry, symbolInfo, defs},
 
   If[$Debug2,
-    log["textDocument/documentSymbol: enter"]
+    log["textDocument/documentSymbolFencepost: enter"]
   ];
 
   id = content["id"];

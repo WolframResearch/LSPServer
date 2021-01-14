@@ -61,7 +61,7 @@ Catch[
 Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
 
   If[$Debug2,
-    log["textDocument/documentColor: enter"]
+    log["textDocument/documentColorFencepost: enter"]
   ];
 
   id = content["id"];

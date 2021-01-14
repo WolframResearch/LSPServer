@@ -13,7 +13,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/references"], po
   Module[{params, id, doc, uri},
 
     If[$Debug2,
-      log["textDocument/documentColor: enter expand"]
+      log["textDocument/references: enter expand"]
     ];
 
     id = content["id"];
@@ -26,7 +26,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/references"], po
         log["canceled"]
       ];
       
-      Throw[{<| "method" -> "textDocument/references", "id" -> id, "params" -> params |>}]
+      Throw[{<| "method" -> "textDocument/referencesFencepost", "id" -> id, "params" -> params |>}]
     ];
 
     params = content["params"];
@@ -39,7 +39,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/references"], po
         log["stale"]
       ];
 
-      Throw[{<| "method" -> "textDocument/references", "id" -> id, "params" -> params, "stale" -> True |>}]
+      Throw[{<| "method" -> "textDocument/referencesFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
@@ -50,7 +50,11 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/references"], po
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/referencesFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entry, locations, text, fileName, fileFormat},
+Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entry, locations},
+  
+  If[$Debug2,
+    log["textDocument/referencesFencepost: enter"]
+  ];
 
   id = content["id"];
 

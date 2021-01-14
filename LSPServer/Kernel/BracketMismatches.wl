@@ -41,7 +41,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismat
   Module[{params, doc, uri, entry, text, mismatches, aggTabs},
     
     If[$Debug2,
-      log["textDocument/runBracketMismatches: enter"]
+      log["textDocument/runBracketMismatchesFencepost: enter"]
     ];
 
     params = content["params"];

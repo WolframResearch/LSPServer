@@ -55,7 +55,7 @@ Catch[
 Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, namePat, srcs, entry},
 
   If[$Debug2,
-    log["textDocument/definition: enter"]
+    log["textDocument/definitionFencepost: enter"]
   ];
 
   id = content["id"];
