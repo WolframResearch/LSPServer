@@ -67,6 +67,7 @@ Needs["LSPServer`Hover`"]
 Needs["LSPServer`ImplicitTokens`"]
 Needs["LSPServer`Library`"]
 Needs["LSPServer`References`"]
+Needs["LSPServer`SelectionRange`"]
 Needs["LSPServer`ServerDiagnostics`"]
 Needs["LSPServer`Utils`"]
 Needs["LSPServer`Workspace`"]
@@ -1037,7 +1038,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "documentFormattingProvider" -> True,
                                          "documentRangeFormattingProvider" -> True,
                                          "executeCommandProvider" -> $ExecuteCommandProvider,
-                                         "documentSymbolProvider" -> True
+                                         "documentSymbolProvider" -> True,
+                                         "selectionRangeProvider" -> True
                                      |>
                  |>
   |>}
