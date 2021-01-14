@@ -8,11 +8,47 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
-(*
-no expandContent here because textDocument/references is a request
-*)
+expandContent[content:KeyValuePattern["method" -> "textDocument/references"], pos_] :=
+  Catch[
+  Module[{params, id, doc, uri},
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/references"]] :=
+    If[$Debug2,
+      log["textDocument/documentColor: enter expand"]
+    ];
+
+    id = content["id"];
+
+    If[Lookup[$CancelMap, id, False],
+
+      $CancelMap[id] =.;
+
+      If[$Debug2,
+        log["canceled"]
+      ];
+      
+      Throw[{<| "method" -> "textDocument/references", "id" -> id, "params" -> params |>}]
+    ];
+
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+    
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{<| "method" -> "textDocument/references", "id" -> id, "params" -> params, "stale" -> True |>}]
+    ];
+
+    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+       "textDocument/concreteParse",
+       "textDocument/referencesFencepost"
+    }
+  ]]
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/referencesFencepost"]] :=
 Catch[
 Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entry, locations, text, fileName, fileFormat},
 
@@ -54,21 +90,7 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
 
   entry = $OpenFilesMap[uri];
 
-  cst = Look[entry, "CST", Null];
-
-  If[cst === Null,
-    
-    text = entry["Text"];
-
-    fileName = normalizeURI[uri];
-
-    fileFormat = Automatic;
-    If[FileExtension[fileName] == "wls",
-      fileFormat = "Script"
-    ];
-
-    cst = CodeConcreteParse[text, "FileFormat" -> fileFormat];
-  ];
+  cst = entry["CST"];
 
   If[FailureQ[cst],
     Throw[cst]

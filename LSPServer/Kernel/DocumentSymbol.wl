@@ -37,13 +37,51 @@ $SymbolKind = <|
   "TypeParameter" -> 26
 |>
 
-(*
-no expandContent here because textDocument/documentSymbol is a request
-*)
+expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"], pos_] :=
+  Catch[
+  Module[{params, id, doc, uri},
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]] :=
+    If[$Debug2,
+      log["textDocument/documentColor: enter expand"]
+    ];
+
+    id = content["id"];
+
+    If[Lookup[$CancelMap, id, False],
+
+      $CancelMap[id] =.;
+
+      If[$Debug2,
+        log["canceled"]
+      ];
+      
+      Throw[{<| "method" -> "textDocument/documentSymbol", "id" -> id, "params" -> params |>}]
+    ];
+
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+    
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{<| "method" -> "textDocument/documentSymbol", "id" -> id, "params" -> params, "stale" -> True |>}]
+    ];
+
+    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+       "textDocument/concreteParse",
+       "textDocument/aggregateParse",
+       "textDocument/abstractParse",
+       "textDocument/documentSymbolFencepost"
+    }
+  ]]
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbolFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs, text, fileName, fileFormat},
+Module[{id, params, doc, uri, ast, entry, symbolInfo, defs},
 
   If[$Debug2,
     log["textDocument/documentSymbol: enter"]
@@ -77,51 +115,7 @@ Module[{id, params, doc, uri, ast, entry, cst, agg, symbolInfo, defs, text, file
     
   entry = $OpenFilesMap[uri];
 
-  ast = Lookup[entry, "AST", Null];
-
-  If[ast === Null,
-    
-    agg = Lookup[entry, "Agg", Null];
-
-    If[agg === Null,
-      
-      cst = Lookup[entry, "CST", Null];
-
-      If[cst === Null,
-
-        text = entry["Text"];
-
-        fileName = normalizeURI[uri];
-
-        fileFormat = Automatic;
-        If[FileExtension[fileName] == "wls",
-          fileFormat = "Script"
-        ];
-
-        cst = CodeConcreteParse[text, "FileFormat" -> fileFormat];
-      ];
-
-      If[FailureQ[cst],
-        Throw[cst]
-      ];
-
-      agg = CodeParser`Abstract`Aggregate[cst];
-      
-      entry["Agg"] = agg;
-
-      $OpenFilesMap[uri] = entry
-    ];
-    
-    If[FailureQ[agg],
-      Throw[agg]
-    ];
-
-    ast = CodeParser`Abstract`Abstract[agg];
-    
-    entry["AST"] = ast;
-
-    $OpenFilesMap[uri] = entry
-  ];
+  ast = entry["AST"];
 
   If[FailureQ[ast],
     Throw[ast]
