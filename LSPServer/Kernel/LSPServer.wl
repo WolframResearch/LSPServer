@@ -48,6 +48,12 @@ $ConfidenceLevel
 $ML4CodeTimeLimit
 
 
+
+$BracketMatcherDelayAfterLastChange
+$DiagnosticsDelayAfterLastChange
+$ImplicitTokensDelayAfterLastChange
+
+
 Begin["`Private`"]
 
 Needs["LSPServer`BracketMismatches`"]
@@ -172,9 +178,25 @@ $TextDocumentSyncKind = <|
 
 $ContentQueue = {}
 
+(*
+An assoc of uri -> entry
+
+entry is an assoc of various key/values such as "Text" -> text and "CST" -> cst
+
+*)
 $OpenFilesMap = <||>
 
+
+(*
+An assoc of id -> True|False
+*)
 $CancelMap = <||>
+
+
+
+$DiagnosticsDelayAfterLastChange = 0.5
+$ImplicitTokensDelayAfterLastChange = 3
+$BracketMatcherDelayAfterLastChange = 5
 
 
 
@@ -309,6 +331,8 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   While[True,
 
     TryQueue[];
+
+    ProcessScheduledJobs[];
 
     If[empty[$ContentQueue],
       Pause[0.1];
@@ -456,8 +480,7 @@ TryQueue[] :=
     queueSize, frontMessageSize,
     content,
     bytessIn, contentsIn,
-    backgroundReaderThreadError, errStr, ferror,
-    lastContentsIn},
+    backgroundReaderThreadError, errStr, ferror},
 
     backgroundReaderThreadError = GetBackgroundReaderThreadError[];
 
@@ -564,63 +587,9 @@ TryQueue[] :=
       exitHard[]
     ];
 
-
     preScanForCancels[contentsIn];
 
-
-    (*
-    Now expand new contents
-    *)
-
-    If[$Debug2,
-      log["before expandContent"]
-    ];
-
-    $PreExpandContentQueue = contentsIn;
-
-    lastContentsIn = $PreExpandContentQueue;
-
-    $PreExpandContentQueue = Flatten[MapIndexed[expandContent, $PreExpandContentQueue] /. expandContent[c_, _] :> {c}];
-
-    If[$Debug2,
-      log["$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
-      log["..."]
-    ];
-
-    While[$PreExpandContentQueue =!= lastContentsIn,
-
-      If[$Debug2,
-        log["expanded (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
-        log["..."]
-      ];
-
-      lastContentsIn = $PreExpandContentQueue;
-
-      $PreExpandContentQueue = Flatten[MapIndexed[expandContent, $PreExpandContentQueue] /. expandContent[c_, _] :> {c}];
-
-      If[$Debug2,
-        log["$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
-        log["..."]
-      ]
-    ];
-
-    If[$Debug2,
-      log["after expandContent"]
-    ];
-
-    contentsIn = $PreExpandContentQueue;
-
-    $PreExpandContentQueue =.;
-
-
-    If[!MatchQ[contentsIn, {_?AssociationQ ...}],
-      log["\n\n"];
-      log["Internal assert 2 failed: list of Associations: ", contentsIn];
-      log["\n\n"];
-
-      exitHard[]
-    ];
-
+    contentsIn = expandContents[contentsIn];
 
     $ContentQueue = $ContentQueue ~Join~ contentsIn;
 
@@ -653,6 +622,105 @@ preScanForCancels[contents:{_?AssociationQ ...}] :=
     ]
   ]
 
+
+expandContents[contentsIn_] :=
+Module[{contents, lastContents},
+
+  contents = contentsIn;
+
+  If[$Debug2,
+    log["before expandContent"]
+  ];
+
+  Block[{$PreExpandContentQueue},
+
+    $PreExpandContentQueue = contents;
+
+    lastContents = $PreExpandContentQueue;
+
+    $PreExpandContentQueue = Flatten[MapIndexed[expandContent, $PreExpandContentQueue] /. expandContent[c_, _] :> {c}];
+
+    If[$Debug2,
+      log["$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
+      log["..."]
+    ];
+
+    While[$PreExpandContentQueue =!= lastContents,
+
+      If[$Debug2,
+        log["expanded (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
+        log["..."]
+      ];
+
+      lastContents = $PreExpandContentQueue;
+
+      $PreExpandContentQueue = Flatten[MapIndexed[expandContent, $PreExpandContentQueue] /. expandContent[c_, _] :> {c}];
+
+      If[$Debug2,
+        log["$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
+        log["..."]
+      ]
+    ];
+
+    If[$Debug2,
+      log["after expandContent"]
+    ];
+
+    contents = $PreExpandContentQueue;
+  ];
+
+  If[!MatchQ[contents, {_?AssociationQ ...}],
+    log["\n\n"];
+    log["Internal assert 2 failed: list of Associations: ", contents];
+    log["\n\n"];
+
+    exitHard[]
+  ];
+
+  contents
+]
+
+
+ProcessScheduledJobs[] :=
+Module[{openFilesMapCopy, entryCopy, jobs, res, methods, contents, toRemove, job, toRemoveIndices, contentsToAdd},
+
+  openFilesMapCopy = $OpenFilesMap;
+
+  contents = {};
+  KeyValueMap[
+    Function[{uri, entry},
+      jobs = Lookup[entry, "ScheduledJobs", {}];
+      toRemoveIndices = {};
+      Do[
+        job = jobs[[j]];
+        res = job[entry];
+        {methods, toRemove} = res;
+
+        contentsToAdd = <| "method" -> #, "params" -> <| "textDocument" -> <| "uri" -> uri |> |> |>& /@ methods;
+
+        contents = contents ~Join~ contentsToAdd;
+
+        If[toRemove,
+          AppendTo[toRemoveIndices, {j}]
+        ]
+        ,
+        {j, 1, Length[jobs]}
+      ];
+      If[!empty[toRemoveIndices],
+        jobs = Delete[jobs, toRemoveIndices];
+        entryCopy = entry;
+        entryCopy["ScheduledJobs"] = jobs;
+        $OpenFilesMap[uri] = entryCopy
+      ]
+    ]
+    ,
+    openFilesMapCopy
+  ];
+
+  contents = expandContents[contents];
+
+  $ContentQueue = $ContentQueue ~Join~ contents;
+]
 
 
 (*
@@ -731,9 +799,16 @@ $didCloseMethods = {
 $didSaveMethods = {}
 
 
-$didChangeMethods = {
-  "textDocument/runDiagnostics",
-  "textDocument/publishDiagnostics"
+$didChangeMethods = {}
+
+$didChangeScheduledJobs = {
+  Function[{entry}, If[Now - entry["LastChange"] > Quantity[$DiagnosticsDelayAfterLastChange, "Seconds"],
+    {{
+      "textDocument/runDiagnostics",
+      "textDocument/publishDiagnostics"
+    }, True},
+    {{}, False}]
+  ]
 }
 
 
@@ -744,6 +819,15 @@ RegisterDidCloseMethods[meths_] := ($didCloseMethods = Join[$didCloseMethods, me
 RegisterDidSaveMethods[meths_] := ($didSaveMethods = Join[$didSaveMethods, meths])
 
 RegisterDidChangeMethods[meths_] := ($didChangeMethods = Join[$didChangeMethods, meths])
+
+RegisterDidOpenScheduledJobs[jobs_] := ($didOpenScheduledJobs = Join[$didOpenScheduledJobs, jobs])
+
+RegisterDidCloseScheduledJobs[jobs_] := ($didCloseScheduledJobs = Join[$didCloseScheduledJobs, jobs])
+
+RegisterDidSaveScheduledJobs[jobs_] := ($didSaveScheduledJobs = Join[$didSaveScheduledJobs, jobs])
+
+RegisterDidChangeScheduledJobs[jobs_] := ($didChangeScheduledJobs = Join[$didChangeScheduledJobs, jobs])
+
 
 
 
@@ -881,9 +965,14 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
     RegisterDidSaveMethods[{}];
 
-    RegisterDidChangeMethods[{
-      "textDocument/runImplicitTokens",
-      "textDocument/publishImplicitTokens"
+    RegisterDidChangeScheduledJobs[{
+      Function[{entry}, If[Now - entry["LastChange"] > Quantity[$ImplicitTokensDelayAfterLastChange, "Seconds"],
+        {{
+          "textDocument/runImplicitTokens",
+          "textDocument/publishImplicitTokens"
+        }, True},
+        {{}, False}]
+      ]
     }]
   ];
 
@@ -908,10 +997,15 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
     RegisterDidSaveMethods[{}];
 
-    RegisterDidChangeMethods[{
-      "textDocument/runBracketMismatches",
-      "textDocument/suggestBracketEdits",
-      "textDocument/publishBracketMismatches"
+    RegisterDidChangeScheduledJobs[{
+      Function[{entry}, If[Now - entry["LastChange"] > Quantity[$BracketMatcherDelayAfterLastChange, "Seconds"],
+        {{
+          "textDocument/runBracketMismatches",
+          "textDocument/suggestBracketEdits",
+          "textDocument/publishBracketMismatches"
+        }, True},
+        {{}, False}]
+      ]
     }];
 
     $ExecuteCommandProvider =
@@ -1619,7 +1713,11 @@ Module[{params, doc, uri, text, lastChange, entry},
 
   text = lastChange["text"];
 
-  entry = <| "Text" -> text |>;
+  entry = <|
+    "Text" -> text,
+    "LastChange" -> Now,
+    "ScheduledJobs" -> $didChangeScheduledJobs
+  |>;
 
   $OpenFilesMap[uri] = entry;
 
