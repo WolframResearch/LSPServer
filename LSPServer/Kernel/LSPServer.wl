@@ -969,6 +969,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
     RegisterDidSaveMethods[{}];
 
+    RegisterDidChangeMethods[{
+      "textDocument/clearImplicitTokens",
+      "textDocument/publishImplicitTokens"
+    }];
+
     RegisterDidChangeScheduledJobs[{
       Function[{entry}, If[Now - entry["LastChange"] > Quantity[$ImplicitTokensDelayAfterLastChange, "Seconds"],
         {{
@@ -1000,6 +1005,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     }];
 
     RegisterDidSaveMethods[{}];
+
+    RegisterDidChangeMethods[{
+      "textDocument/clearBracketMismatches",
+      "textDocument/publishBracketMismatches"
+    }];
 
     RegisterDidChangeScheduledJobs[{
       Function[{entry}, If[Now - entry["LastChange"] > Quantity[$BracketMatcherDelayAfterLastChange, "Seconds"],
