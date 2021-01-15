@@ -61,6 +61,7 @@ set(STATIC_WL_PACLET_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/References.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/SelectionRange.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/SemanticTokens.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/ServerDiagnostics.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl

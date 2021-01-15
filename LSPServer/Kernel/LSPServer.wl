@@ -68,6 +68,7 @@ Needs["LSPServer`ImplicitTokens`"]
 Needs["LSPServer`Library`"]
 Needs["LSPServer`References`"]
 Needs["LSPServer`SelectionRange`"]
+Needs["LSPServer`SemanticTokens`"]
 Needs["LSPServer`ServerDiagnostics`"]
 Needs["LSPServer`Utils`"]
 Needs["LSPServer`Workspace`"]
@@ -1049,7 +1050,13 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "documentRangeFormattingProvider" -> True,
                                          "executeCommandProvider" -> $ExecuteCommandProvider,
                                          "documentSymbolProvider" -> True,
-                                         "selectionRangeProvider" -> True
+                                         "selectionRangeProvider" -> True,
+                                         "semanticTokensProvider" -> <| "legend" -> <| "tokenTypes" -> {"moduleVariable"},
+                                                                                       "tokenModifiers" -> {}
+                                                                                    |>,
+                                                                        "range" -> False,
+                                                                        "full" -> <| "delta" -> False |>
+                                                                     |>
                                      |>
                  |>
   |>}
