@@ -316,7 +316,7 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   CodeParse["1+1"];
 
 
-  log["Starting server... (If this is the last line you see, then there may be a problem and the server is hanging.)"];
+  log["Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)"];
   log["\n\n"];
 
 
