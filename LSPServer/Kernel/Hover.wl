@@ -93,9 +93,17 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
   ];
 
   
+  If[$Debug2,
+    log["hover: before finding position"]
+  ];
+
   toks = Cases[cstTabs,
     LeafNode[_, _,
       KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {positionLine, positionColumn}]]], Infinity];
+
+  If[$Debug2,
+    log["hover: after finding position"]
+  ];
 
   strs = Cases[toks, LeafNode[String, _, _], Infinity];
 

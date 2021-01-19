@@ -1051,8 +1051,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "executeCommandProvider" -> $ExecuteCommandProvider,
                                          "documentSymbolProvider" -> True,
                                          "selectionRangeProvider" -> True,
-                                         "semanticTokensProvider" -> <| "legend" -> <| "tokenTypes" -> {"moduleVariable"},
-                                                                                       "tokenModifiers" -> {}
+                                         "semanticTokensProvider" -> <| "legend" -> <| "tokenTypes" -> Keys[$SemanticTokenTypes],
+                                                                                       "tokenModifiers" -> Keys[$SemanticTokenModifiers]
                                                                                     |>,
                                                                         "range" -> False,
                                                                         "full" -> <| "delta" -> False |>
