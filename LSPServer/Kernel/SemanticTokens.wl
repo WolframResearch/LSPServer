@@ -17,7 +17,8 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/f
     ];
 
     id = content["id"];
-
+    params = content["params"];
+    
     If[Lookup[$CancelMap, id, False],
 
       $CancelMap[id] =.;
@@ -26,10 +27,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/f
         log["canceled"]
       ];
       
-      Throw[{<| "method" -> "textDocument/semanticTokens/fullFencepost", "id" -> id, "params" -> params |>}]
+      Throw[{<| "method" -> "textDocument/semanticTokens/fullFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
     ];
 
-    params = content["params"];
     doc = params["textDocument"];
     uri = doc["uri"];
 

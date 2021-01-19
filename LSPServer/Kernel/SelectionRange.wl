@@ -17,7 +17,8 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/selectionRange"]
     ];
 
     id = content["id"];
-
+    params = content["params"];
+    
     If[Lookup[$CancelMap, id, False],
 
       $CancelMap[id] =.;
@@ -26,10 +27,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/selectionRange"]
         log["canceled"]
       ];
       
-      Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params |>}]
+      Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
     ];
 
-    params = content["params"];
     doc = params["textDocument"];
     uri = doc["uri"];
 

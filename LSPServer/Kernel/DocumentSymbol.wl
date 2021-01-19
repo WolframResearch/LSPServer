@@ -46,7 +46,8 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
     ];
 
     id = content["id"];
-
+    params = content["params"];
+    
     If[Lookup[$CancelMap, id, False],
 
       $CancelMap[id] =.;
@@ -55,10 +56,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
         log["canceled"]
       ];
       
-      Throw[{<| "method" -> "textDocument/documentSymbolFencepost", "id" -> id, "params" -> params |>}]
+      Throw[{<| "method" -> "textDocument/documentSymbolFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
     ];
 
-    params = content["params"];
     doc = params["textDocument"];
     uri = doc["uri"];
 
