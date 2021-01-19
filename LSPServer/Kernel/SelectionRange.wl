@@ -51,7 +51,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/selectionRange"]
 handleContent[content:KeyValuePattern["method" -> "textDocument/selectionRangeFencepost"]] :=
 Catch[
 Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, firstCaseSrc, firstCasePos,
-  posChain, rangeify},
+  posChain, rangeify, selectionRanges},
 
   If[$Debug2,
     log["textDocument/selectionRangeFencepost: enter"]

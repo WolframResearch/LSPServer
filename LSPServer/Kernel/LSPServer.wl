@@ -1551,7 +1551,7 @@ Module[{params, doc, uri, entry, cstTabs, aggTabs},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/abstractParse"]] :=
 Catch[
-Module[{params, doc, uri, entry, agg},
+Module[{params, doc, uri, entry, agg, ast},
 
   If[$Debug2,
     log["textDocument/abstractParse: enter"]
@@ -1710,7 +1710,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/didChange"], pos
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChangeFencepost"]] :=
 Catch[
-Module[{params, doc, uri, text, lastChange, entry},
+Module[{params, doc, uri, text, lastChange, entry, changes},
   
   If[$Debug2,
     log["textDocument/didChangeFencepost: enter"]

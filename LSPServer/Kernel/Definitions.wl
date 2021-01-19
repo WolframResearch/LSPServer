@@ -10,7 +10,7 @@ Needs["CodeParser`Utils`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/definition"], pos_] :=
   Catch[
-  Module[{params, id},
+  Module[{params, id, doc, uri},
 
     If[$Debug2,
       log["textDocument/definition: enter expand"]

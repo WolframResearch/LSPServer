@@ -222,7 +222,8 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
   Catch[
   Module[{params, doc, uri, lines, entry, text, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
     badChunkLines, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
-    line1Map, line2Map, line3Map, line4Map},
+    line1Map, line2Map, line3Map, line4Map,
+    data},
     
     If[$Debug2,
       log["textDocument/publishBracketMismatches: enter"]

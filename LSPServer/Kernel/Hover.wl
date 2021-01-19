@@ -11,7 +11,8 @@ Needs["CodeParser`Utils`"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
 Catch[
-Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLine, positionColumn, pre, cstTabs, syms, toks, nums},
+Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLine, positionColumn, pre, cstTabs, syms, toks, nums,
+  res},
 
   If[$Debug2,
     log["textDocument/hover: enter"]
