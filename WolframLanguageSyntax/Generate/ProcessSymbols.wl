@@ -458,12 +458,9 @@ Module[{names, documentedSymbols, allSymbols, allASCIISymbols, obsoleteNames,
   builtInDollarFunctions, actuallyNonSystemConstants},
 
   WolframLanguageSyntax`Generate`$builtInFunctions = {};
-  WolframLanguageSyntax`Generate`$constants = {};
   WolframLanguageSyntax`Generate`$undocumentedSymbols = {};
   WolframLanguageSyntax`Generate`$experimentalSymbols = {};
   WolframLanguageSyntax`Generate`$obsoleteSymbols = {};
-  WolframLanguageSyntax`Generate`$systemLongNames = {};
-  WolframLanguageSyntax`Generate`$systemCharacters = {};
 
   Print["Setting up symbols for version: ", $Version];
 
@@ -584,6 +581,15 @@ Module[{dumpFile},
   If[FileExistsQ[dumpFile],
     DeleteFile[dumpFile]
   ];
+
+  Print["dumping processedSymbols.mx"];
+  Print["builtInFunctions: ", WolframLanguageSyntax`Generate`$builtInFunctions //Length];
+  Print["constants: ", WolframLanguageSyntax`Generate`$constants //Length];
+  Print["undocumentedSymbols: ", WolframLanguageSyntax`Generate`$undocumentedSymbols //Length];
+  Print["experimentalSymbols: ", WolframLanguageSyntax`Generate`$experimentalSymbols //Length];
+  Print["obsoleteSymbols: ", WolframLanguageSyntax`Generate`$obsoleteSymbols //Length];
+  Print["systemLongNames: ", WolframLanguageSyntax`Generate`$systemLongNames //Length];
+  Print["systemCharacters: ", WolframLanguageSyntax`Generate`$systemCharacters //Length];
 
   DumpSave[dumpFile, {
     WolframLanguageSyntax`Generate`$builtInFunctions,
