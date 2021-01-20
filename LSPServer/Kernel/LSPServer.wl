@@ -684,7 +684,15 @@ Module[{contents, lastContents},
 
 
 ProcessScheduledJobs[] :=
+Catch[
 Module[{openFilesMapCopy, entryCopy, jobs, res, methods, contents, toRemove, job, toRemoveIndices, contentsToAdd},
+
+  (*
+  Do not process any scheduled jobs after shutdown
+  *)
+  If[$ServerState == "shutdown",
+    Throw[Null]
+  ];
 
   openFilesMapCopy = $OpenFilesMap;
 
@@ -725,7 +733,7 @@ Module[{openFilesMapCopy, entryCopy, jobs, res, methods, contents, toRemove, job
 
     $ContentQueue = $ContentQueue ~Join~ contents;
   ]
-]
+]]
 
 
 (*
