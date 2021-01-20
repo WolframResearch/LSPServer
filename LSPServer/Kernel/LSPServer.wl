@@ -220,9 +220,17 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   errStr, ferror},
 
   If[$Notebooks,
+    (*
+    OK to return here without killing the kernel
+    This is in a notebook session
+    *)
     Message[StartServer::notebooks];
     Throw[$Failed]
   ];
+
+  (*
+  This is NOT a notebook session, so it is ok to kill the kernel
+  *)
 
   $ConfidenceLevelOption = OptionValue[ConfidenceLevel];
 
@@ -281,6 +289,15 @@ Module[{logFile, res, bytes, bytess, logFileStream,
 
     logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
 
+    If[FailureQ[logFileStream],
+      
+      log["\n\n"];
+      log["opening log file failed: ", logFileStream];
+      log["\n\n"];
+      
+      exitHard[]
+    ];
+
     $Messages = $Messages ~Join~ { logFileStream }
   ];
 
@@ -321,7 +338,18 @@ Module[{logFile, res, bytes, bytess, logFileStream,
   log["\n\n"];
 
 
-  StartBackgroundReaderThread[];
+  (*
+  This is the first use of LSPServer library, so this is where the library is initialized.
+  Handle any initialization failures or other errors.
+  *)
+  res = StartBackgroundReaderThread[];
+  If[FailureQ[res],
+    log["\n\n"];
+    log["StartBackgroundReaderThread failed: ", res];
+    log["\n\n"];
+    
+    exitHard[]
+  ];
 
 
   (*
