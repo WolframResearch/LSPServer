@@ -261,7 +261,7 @@ Module[{logFile, res, bytes, bytess, logFileStream,
     *)
     oldLogFiles = FileNames["kernelLog*", logDir];
     now = Now;
-    dateStr = DateString[now, {"Year", "-", "Month", "-", "Day", "-", "Hour24", ":", "Minute", ":", "Second"}];
+    dateStr = DateString[now, {"Year", "-", "Month", "-", "Day", "_", "Hour24", "-", "Minute", "-", "Second"}];
     quantity30days = Quantity[30, "Days"];
     Do[
       (*
