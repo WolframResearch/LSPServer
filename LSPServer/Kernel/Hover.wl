@@ -327,7 +327,7 @@ Module[{lines, lineMap, originalLineNumber, line,
 
   lines = Values[lineMap];
 
-  lines = escapeMarkdown[replacePUA[StringJoin[#["characters"]]]]& /@ lines;
+  lines = escapeMarkdown[replaceControl[replacePUA[StringJoin[#["characters"]]]]]& /@ lines;
 
   Which[
     Length[lines] == 0,
@@ -366,8 +366,8 @@ Module[{lines, line, result, syms, usage, a1},
         LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
         LeafNode[Token`LinearSyntaxBlob, s_, _] :> parseLinearSyntaxBlob[s],
         LeafNode[String, s_, _] :> parseString[s],
-        LeafNode[_, s_, _] :> escapeMarkdown[replacePUA[s]],
-        ErrorNode[_, s_, _] :> escapeMarkdown[replacePUA[s]]
+        LeafNode[_, s_, _] :> escapeMarkdown[replaceControl[replacePUA[s]]],
+        ErrorNode[_, s_, _] :> escapeMarkdown[replaceControl[replacePUA[s]]]
       };
 
       line = StringJoin[a1];
@@ -495,7 +495,8 @@ containsUnicodeCharacterQ[str_String] :=
 (?::[0-9a-fA-F]{4})|(?# \\:xxxx 4 hex)\
 (?:\\.[0-9a-fA-F]{2})|(?# \\.xx 2 hex)\
 (?:[0-7]{3})|(?# \\xxx octal)\
-(?:\\|[0-9a-fA-F]{6})(?# \\|xxxxxx 6 hex)\
+(?:\\|[0-9a-fA-F]{6})|(?# \\|xxxxxx 6 hex)\
+(?:[bf])(?# \\x escape)\
 )"]]
 
 
@@ -524,8 +525,8 @@ parseString[s_] :=
       LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
       LeafNode[Token`LinearSyntaxBlob, s1_, _] :> parseLinearSyntaxBlob[s1],
       LeafNode[String, s1_, _] :> parseString[s1],
-      LeafNode[_, s1_, _] :> escapeMarkdown[replacePUA[s1]],
-      ErrorNode[_, s1_, _] :> escapeMarkdown[replacePUA[s1]]
+      LeafNode[_, s1_, _] :> escapeMarkdown[replaceControl[replacePUA[s1]]],
+      ErrorNode[_, s1_, _] :> escapeMarkdown[replaceControl[replacePUA[s1]]]
     };
     {If[hasStartingQuote, "\"", ""], a1, If[hasEndingQuote, "\"", ""]}
   ]
@@ -641,7 +642,7 @@ interpretBox[s_String /; StringStartsQ[s, LetterCharacter | "$"] &&
 )
 
 interpretBox[s_String] :=
-  escapeMarkdown[replacePUA[s]]
+  escapeMarkdown[replaceControl[replacePUA[s]]]
 
 interpretBox[$Failed] := (
   Message[interpretBox::unhandled, $Failed];
@@ -728,6 +729,94 @@ escapeMarkdown[s_String] :=
     "!" -> "\\!"
   }]
 
+
+BeginStaticAnalysisIgnore[]
+
+(*
+FIXME: maybe have some nicer replacement strings
+do not necessarily have to display the escape sequence
+*)
+replaceControl[s_String] :=
+  StringReplace[s, {
+    (*
+    ASCII control characters
+    *)
+    "\.00" -> "\\.00",
+    "\.01" -> "\\.01",
+    "\.02" -> "\\.02",
+    "\.03" -> "\\.03",
+    "\.04" -> "\\.04",
+    "\.05" -> "\\.05",
+    "\.06" -> "\\.06",
+    "\.07" -> "\\.07",
+    "\b" -> "\\b",
+    (*\t*)
+    (*\n*)
+    "\.0b" -> "\\.0b",
+    "\f" -> "\\f",
+    (*\r*)
+    "\.0e" -> "\\.0e",
+    "\.0f" -> "\\.0f",
+    "\.10" -> "\\.10",
+    "\.11" -> "\\.11",
+    "\.12" -> "\\.12",
+    "\.13" -> "\\.13",
+    "\.14" -> "\\.14",
+    "\.15" -> "\\.15",
+    "\.16" -> "\\.16",
+    "\.17" -> "\\.17",
+    "\.18" -> "\\.18",
+    "\.19" -> "\\.19",
+    "\.1a" -> "\\.1a",
+    "\[RawEscape]" -> "\\[RawEscape]",
+    "\.1c" -> "\\.1c",
+    "\.1d" -> "\\.1d",
+    "\.1e" -> "\\.1e",
+    "\.1f" -> "\\.1f",
+
+    (*
+    DEL
+    *)
+    "\.7f" -> "\\.7f",
+
+    (*
+    C1 block
+    *)
+    "\.80" -> "\\.80",
+    "\.81" -> "\\.81",
+    "\.82" -> "\\.82",
+    "\.83" -> "\\.83",
+    "\.84" -> "\\.84",
+    "\.85" -> "\\.85",
+    "\.86" -> "\\.86",
+    "\.87" -> "\\.87",
+    "\.88" -> "\\.88",
+    "\.89" -> "\\.89",
+    "\.8a" -> "\\.8a",
+    "\.8b" -> "\\.8b",
+    "\.8c" -> "\\.8c",
+    "\.8d" -> "\\.8d",
+    "\.8e" -> "\\.8e",
+    "\.8f" -> "\\.8f",
+    "\.90" -> "\\.90",
+    "\.91" -> "\\.91",
+    "\.92" -> "\\.92",
+    "\.93" -> "\\.93",
+    "\.94" -> "\\.94",
+    "\.95" -> "\\.95",
+    "\.96" -> "\\.96",
+    "\.97" -> "\\.97",
+    "\.98" -> "\\.98",
+    "\.99" -> "\\.99",
+    "\.9a" -> "\\.9a",
+    "\.9b" -> "\\.9b",
+    "\.9c" -> "\\.9c",
+    "\.9d" -> "\\.9d",
+    "\.9e" -> "\\.9e",
+    "\.9f" -> "\\.9f"
+  }]
+
+EndStaticAnalysisIgnore[]
 
 
 (*
