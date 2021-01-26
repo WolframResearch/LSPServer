@@ -1209,6 +1209,8 @@ Module[{id},
     ,
     (*
     does not have id, so this is a notification
+    something like: $/setTraceNotification
+    $/cancelRequest is handled elsewhere
     just ignore
     *)
     {}
