@@ -3,7 +3,7 @@ Paclet[
   Name -> "LSPServer",
   Version -> "1.2",
   WolframVersion -> "12.0+",
-  Description -> "Implement the Language Server Protocol for Wolfram Language.",
+  Description -> "Language Server Protocol implementation for Wolfram Language.",
   Creator ->"Brenton Bostick <brenton@wolfram.com>",
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "LSPServer`"},
