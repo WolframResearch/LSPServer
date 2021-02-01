@@ -86,7 +86,7 @@ EndPackage[]
 };
 
 Print["exporting ReplacePUA.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "ReplacePUA.wl"}], Column[replacePUAWL], "String"];
+res = Export[FileNameJoin[{generatedWLDir, "Kernel", "ReplacePUA.wl"}], Column[replacePUAWL], "String"];
 
 If[FailureQ[res],
   Print[res];
