@@ -45,6 +45,8 @@ when these characters are sent to clients, they represent a combination of impli
 
 x: implicit Times
 
+z: implicit Times with space preceding it
+
 1: implicit 1
 
 A: implicit All

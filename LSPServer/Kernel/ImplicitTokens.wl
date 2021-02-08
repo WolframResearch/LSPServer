@@ -239,6 +239,7 @@ markupSymbolToChar[LintMarkup[LintAllCharacter, ___]] := "A"
 markupSymbolToChar[LintMarkup[LintNullCharacter, ___]] := "N"
 markupSymbolToChar[LintMarkup[LintOneCharacter, ___]] := "1"
 markupSymbolToChar[LintMarkup[LintTimesCharacter, ___]] := "x"
+markupSymbolToChar[LintMarkup[LintSpaceTimesCharacter, ___]] := "z"
 markupSymbolToChar[LintMarkup[LintExpectedOperandCharacter, ___]] := "e"
 
 markupSymbolToChar[LintMarkup[LintAllCloseCharacter, ___]] := "A"
