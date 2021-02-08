@@ -44,6 +44,14 @@ $BracketMatcherUseDesignColors
 
 $ConfidenceLevel
 
+(*
+$SemanticTokens is True if the client supports semantic tokens and the user has enabled them
+
+If $SemanticTokens is False, then diagnostics are used as a fallback to indicate scoping issues such as unused variables and shadowed variables
+
+*)
+$SemanticTokens
+
 
 $ML4CodeTimeLimit
 
@@ -114,6 +122,10 @@ if $BracketMatcher, then load ML4Code` and use ML bracket matching tech
 $BracketMatcher = False
 
 $BracketMatcherUseDesignColors = True
+
+
+$SemanticTokens = False
+
 
 (*
 $BracketMatcherDisplayInsertionText = False
@@ -884,7 +896,7 @@ returns: a list of associations (possibly empty), each association represents JS
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
   codeActionProviderValue, initializationOptions, implicitTokens,
-  bracketMatcher, debugBracketMatcher, clientName},
+  bracketMatcher, debugBracketMatcher, clientName, semanticTokensProviderValue, semanticTokens},
 
   If[$Debug2,
     log["initialize: enter"];
@@ -928,6 +940,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
       $DebugBracketMatcher = debugBracketMatcher
     ];
+    If[KeyExistsQ[initializationOptions, "semanticTokens"],
+      semanticTokens = initializationOptions["semanticTokens"];
+
+      $SemanticTokens = semanticTokens
+    ];
   ];
 
   (*
@@ -949,7 +966,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     log["$AllowedImplicitTokens: ", $AllowedImplicitTokens];
     log["$BracketMatcher: ", $BracketMatcher];
     log["$DebugBracketMatcher: ", $DebugBracketMatcher];
-    log["$ConfidenceLevel: ", $ConfidenceLevel]
+    log["$ConfidenceLevel: ", $ConfidenceLevel];
+    log["$SemanticTokens: ", $SemanticTokens]
   ];
 
 
@@ -1076,6 +1094,26 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       |>}, Flatten]
   ];
 
+  If[$SemanticTokens,
+    If[KeyExistsQ[textDocument, "semanticTokens"],
+      semanticTokensProviderValue = <|
+        "legend" -> <|
+          "tokenTypes" -> Keys[$SemanticTokenTypes],
+          "tokenModifiers" -> Keys[$SemanticTokenModifiers]
+        |>,
+        "range" -> False,
+        "full" -> <| "delta" -> False |>
+      |>
+      ,
+      (*
+      if client does not advertise semantic token support, then do not respond with any support
+      *)
+      semanticTokensProviderValue = Null
+    ];
+    ,
+    semanticTokensProviderValue = Null
+  ];
+
   {<| "jsonrpc" -> "2.0", "id" -> id,
       "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
                                          "textDocumentSync" -> <| "openClose" -> True,
@@ -1091,12 +1129,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "executeCommandProvider" -> $ExecuteCommandProvider,
                                          "documentSymbolProvider" -> True,
                                          "selectionRangeProvider" -> True,
-                                         "semanticTokensProvider" -> <| "legend" -> <| "tokenTypes" -> Keys[$SemanticTokenTypes],
-                                                                                       "tokenModifiers" -> Keys[$SemanticTokenModifiers]
-                                                                                    |>,
-                                                                        "range" -> False,
-                                                                        "full" -> <| "delta" -> False |>
-                                                                     |>
+                                         "semanticTokensProvider" -> semanticTokensProviderValue
                                      |>
                  |>
   |>}

@@ -7,6 +7,7 @@ Needs["LSPServer`Utils`"]
 Needs["CodeInspector`"]
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
+Needs["CodeParser`Scoping`"] (* for scopingDataObject *)
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"], pos_] :=
@@ -36,7 +37,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
        "textDocument/aggregateParse",
        "textDocument/runAggregateDiagnostics",
        "textDocument/abstractParse",
-       "textDocument/runAbstractDiagnostics"
+       "textDocument/runAbstractDiagnostics",
+       "textDocument/runScopingData", (* implemented in SemanticTokens.wl *)
+       "textDocument/runScopingDiagnostics"
     }
   ]]
 
@@ -196,6 +199,68 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
     {}
   ]]
 
+handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagnostics"]] :=
+  Catch[
+  Module[{params, doc, uri, entry, scopingLints, scopingData, filtered},
+
+    If[$Debug2,
+      log["textDocument/runScopingDiagnostics: enter"]
+    ];
+
+    (*
+    If $SemanticTokens, then do not also create scoping diagnostics
+    *)
+    If[$SemanticTokens,
+      Throw[{}]
+    ];
+
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$ContentQueue, uri],
+      
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{}]
+    ];
+
+    entry = $OpenFilesMap[uri];
+
+    scopingLints = Lookup[entry, "ScopingLints", Null];
+
+    If[scopingLints =!= Null,
+      Throw[{}]
+    ];
+
+    scopingData = entry["ScopingData"];
+
+    If[$Debug2,
+      log["scopingData: ", scopingData]
+    ];
+
+    (*
+    Filter those that have non-empty modifiers
+    *)
+    filtered = Cases[scopingData, scopingDataObject[_, _, {_, ___}]];
+
+    scopingLints = scopingDataObjectToLints /@ filtered;
+
+    scopingLints = Flatten[scopingLints];
+
+    If[$Debug2,
+      log["scopingLints: ", #["Tag"]& /@ scopingLints]
+    ];
+
+    entry["ScopingLints"] = scopingLints;
+
+    $OpenFilesMap[uri] = entry;
+
+    {}
+  ]]
+
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/clearDiagnostics"]] :=
   Catch[
@@ -226,6 +291,8 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearDiagnostics
     
     entry["ASTLints"] =.;
 
+    entry["ScopingLints"] =.;
+
     $OpenFilesMap[uri] = entry;
 
     {}
@@ -234,7 +301,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearDiagnostics
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints, astLints},
+  Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints, astLints, scopingLints},
 
     If[$Debug2,
       log["textDocument/publishDiagnostics: enter"]
@@ -280,7 +347,12 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnosti
     *)
     astLints = Lookup[entry, "ASTLints", {}];
 
-    lints = cstLints ~Join~ aggLints ~Join~ astLints;
+    (*
+    Possibly cleared
+    *)
+    scopingLints = Lookup[entry, "ScopingLints", {}];
+
+    lints = cstLints ~Join~ aggLints ~Join~ astLints ~Join~ scopingLints;
 
     If[$Debug2,
       log["lints: ", #["Tag"]& /@ lints]

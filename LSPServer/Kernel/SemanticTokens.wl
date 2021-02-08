@@ -9,6 +9,7 @@ Begin["`Private`"]
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
+Needs["CodeParser`Scoping`"]
 Needs["CodeParser`Utils`"]
 
 
@@ -20,16 +21,10 @@ $SemanticTokenTypes = <|
 $SemanticTokenModifiers = <|
   "Module" -> 0,
   "Block" -> 1,
-  "shadowed" -> 2
+  "shadowed" -> 2,
+  "unused" -> 3,
+  "error" -> 4
 |>
-
-
-tokenType[{"parameter"..}] := $SemanticTokenTypes["parameter"]
-tokenType[_] := $SemanticTokenTypes["variable"]
-
-modifiersBitset[{"parameter"}] = 0
-modifiersBitset[{decl_}] := BitShiftLeft[1, $SemanticTokenModifiers[decl]];
-modifiersBitset[_] := BitShiftLeft[1, $SemanticTokenModifiers["shadowed"]];
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/full"], pos_] :=
@@ -70,13 +65,14 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/f
        "textDocument/concreteParse",
        "textDocument/aggregateParse",
        "textDocument/abstractParse",
+       "textDocument/runScopingData",
        "textDocument/semanticTokens/fullFencepost"
     }
   ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/fullFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, entry, ast, data,
+Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
   line, char, oldLine, oldChar},
 
   If[$Debug2,
@@ -111,354 +107,113 @@ Module[{id, params, doc, uri, entry, ast, data,
 
   entry = $OpenFilesMap[uri];
 
-  data = Lookup[entry, "SemanticTokens", Null];
+  semanticTokens = Lookup[entry, "SemanticTokens", Null];
 
-  If[data =!= Null,
-    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> <| "data" -> data |> |>}]
+  If[semanticTokens =!= Null,
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> <| "data" -> semanticTokens |> |>}]
   ];
 
-  ast = entry["AST"];
+  scopingData = entry["ScopingData"];
 
-  If[FailureQ[ast],
-    Throw[ast]
+  If[FailureQ[scopingData],
+    Throw[scopingData]
   ];
 
-  Block[{$LexicalScope, $Data},
-  
-    (*
-    $LexicalScope is an assoc of names -> decls
-    *)
-    $LexicalScope = <||>;
+  (*
+  transform data
 
-    (*
-    $Data is a list of {line, startChar, len, tokenType, tokenModifiers}
-    *)
-    $Data = {};
+  Related links: https://microsoft.github.io/language-server-protocol/specification#textDocument_semanticTokens
+  *)
 
-    walk[ast];
-
-    data = $Data;
-  ];
+  transformed =
+    Function[{source, scope, modifiers},
+      {#[[1, 1]], #[[1, 2]], #[[2, 2]] - #[[1, 2]],
+        $SemanticTokenTypes[If[MemberQ[{"Module", "Block", "DynamicModule", "Internal`InheritedBlock"}, scope[[-1]]], "variable", "parameter"]],
+        BitOr @@ BitShiftLeft[1, Lookup[$SemanticTokenModifiers, modifiers ~Join~ (
+            scope[[-1]] /. {
+              "Module" | "DynamicModule" -> {"Module"},
+              "Block" | "Internal`InheritedBlock" -> {"Block"},
+              _ -> {}
+              }
+          )]]}&[source - 1]
+    ] @@@ scopingData;
 
   (*
   Relativize the tokens
   *)
 
-  data = Sort[data];
+  transformed = Sort[transformed];
 
   line = 0;
   char = 0;
 
-  data = Function[{t},
+  transformed = Function[{t},
     oldLine = line;
     oldChar = char;
     line = t[[1]];
     char = t[[2]];
     {line - oldLine, If[oldLine == line, char - oldChar, char], t[[3]], t[[4]], t[[5]]}
-  ] /@ data;
+  ] /@ transformed;
 
-  data = Flatten[data];
+  transformed = Flatten[transformed];
 
-  entry["SemanticTokens"] = data;
+  semanticTokens = transformed;
+  
+  entry["SemanticTokens"] = semanticTokens;
 
   $OpenFilesMap[uri] = entry;
 
-  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> <| "data" -> data |> |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> <| "data" -> semanticTokens |> |>}
 ]]
 
 
+handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingData"]] :=
+  Catch[
+  Module[{params, doc, uri, entry, ast, scopingData},
 
-walk[ContainerNode[File, children_, _]] :=
-  Scan[walk, children]
+    If[$Debug2,
+      log["textDocument/runScopingData: enter"]
+    ];
 
-walk[PackageNode[_, children_, _]] :=
-  Scan[walk, children]
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
 
-walk[ContextNode[_, children_, _]] :=
-  Scan[walk, children]
+    If[isStale[$ContentQueue, uri],
+      
+      If[$Debug2,
+        log["stale"]
+      ];
 
-walk[NewContextPathNode[_, children_, _]] :=
-  Scan[walk, children]
+      Throw[{}]
+    ];
 
-walk[CallNode[LeafNode[Symbol, "Module", _], children:{CallNode[LeafNode[Symbol, "List", _], _, _], _}, _]] :=
-Module[{variableSymbols, newScope},
+    entry = $OpenFilesMap[uri];
 
-  variableSymbols = children[[1, 2]];
-  variableSymbols = Replace[variableSymbols, {
-    sym:LeafNode[Symbol, _, _] :> sym,
-    CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], _}, _] :> lhs
-  }, 1];
+    scopingData = Lookup[entry, "ScopingData", Null];
 
-  newScope = <| (#[[2]] -> {"Module"})& /@ variableSymbols |>;
+    If[scopingData =!= Null,
+      Throw[{}]
+    ];
 
-  Internal`InheritedBlock[{$LexicalScope},
+    ast = entry["AST"];
 
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
+    If[$Debug2,
+      log["before ScopingData"]
+    ];
+    
+    scopingData = ScopingData[ast];
 
-    Scan[walk, children]
-  ]
-]
+    If[$Debug2,
+      log["after ScopingData"]
+    ];
 
-walk[CallNode[LeafNode[Symbol, "DynamicModule", _], children:{CallNode[LeafNode[Symbol, "List", _], _, _], _}, _]] :=
-Module[{variableSymbols, newScope},
+    entry["ScopingData"] = scopingData;
 
-  variableSymbols = children[[1, 2]];
-  variableSymbols = Replace[variableSymbols, {
-    sym:LeafNode[Symbol, _, _] :> sym,
-    CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], _}, _] :> lhs
-  }, 1];
+    $OpenFilesMap[uri] = entry;
 
-  newScope = <| (#[[2]] -> {"Module"})& /@ variableSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Block", _], children:{CallNode[LeafNode[Symbol, "List", _], _, _], _}, _]] :=
-Module[{variableSymbols, newScope},
-
-  variableSymbols = children[[1, 2]];
-  variableSymbols = Replace[variableSymbols, {
-    sym:LeafNode[Symbol, _, _] :> sym,
-    CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], _}, _] :> lhs
-  }, 1];
-
-  newScope = <| (#[[2]] -> {"Block"})& /@ variableSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Internal`InheritedBlock", _], children:{CallNode[LeafNode[Symbol, "List", _], _, _], _}, _]] :=
-Module[{variableSymbols, newScope},
-
-  variableSymbols = children[[1, 2]];
-  variableSymbols = Replace[variableSymbols, {
-    sym:LeafNode[Symbol, _, _] :> sym,
-    CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], _}, _] :> lhs
-  }, 1];
-
-  newScope = <| (#[[2]] -> {"Block"})& /@ variableSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "With", _], children:{CallNode[LeafNode[Symbol, "List", _], _, _], _}, _]] :=
-Module[{variableSymbols, newScope},
-
-  variableSymbols = children[[1, 2]];
-  variableSymbols = Replace[variableSymbols, {
-    sym:LeafNode[Symbol, _, _] :> sym,
-    CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {lhs:LeafNode[Symbol, _, _], _}, _] :> lhs
-  }, 1];
-
-  newScope = <| (#[[2]] -> {"parameter"})& /@ variableSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "SetDelayed", _], children:{_, _}, _]] :=
-Module[{patterns, patternSymbols, newScope},
-
-  patterns = Cases[children[[1]], CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, _, _], _}, _], {0, Infinity}];
-  patternSymbols = #[[2, 1]]& /@ patterns;
-
-  newScope = <| (#[[2]] -> {"parameter"})& /@ patternSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "TagSetDelayed", _], children:{_, _, _}, _]] :=
-Module[{patterns, patternSymbols, newScope},
-
-  patterns = Cases[children[[2]], CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, _, _], _}, _], {0, Infinity}];
-  patternSymbols = #[[2, 1]]& /@ patterns;
-
-  newScope = <| (#[[2]] -> {"parameter"})& /@ patternSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "RuleDelayed", _], children:{_, _}, _]] :=
-Module[{patterns, patternSymbols, newScope},
-
-  patterns = Cases[children[[1]], CallNode[LeafNode[Symbol, "Pattern", _], {LeafNode[Symbol, _, _], _}, _], {0, Infinity}];
-  patternSymbols = #[[2, 1]]& /@ patterns;
-
-  newScope = <| (#[[2]] -> {"parameter"})& /@ patternSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Function", _], children:{LeafNode[Symbol, _, _], _}, _]] :=
-Module[{param, newScope},
-
-  param = children[[1]];
-
-  newScope = <| (param[[2]] -> {"parameter"}) |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Function", _], children:{LeafNode[Symbol, _, _], _, _}, _]] :=
-Module[{param, newScope},
-
-  param = children[[1]];
-
-  newScope = <| (param[[2]] -> {"parameter"}) |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Function", _], children:{CallNode[LeafNode[Symbol, "List", _], _, _], _}, _]] :=
-Module[{paramSymbols, newScope},
-
-  paramSymbols = children[[1, 2]];
-  paramSymbols = Replace[paramSymbols, {
-    sym:LeafNode[Symbol, _, _] :> sym
-  }, 1];
-
-  newScope = <| (#[[2]] -> {"parameter"})& /@ paramSymbols |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Do", _], children:{_, CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _}, _]}, _]] :=
-Module[{param, newScope},
-
-  param = children[[2, 2, 1]];
-
-  newScope = <| (param[[2]] -> {"parameter"}) |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Do", _], children:{_, CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, _}, _]}, _]] :=
-Module[{param, newScope},
-
-  param = children[[2, 2, 1]];
-
-  newScope = <| (param[[2]] -> {"parameter"}) |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Table", _], children:{_, CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _}, _]}, _]] :=
-Module[{param, newScope},
-
-  param = children[[2, 2, 1]];
-
-  newScope = <| (param[[2]] -> {"parameter"}) |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[LeafNode[Symbol, "Table", _], children:{_, CallNode[LeafNode[Symbol, "List", _], {LeafNode[Symbol, _, _], _, _}, _]}, _]] :=
-Module[{param, newScope},
-
-  param = children[[2, 2, 1]];
-
-  newScope = <| (param[[2]] -> {"parameter"}) |>;
-
-  Internal`InheritedBlock[{$LexicalScope},
-
-    $LexicalScope = Merge[{$LexicalScope, newScope}, Flatten];
-
-    Scan[walk, children]
-  ]
-]
-
-walk[CallNode[head_, children_, _]] := (
-  walk[head];
-  Scan[walk, children]
-)
-
-walk[LeafNode[Symbol, name_, data_]] :=
-Module[{decls = Lookup[$LexicalScope, name, {}]},
-  If[!empty[decls],
-      AppendTo[$Data, {
-          #[[1, 1]], #[[1, 2]], #[[2, 2]] - #[[1, 2]],
-          tokenType[decls],
-          modifiersBitset[decls]
-        }&[data[[Key[Source]]]-1]
-      ]
-  ]
-]
-
-walk[LeafNode[_, _, _]] :=
-  Null
-
-walk[ErrorNode[_, _, _]] :=
-  Null
-
-walk[UnterminatedCallNode[_, _, _]] :=
-  Null
-
-walk[UnterminatedGroupNode[_, _, _]] :=
-  Null
+    {}
+  ]]
 
 
 End[]
