@@ -137,6 +137,58 @@ Module[{rVal, gVal, bVal, aVal, src},
                    "alpha" -> aVal |> |>
 ]
 
+colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {
+  CallNode[LeafNode[Symbol, "List", _], {
+      r:LeafNode[Integer | Real, _, _],
+      g:LeafNode[Integer | Real, _, _],
+      b:LeafNode[Integer | Real, _, _],
+      a:LeafNode[Integer | Real, _, _]:LeafNode[Integer, "1", <||>]}, _]}, data_]] :=
+Module[{rVal, gVal, bVal, aVal, src},
+
+  rVal = fromNode[r];
+  gVal = fromNode[g];
+  bVal = fromNode[b];
+  aVal = fromNode[a];
+
+  src = data[Source];
+
+  src-=1;
+
+  <| "range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+                   "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
+     "color" -> <| "red" -> rVal,
+                   "green" -> gVal,
+                   "blue" -> bVal,
+                   "alpha" -> aVal |> |>
+]
+
+colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {
+  CallNode[LeafNode[Symbol, "Times", _], {
+    CallNode[LeafNode[Symbol, "List", _], {
+      r:LeafNode[Integer | Real, _, _],
+      g:LeafNode[Integer | Real, _, _],
+      b:LeafNode[Integer | Real, _, _]}, _]
+    , 
+    multiplier:CallNode[LeafNode[Symbol, "Power", _], {
+      LeafNode[Integer | Real, _, _], LeafNode[Integer, "-1", _]}, _]}, _]}, data_]] :=
+Module[{rVal, gVal, bVal, src},
+
+  rVal = fromNode[CallNode[LeafNode[Symbol, "Times", <||>], {r, multiplier}, <||>]];
+  gVal = fromNode[CallNode[LeafNode[Symbol, "Times", <||>], {g, multiplier}, <||>]];
+  bVal = fromNode[CallNode[LeafNode[Symbol, "Times", <||>], {b, multiplier}, <||>]];
+
+  src = data[Source];
+
+  src-=1;
+
+  <| "range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+                   "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
+     "color" -> <| "red" -> rVal,
+                   "green" -> gVal,
+                   "blue" -> bVal,
+                   "alpha" -> 1.0 |> |>
+]
+
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {s:LeafNode[String, _, _]}, data_]] :=
 Catch[
 Module[{sVal, src, cases, rVal, gVal, bVal, aVal, case},
@@ -348,6 +400,11 @@ fromNode[CallNode[LeafNode[Symbol, "Times", _], {
   n:LeafNode[Integer, _, _],
   CallNode[LeafNode[Symbol, "Power", _], {
     d:LeafNode[Integer, _, _], LeafNode[Integer, "-1", _]}, _]}, _]] := N[FromNode[n]/FromNode[d]]
+
+fromNode[CallNode[LeafNode[Symbol, "Times", _], {
+  n:LeafNode[Integer | Real, _, _],
+  CallNode[LeafNode[Symbol, "Power", _], {
+    d:LeafNode[Integer | Real, _, _], LeafNode[Integer, "-1", _]}, _]}, _]] := FromNode[n]/FromNode[d]
 
 
 
