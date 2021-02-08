@@ -208,9 +208,9 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearBracketMism
 
     entry = $OpenFilesMap[uri];
 
-    entry["BracketMismatches"] = .;
+    entry["BracketMismatches"] =.;
 
-    entry["BracketEditsData"] = .;
+    entry["BracketEditsData"] =.;
 
     $OpenFilesMap[uri] = entry;
 

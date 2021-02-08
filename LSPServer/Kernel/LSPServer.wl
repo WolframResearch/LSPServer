@@ -205,7 +205,7 @@ $BracketMatcherDelayAfterLastChange = 5
 StartServer::notebooks = "LSPServer cannot be started inside of a notebook session."
 
 Options[StartServer] = {
-	ConfidenceLevel -> Automatic
+  ConfidenceLevel -> Automatic
 }
 
 (*
@@ -214,7 +214,7 @@ setup the REPL to handle traffic from client
 StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
-Module[{logFile, res, bytes, bytess, logFileStream,
+Module[{logFile, res, bytess, logFileStream,
   logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr,
   content, contents,
   errStr, ferror},
@@ -261,6 +261,10 @@ Module[{logFile, res, bytes, bytess, logFileStream,
     *)
     oldLogFiles = FileNames["kernelLog*", logDir];
     now = Now;
+    (*
+    Was using ":" as a time separator
+    But obviously cannot use ":" character in file names on Windows!!
+    *)
     dateStr = DateString[now, {"Year", "-", "Month", "-", "Day", "_", "Hour24", "-", "Minute", "-", "Second"}];
     quantity30days = Quantity[30, "Days"];
     Do[

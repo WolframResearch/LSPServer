@@ -140,7 +140,7 @@ For strings that contain \[] or \: notation, display the decoded string
 handleStrings[id_, strsIn_] :=
 Catch[
 Module[{lines, lineMap, originalLineNumber, line,
-  originalColumn, rules, char, decoded, rule, positionLine, segment, index, result, segments,
+  originalColumn, rules, decoded, rule, positionLine, segment1, index, result, segments,
   originalColumnCount, strs},
 
   (*
@@ -158,11 +158,11 @@ Module[{lines, lineMap, originalLineNumber, line,
 
     If[Length[segments] == 1,
 
-      segment = segments[[1]];
+      segment1 = segments[[1]];
 
       rules = {};
       
-      decoded = convertSegment[segment];
+      decoded = convertSegment[segment1];
 
       (*
       Handle tab stops
