@@ -67,7 +67,15 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl
 )
 
-set(PROCESSED_SYMBOLS_DUMP ${PROJECT_BINARY_DIR}/processedSymbols.mx)
+set(PROCESSED_SYMBOLS_DATA_FILES
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/BuiltInFunctions.wl
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/Constants.wl
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/UndocumentedSymbols.wl
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/ExperimentalSymbols.wl
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/ObsoleteSymbols.wl
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/SystemLongNames.wl
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/SystemCharacters.wl
+)
 
 set(PACLETINFO_SOURCE
 	${PROJECT_SOURCE_DIR}/${PACLET}/PacletInfo.wl.in
@@ -142,6 +150,22 @@ foreach(SRC ${STATIC_WL_PACLET_KERNEL_SOURCES})
 endforeach()
 
 #
+# processed Data sources
+#
+foreach(SRC ${PROCESSED_SYMBOLS_DATA_FILES})
+	file(RELATIVE_PATH REL ${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/ ${SRC})
+	add_custom_command(
+		OUTPUT
+			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Data/${REL}
+		COMMAND
+			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Data/${REL}
+		DEPENDS
+			${SRC}
+	)
+	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Data/${REL})
+endforeach()
+
+#
 # generated Kernel sources
 #
 foreach(SRC ${GENERATED_WL_PACLET_KERNEL_SOURCES})
@@ -180,34 +204,6 @@ add_custom_command(
 	WORKING_DIRECTORY
 		${PROJECT_SOURCE_DIR}
 )
-
-add_custom_command(
-	OUTPUT
-		${PROCESSED_SYMBOLS_DUMP}
-	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Generate/ProcessSymbols.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	DEPENDS
-		${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Generate/ProcessSymbols.wl
-		${PROJECT_SOURCE_DIR}/CodeTools/Generate/GenerateSources.wl
-		${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
-	VERBATIM
-	WORKING_DIRECTORY
-		${PROJECT_SOURCE_DIR}
-)
-
-set(COPIED_PROCESSED_SYMBOLS_DUMP ${PROJECT_BINARY_DIR}/paclet/LSPServer/Resources/Generated/processedSymbols.mx)
-
-add_custom_command(
-	OUTPUT
-		${COPIED_PROCESSED_SYMBOLS_DUMP}
-	COMMAND
-		${CMAKE_COMMAND} -E copy ${PROCESSED_SYMBOLS_DUMP} ${COPIED_PROCESSED_SYMBOLS_DUMP}
-	DEPENDS
-		${PROCESSED_SYMBOLS_DUMP}
-)
-
-
-
 
 
 #

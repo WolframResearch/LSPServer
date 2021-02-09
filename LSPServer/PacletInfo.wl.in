@@ -8,6 +8,17 @@ Paclet[
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "LSPServer`"},
     {"Documentation", Language -> "English", MainPage -> "Guides/LSPServer"},
-    {"LibraryLink"}
+    {"LibraryLink"},
+    {"Resource", Root -> "Resources",
+      Resources -> {
+        {"BuiltInFunctions", "Data/BuiltInFunctions.wl"},
+        {"Constants", "Data/Constants.wl"},
+        {"ExperimentalSymbols", "Data/ExperimentalSymbols.wl"},
+        {"ObsoleteSymbols", "Data/ObsoleteSymbols.wl"},
+        {"SystemCharacters", "Data/SystemCharacters.wl"},
+        {"SystemLongNames", "Data/SystemLongNames.wl"},
+        {"UndocumentedSymbols", "Data/UndocumentedSymbols.wl"}
+      }
+    }
   }
 ]
