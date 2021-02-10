@@ -21,6 +21,19 @@ replacements = Select[puaChars, MatchQ[#[[3]], KeyValuePattern["ASCIIReplacement
 nonReplacements = Select[puaChars, (!MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]] && !MemberQ[{"RawCharacter", "UnsupportedCharacter"}, SymbolName[#[[1]]]])&]
 
 
+
+
+
+Attributes[HoldFormBlindToInputForm] = {HoldFirst}
+
+Format[HoldFormBlindToInputForm[s_Symbol], InputForm] := s
+
+Format[HoldFormBlindToInputForm[s_String], InputForm] := s
+
+Format[HoldFormBlindToInputForm[h_[arg1_]], InputForm] :=
+	HoldFormBlindToInputForm[h][HoldFormBlindToInputForm[arg1]]
+
+
 (*
 Basically just converts "Alpha" => "\[Alpha]"
 
@@ -29,7 +42,9 @@ But handles newly-added characters by converting to \: notation
 toChar[k_, v_] :=
 	Module[{},
 		If[MatchQ[v[[3]], KeyValuePattern["Added" -> _]],
-			ToExpression["\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""]
+			With[{str = "\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""},
+				HoldFormBlindToInputForm[ToExpression[str]]
+			]
 			,
 			ToExpression["\"\\["<> k <> "]\""]
 		]
