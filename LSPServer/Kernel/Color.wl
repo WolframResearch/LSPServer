@@ -331,6 +331,51 @@ Module[{rVal, gVal, bVal, aVal, src, info, c},
                    "alpha" -> aVal |> |>
 ]]
 
+colorNodeToColorInformation[CallNode[head:LeafNode[Symbol, "Darker" | "Lighter", _], {n_, f:LeafNode[Integer|Real, _, _]|fractionPat}, data_]] :=
+Catch[
+Module[{rVal, gVal, bVal, aVal, src, info, c, fVal},
+
+  info = colorNodeToColorInformation[n];
+
+  If[info === Null,
+    Throw[info]
+  ];
+
+  c = info["color"];
+
+  rVal = c["red"];
+  gVal = c["green"];
+  bVal = c["blue"];
+  aVal = c["alpha"];
+
+  fVal = fromNode[f];
+
+  c = RGBColor[rVal, gVal, bVal, aVal];
+  Switch[head,
+    LeafNode[Symbol, "Darker", _],
+      c = N[Darker[c, fVal]]
+    ,
+    LeafNode[Symbol, "Lighter", _],
+      c = N[Lighter[c, fVal]]
+  ];
+
+  rVal = c[[1]];
+  gVal = c[[2]];
+  bVal = c[[3]];
+  aVal = c[[4]];
+
+  src = data[Source];
+
+  src-=1;
+
+  <| "range" -> <| "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+                   "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |> |>,
+     "color" -> <| "red" -> rVal,
+                   "green" -> gVal,
+                   "blue" -> bVal,
+                   "alpha" -> aVal |> |>
+]]
+
 
 colorNodeToColorInformation[_] :=
   Null
