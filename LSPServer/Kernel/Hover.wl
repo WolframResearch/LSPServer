@@ -525,8 +525,8 @@ parseString[s_] :=
       LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
       LeafNode[Token`LinearSyntaxBlob, s1_, _] :> parseLinearSyntaxBlob[s1],
       LeafNode[String, s1_, _] :> parseString[s1],
-      LeafNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replacePUA[s1]]]],
-      ErrorNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replacePUA[s1]]]]
+      LeafNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s1]]]],
+      ErrorNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s1]]]]
     };
     {If[hasStartingQuote, "\"", ""], a1, If[hasEndingQuote, "\"", ""]}
   ]
