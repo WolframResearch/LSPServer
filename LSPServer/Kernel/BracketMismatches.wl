@@ -2,6 +2,19 @@ BeginPackage["LSPServer`BracketMismatches`"]
 
 Begin["`Private`"]
 
+(*
+
+ML4Code` misbehaves and emits messages when loaded:
+DataStructure`EmptyQ::shdw
+
+So cannot have Needs here
+
+These Needs statements are evaluated at package-load time, before $Messages has been redirected
+
+So any messages that are emitted by Needs are printed to stdout and break LSPServer
+
+Needs["ML4Code`"] (* for SuggestBracketEdits *)
+*)
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeInspector`BracketMismatches`"]
@@ -146,6 +159,11 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEd
           log["before ML4Code`SuggestBracketEdits"];
           log["badChunk: ", badChunk]
         ];
+
+        (*
+        A message DataStructure`EmptyQ::shdw may be emitted the first time this is evaluated
+        *)
+        Block[{$ContextPath}, Needs["ML4Code`"]];
 
         (*
         Using $DefaultTabWidth of 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML

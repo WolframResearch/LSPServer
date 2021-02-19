@@ -192,6 +192,13 @@ $TextDocumentSyncKind = <|
   "Incremental" -> 2
 |>
 
+$MessageType = <|
+  "Error" -> 1,
+  "Warning" -> 2,
+  "Info" -> 3,
+  "Log" -> 4
+|>
+
 
 
 $ContentQueue = {}
@@ -234,6 +241,8 @@ Module[{logFile, res, bytess, logFileStream,
   logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr,
   content, contents,
   errStr, ferror},
+
+  $kernelStartTime = Now;
 
   If[$Notebooks,
     (*
@@ -350,12 +359,6 @@ Module[{logFile, res, bytess, logFileStream,
   log["\n\n"];
 
 
-  (*
-  Some simple thing to warm-up
-  *)
-  CodeParse["1+1"];
-
-
   log["Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)"];
   log["\n\n"];
 
@@ -372,7 +375,9 @@ Module[{logFile, res, bytess, logFileStream,
     
     exitHard[]
   ];
+  
 
+  $kernelEnteringLoop = Now;
 
   (*
   loop over:
@@ -1052,13 +1057,6 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
   If[$BracketMatcher,
 
-    Needs["ML4Code`"];
-
-    (*
-    Some simple thing to warm-up
-    *)
-    ML4Code`SuggestBracketEdits["f["];
-
     RegisterDidOpenMethods[{
       "textDocument/runBracketMismatches",
       "textDocument/suggestBracketEdits",
@@ -1120,6 +1118,12 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     semanticTokensProviderValue = Null
   ];
 
+  $kernelInitializeTime = Now;
+
+  If[$Debug2,
+    log["time to intialize: ", $kernelInitializeTime - $kernelStartTime]
+  ];
+
   {<| "jsonrpc" -> "2.0", "id" -> id,
       "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
                                          "textDocumentSync" -> <| "openClose" -> True,
@@ -1143,14 +1147,35 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
 
 handleContent[content:KeyValuePattern["method" -> "initialized"]] :=
-  Module[{},
+  Module[{warning},
 
     If[$Debug2,
       log["initialized: enter"]
     ];
 
-    {}
+    (*
+    Some simple thing to warm-up
+    *)
+    CodeParse["1+1"];
+
+    If[$BracketMatcher,
+
+      Block[{$ContextPath}, Needs["ML4Code`"]];
+   
+      (*
+      Some simple thing to warm-up
+      *)
+      ML4Code`SuggestBracketEdits["f["];
+    ];
+
+    warning = False;
+    If[warning,
+      {<| "jsonrpc" -> "2.0", "method" -> "window/showMessage", "params" -> <| "type" -> $MessageType["Warning"], "message" -> "I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! " |> |>}
+      ,
+      {}
+    ]
   ]
+
 
 handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
 Catch[
