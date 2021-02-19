@@ -13,6 +13,11 @@ fractionPat = CallNode[LeafNode[Symbol, "Times", _], {
     LeafNode[Integer, _, _], LeafNode[Integer, "-1", _]}, _]}, _]
 
 
+rationalPat = CallNode[LeafNode[Symbol, "Rational", _], {
+  LeafNode[Integer | Real, _, _],
+  LeafNode[Integer | Real, _, _]}, _]
+
+
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/documentColor"], pos_] :=
   Catch[
@@ -114,10 +119,10 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {
-  r:LeafNode[Integer|Real, _, _]|fractionPat,
-  g:LeafNode[Integer|Real, _, _]|fractionPat,
-  b:LeafNode[Integer|Real, _, _]|fractionPat,
-  a:LeafNode[Integer|Real, _, _]|fractionPat:LeafNode[Integer, "1", <||>]}, data_]] :=
+  r:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  g:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  b:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  a:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{rVal, gVal, bVal, aVal, src},
 
   rVal = fromNode[r];
@@ -225,10 +230,10 @@ colorNodeToColorInformation[CallNode[LeafNode[Symbol, "Hue", _], {h:LeafNode[Int
   colorNodeToColorInformation[CallNode[LeafNode[Symbol, "Hue", <||>], {h, LeafNode[Integer, "1", <||>], LeafNode[Integer, "1", <||>]}, data]]
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "Hue", _], {
-  h:LeafNode[Integer|Real, _, _]|fractionPat,
-  s:LeafNode[Integer|Real, _, _]|fractionPat,
-  b:LeafNode[Integer|Real, _, _]|fractionPat,
-  a:LeafNode[Integer|Real, _, _]|fractionPat:LeafNode[Integer, "1", <||>]}, data_]] :=
+  h:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  s:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  b:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  a:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{hVal, sVal, bVal, aVal, src, rgba},
 
   hVal = fromNode[h];
@@ -252,8 +257,8 @@ Module[{hVal, sVal, bVal, aVal, src, rgba},
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "GrayLevel", _], {
-  g:LeafNode[Integer|Real, _, _]|fractionPat,
-  a:LeafNode[Integer|Real, _, _]|fractionPat:LeafNode[Integer, "1", <||>]}, data_]] :=
+  g:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
+  a:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{gVal, aVal, src},
 
   gVal = fromNode[g];
@@ -331,7 +336,7 @@ Module[{rVal, gVal, bVal, aVal, src, info, c},
                    "alpha" -> aVal |> |>
 ]]
 
-colorNodeToColorInformation[CallNode[head:LeafNode[Symbol, "Darker" | "Lighter", _], {n_, f:LeafNode[Integer|Real, _, _]|fractionPat}, data_]] :=
+colorNodeToColorInformation[CallNode[head:LeafNode[Symbol, "Darker" | "Lighter", _], {n_, f:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat}, data_]] :=
 Catch[
 Module[{rVal, gVal, bVal, aVal, src, info, c, fVal},
 
@@ -451,6 +456,10 @@ fromNode[CallNode[LeafNode[Symbol, "Times", _], {
   CallNode[LeafNode[Symbol, "Power", _], {
     d:LeafNode[Integer | Real, _, _], LeafNode[Integer, "-1", _]}, _]}, _]] := FromNode[n]/FromNode[d]
 
+
+fromNode[CallNode[LeafNode[Symbol, "Rational", _], {
+  n:LeafNode[Integer | Real, _, _],
+  d:LeafNode[Integer | Real, _, _]}, _]] := N[FromNode[n]/FromNode[d]]
 
 
 
