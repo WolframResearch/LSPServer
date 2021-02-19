@@ -386,7 +386,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnosti
     *)
     lints = SortBy[lints, {-severityToInteger[#[[3]]]&, #[[4, Key[Source]]]&}];
 
-    lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
+    lints = Take[lints, UpTo[CodeInspector`Summarize`$DefaultLintLimit]];
 
     If[$Debug2,
       log["lints: ", #["Tag"]& /@ lints]

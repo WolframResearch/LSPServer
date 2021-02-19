@@ -158,7 +158,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   *)
   lints = SortBy[lints, {-severityToInteger[#[[3]]]&, #[[4, Key[Source]]]&}];
 
-  lints = Take[lints, UpTo[CodeInspector`Summarize`$LintLimit]];
+  lints = Take[lints, UpTo[CodeInspector`Summarize`$DefaultLintLimit]];
 
   
   lspActions = {};
