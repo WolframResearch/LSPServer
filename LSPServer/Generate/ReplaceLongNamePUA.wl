@@ -1,7 +1,7 @@
 
 If[!MemberQ[$Path, #], PrependTo[$Path, #]]&[DirectoryName[$InputFileName, 3]]
 
-BeginPackage["LSPServer`Generate`ReplacePUA`"]
+BeginPackage["LSPServer`Generate`ReplaceLongNamePUA`"]
 
 
 Begin["`Private`"]
@@ -14,11 +14,11 @@ dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 
 
-puaChars = Select[importedLongNames, (16^^e000 <= #[[2]] <= 16^^f8ff)&]
+longNamePUAChars = Select[importedLongNames, (16^^e000 <= #[[2]] <= 16^^f8ff)&]
 
-replacements = Select[puaChars, MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]]&]
+replacements = Select[longNamePUAChars, MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]]&]
 
-nonReplacements = Select[puaChars, (!MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]] && !MemberQ[{"RawCharacter", "UnsupportedCharacter"}, SymbolName[#[[1]]]])&]
+nonReplacements = Select[longNamePUAChars, (!MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]] && !MemberQ[{"RawCharacter", "UnsupportedCharacter"}, SymbolName[#[[1]]]])&]
 
 
 
@@ -38,6 +38,8 @@ Format[HoldFormBlindToInputForm[h_[arg1_]], InputForm] :=
 Basically just converts "Alpha" => "\[Alpha]"
 
 But handles newly-added characters by converting to \: notation
+
+TODO: I would just write out \:xxxx if it were easy to do...
 *)
 toChar[k_, v_] :=
 	Module[{},
@@ -52,7 +54,7 @@ toChar[k_, v_] :=
 
 
 
-replacePUARules =
+replaceLongNamePUARules =
 	KeyValueMap[
 		Function[{k, v},
 			toChar[k, v] -> v[[3, Key["ASCIIReplacements"], -1]]
@@ -72,25 +74,25 @@ replacePUARules =
 
 generate[] := (
 
-Print["Generating ReplacePUA..."];
+Print["Generating ReplaceLongNamePUA..."];
 
-replacePUAWL = {
+replaceLongNamePUAWL = {
 "
 (*
 AUTO GENERATED FILE
 DO NOT MODIFY
 *)
 
-BeginPackage[\"LSPServer`ReplacePUA`\"]
+BeginPackage[\"LSPServer`ReplaceLongNamePUA`\"]
 
-replacePUA
+replaceLongNamePUA
 
 Begin[\"`Private`\"]
 
-replacePUA[s_String] :=
+replaceLongNamePUA[s_String] :=
   StringReplace[s, "} ~Join~
 
-{ToString[replacePUARules, InputForm, CharacterEncoding -> "ASCII", PageWidth -> 120]} ~Join~ {"
+{ToString[replaceLongNamePUAWL, InputForm, CharacterEncoding -> "ASCII", PageWidth -> 120]} ~Join~ {"
 
   ]
 
@@ -100,15 +102,15 @@ EndPackage[]
 "
 };
 
-Print["exporting ReplacePUA.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Kernel", "ReplacePUA.wl"}], Column[replacePUAWL], "String"];
+Print["exporting ReplaceLongNamePUA.wl"];
+res = Export[FileNameJoin[{generatedWLDir, "Kernel", "ReplaceLongNamePUA.wl"}], Column[replaceLongNamePUAWL], "String"];
 
 If[FailureQ[res],
   Print[res];
   Quit[1]
 ];
 
-Print["Done ReplacePUA"];
+Print["Done ReplaceLongNamePUA"];
 )
 
 If[!StringQ[script],

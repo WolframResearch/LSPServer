@@ -3,7 +3,7 @@ BeginPackage["LSPServer`Hover`"]
 Begin["`Private`"]
 
 Needs["LSPServer`"]
-Needs["LSPServer`ReplacePUA`"]
+Needs["LSPServer`ReplaceLongNamePUA`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
@@ -327,7 +327,7 @@ Module[{lines, lineMap, originalLineNumber, line,
 
   lines = Values[lineMap];
 
-  lines = escapeMarkdown[replaceControl[replacePUA[StringJoin[#["characters"]]]]]& /@ lines;
+  lines = escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[StringJoin[#["characters"]]]]]]& /@ lines;
 
   Which[
     Length[lines] == 0,
@@ -366,8 +366,8 @@ Module[{lines, line, result, syms, usage, a1},
         LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
         LeafNode[Token`LinearSyntaxBlob, s_, _] :> parseLinearSyntaxBlob[s],
         LeafNode[String, s_, _] :> parseString[s],
-        LeafNode[_, s_, _] :> escapeMarkdown[replaceControl[replacePUA[s]]],
-        ErrorNode[_, s_, _] :> escapeMarkdown[replaceControl[replacePUA[s]]]
+        LeafNode[_, s_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]],
+        ErrorNode[_, s_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]]
       };
 
       line = StringJoin[a1];
@@ -515,7 +515,7 @@ parseString[s_] :=
 
     (*
     The string may be reassembled and there may have been an error in the linear syntax,
-    meaning tha there is no trailing quote
+    meaning that there is no trailing quote
     *)
     hasStartingQuote = StringMatchQ[s, "\"" ~~ ___];
     hasEndingQuote = StringMatchQ[s, ___ ~~ "\""];
@@ -525,8 +525,8 @@ parseString[s_] :=
       LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
       LeafNode[Token`LinearSyntaxBlob, s1_, _] :> parseLinearSyntaxBlob[s1],
       LeafNode[String, s1_, _] :> parseString[s1],
-      LeafNode[_, s1_, _] :> escapeMarkdown[replaceControl[replacePUA[s1]]],
-      ErrorNode[_, s1_, _] :> escapeMarkdown[replaceControl[replacePUA[s1]]]
+      LeafNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replacePUA[s1]]]],
+      ErrorNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replacePUA[s1]]]]
     };
     {If[hasStartingQuote, "\"", ""], a1, If[hasEndingQuote, "\"", ""]}
   ]
@@ -637,12 +637,12 @@ Sanity check that the box that starts with a letter is actually a single word or
 *)
 interpretBox[s_String /; StringStartsQ[s, LetterCharacter | "$"] &&
   !StringMatchQ[s, (WordCharacter | "$" | " " | "`" | "_" | "/" | "\[FilledRightTriangle]") ...]] := (
-  Message[interpretBox::unhandledSeq, "letter sequence that probably should be a RowBox", s];
+  Message[interpretBox::unhandledSeq, "letter sequence that probably should be a RowBox: ", s];
   "\[UnknownGlyph]"
 )
 
 interpretBox[s_String] :=
-  escapeMarkdown[replaceControl[replacePUA[s]]]
+  escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]]
 
 interpretBox[$Failed] := (
   Message[interpretBox::unhandled, $Failed];
@@ -817,6 +817,22 @@ replaceControl[s_String] :=
   }]
 
 EndStaticAnalysisIgnore[]
+replaceLinearSyntax[s_String] :=
+  StringReplace[s, {
+    "\!" -> "\\!",
+    "\%" -> "\\%",
+    "\&" -> "\\&",
+    "\(" -> "\\(",
+    "\)" -> "\\)",
+    "\*" -> "\\*",
+    "\+" -> "\\+",
+    "\/" -> "\\/",
+    "\@" -> "\\@",
+    "\^" -> "\\^",
+    "\_" -> "\\_",
+    "\`" -> "\\`"
+  }]
+
 
 
 (*
