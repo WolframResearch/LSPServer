@@ -932,7 +932,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
 
 handleContent[content:KeyValuePattern["method" -> "initialized"]] :=
-  Module[{warning},
+  Module[{warningMessages},
 
     If[$Debug2,
       log["initialized: enter"]
@@ -953,12 +953,21 @@ handleContent[content:KeyValuePattern["method" -> "initialized"]] :=
       ML4Code`SuggestBracketEdits["f["];
     ];
 
-    warning = False;
-    If[warning,
-      {<| "jsonrpc" -> "2.0", "method" -> "window/showMessage", "params" -> <| "type" -> $MessageType["Warning"], "message" -> "I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! I am a warning! " |> |>}
-      ,
-      {}
-    ]
+    warningMessages = ServerDiagnosticWarningMessages[];
+
+    If[$Debug2,
+      log["warningMessages: ", warningMessages]
+    ];
+
+    <|
+      "jsonrpc" -> "2.0",
+      "method" -> "window/showMessage",
+      "params" ->
+        <|
+          "type" -> $MessageType["Warning"],
+          "message" -> #
+        |>
+    |>& /@ warningMessages
   ]
 
 
