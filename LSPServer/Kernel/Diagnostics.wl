@@ -207,13 +207,6 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
       log["textDocument/runScopingDiagnostics: enter"]
     ];
 
-    (*
-    If $SemanticTokens, then do not also create scoping diagnostics
-    *)
-    If[$SemanticTokens,
-      Throw[{}]
-    ];
-
     params = content["params"];
     doc = params["textDocument"];
     uri = doc["uri"];
@@ -249,6 +242,15 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
     scopingLints = scopingDataObjectToLints /@ filtered;
 
     scopingLints = Flatten[scopingLints];
+
+    (*
+    If $SemanticTokens, then only keep the errors
+
+    All other lints will be marked up as semantic highlighting only
+    *)
+    If[$SemanticTokens,
+      scopingLints = Cases[scopingLints, InspectionObject[_, _, "Error" | "Fatal", _]]
+    ];
 
     If[$Debug2,
       log["scopingLints: ", #["Tag"]& /@ scopingLints]
