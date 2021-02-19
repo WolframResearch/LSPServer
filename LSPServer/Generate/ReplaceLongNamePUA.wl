@@ -92,7 +92,7 @@ Begin[\"`Private`\"]
 replaceLongNamePUA[s_String] :=
   StringReplace[s, "} ~Join~
 
-{ToString[replaceLongNamePUAWL, InputForm, CharacterEncoding -> "ASCII", PageWidth -> 120]} ~Join~ {"
+{ToString[replaceLongNamePUARules, InputForm, CharacterEncoding -> "ASCII", PageWidth -> 120]} ~Join~ {"
 
   ]
 
