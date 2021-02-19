@@ -301,7 +301,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearDiagnostics
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints, astLints, scopingLints},
+  Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints, astLints, scopingLints, diagnostics},
 
     If[$Debug2,
       log["textDocument/publishDiagnostics: enter"]

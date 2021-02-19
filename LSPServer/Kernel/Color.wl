@@ -384,7 +384,7 @@ colorNodeToColorInformation[_] :=
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/colorPresentation"]] :=
 Catch[
-Module[{id, params, doc, uri, color, range, rVal, gVal, bVal, aVal, label},
+Module[{id, params, doc, uri, color, range, rVal, gVal, bVal, aVal, label, colorPresentations},
   
   If[$Debug2,
     log["textDocument/documentColorPresentation: enter"]

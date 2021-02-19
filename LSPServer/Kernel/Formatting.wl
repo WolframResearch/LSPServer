@@ -94,7 +94,7 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
 handleContent[content:KeyValuePattern["method" -> "textDocument/rangeFormatting"]] :=
 Catch[
 Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize,
-  insertSpaces, rangeSource, lines, range},
+  insertSpaces, rangeSource, lines, range, indentationString},
 
   If[$Debug2,
     log["textDocument/rangeFormatting: enter"]

@@ -117,10 +117,14 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
 
   srcs = #[[3, Key[Source]]]& /@ cases;
 
-  locations = (<| "uri" -> uri,
-                  "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
-                                "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
-               |>&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs;
+  locations =
+    Function[{src}, <|
+      "uri" -> uri,
+      "range" -> <|
+        "start" -> <|"line" -> #[[1, 1]],"character" -> #[[1, 2]] |>,
+        "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
+      |>
+    |>&[Map[Max[#, 0]&, src-1, {2}]]] /@ srcs;
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>}
 ]]

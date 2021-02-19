@@ -368,7 +368,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
 
       lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines;
 
-      lines = Merge[<|#["line"] -> #|>& /@ lines, ({StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ #, "<br>"], "</div>"], #[[1]]["characterCount"]})&];
+      lines = Merge[<|#["line"] -> #|>& /@ lines, Function[{vals}, {StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ vals, "<br>"], "</div>"], vals[[1]]["characterCount"]}]];
       
       lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|> &, lines]
     ];
