@@ -318,7 +318,9 @@ Module[{logFile, res, bytess, logFileStream,
       exitHard[]
     ];
 
-    $Messages = $Messages ~Join~ { logFileStream }
+    $Messages = $Messages ~Join~ { logFileStream };
+
+    $Output = $Output ~Join~ { logFileStream }
   ];
 
   (*
