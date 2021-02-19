@@ -130,11 +130,15 @@ Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
       {#[[1, 1]], #[[1, 2]], #[[2, 2]] - #[[1, 2]],
         $SemanticTokenTypes[If[MemberQ[{"Module", "Block", "DynamicModule", "Internal`InheritedBlock"}, scope[[-1]]], "variable", "parameter"]],
         BitOr @@ BitShiftLeft[1, Lookup[$SemanticTokenModifiers, modifiers ~Join~ (
-            scope[[-1]] /. {
-              "Module" | "DynamicModule" -> {"Module"},
-              "Block" | "Internal`InheritedBlock" -> {"Block"},
-              _ -> {}
+            Replace[scope,
+              {
+                "Module" | "DynamicModule" -> "Module",
+                "Block" | "Internal`InheritedBlock" -> "Block",
+                _ :> Sequence @@ {}
               }
+              ,
+              {1}
+            ]
           )]]}&[source - 1]
     ] @@@ scopingData;
 
