@@ -2,7 +2,7 @@
 
 Module[{a},
 (*      ^ scoped *)
-	a
+  a
 (* ^ scoped *)
 ]
 
@@ -11,7 +11,7 @@ Module[{a},
 (*      ^ unused *)
    Module[{a},
 (*         ^ scoped, shadowed *)
-	   a
+     a
 (*    ^ scoped, shadowed *)
    ]
 ]
@@ -49,7 +49,7 @@ Table[i, {i, nblks}, {blksize}]
 
 Block[{pred},
 (*     ^ unused *)
-	Function[{pred},
+  Function[{pred},
 (*           ^ shadowed *)
       pred
 (*    ^ shadowed *)
@@ -57,9 +57,9 @@ Block[{pred},
 ]
 
 Block[{pred},
-	pred_ :> pred
+  pred_ :> pred
 (* ^ shadowed *)
-(*          ^ shadowed *)
+(*         ^ shadowed *)
 ]
 
 
@@ -75,9 +75,9 @@ Compile[{{rows, _Integer, 0}, {cols, _Integer, 0}},
 
 Module[{func},
 (*      ^ scoped *)
-	func /: Map[func, _] := lst;
-(* ^ scoped *)
-(*             ^ scoped *)
+  func /: Map[func, _] := lst;
+(*^ scoped *)
+(*            ^ scoped *)
 ]
 
 
@@ -296,20 +296,26 @@ sqlEqual[a_, a_] := True
 
 
 (*
-
-NOT WORKING YET:
-
-Sum with options
+Sum
 *)
 
-Sum[Pochhammer[a,k] * Pochhammer[b,k] * x^k/(Pochhammer[c,k] * k!),
+Sum[k + j, {k,0,Infinity}, {j, 1, 2}]
+(*  ^ scoped*)
+(*      ^ scoped*)
+(*          ^ scoped*)
+(*                          ^ scoped*)
+
+
+Sum[Pochhammer[a,k] * Pochhammer[b,k] * x^k/(Pochhammer[c,k] * k!) + j,
 (*               ^ scoped*)
 (*                                 ^ scoped*)
 (*                                        ^ scoped*)
 (*                                                        ^ scoped*)
 (*                                                             ^ scoped*)
-                  {k,0,Infinity}, VerifyConvergence->False]
+                  {k,0,Infinity}, {j, 1, 2}, VerifyConvergence->False + k + j]
 (*                 ^ scoped*)
+(*                                                                      ^ NOT scoped*)
+(*                                                                          ^ NOT scoped*)
 
 
 
@@ -334,6 +340,76 @@ NOT WORKING YET:
 
 
 
+
+
+
+
+
+
+
+
+xxx /: Part[xxx, yyy] := foo
+(*     ^ it is convenient to mark Part as having a definition here *)
+bar[fileInfo_] := Block[{path = fileInfo[[67]]}, jjj]
+(*                                      ^ and then asking for the Source of the Part syntax here was causing a crash*)
+
+
+
+
+
+
+
+
+  interpreter_Interpreter[input_:Missing["NoInput"]] := s
+(*^ unused*)
+(*            ^ defined*)
+(*                        ^ unused*)
+
+
+
+
+
+
+
+ (#)&
+(*^ scoped*)
+
+((#)&)&
+(*^ shadowed*)
+
+
+
+((##234)&)&
+(*^ shadowed*)
+
+
+Function[# + 1]
+
+
+  #
+(*^ error*)
+
+
+
+
+
+
+CurrentValue /: (CurrentValue[target_, option_] = value_) := With[{t=target, o=option},
+  MathLink`CallFrontEndHeld[FrontEnd`SetValue[FEPrivate`Set[CurrentValue[t, o], value]]]; CurrentValue[t, o]]
+
+
+
+With[{a = 2, p}, foo[]]
+
+
+
+
+
+foo[a_] :=
+Module[{a},
+(*      ^ error*)
+   a + 1
+]
 
 
 
