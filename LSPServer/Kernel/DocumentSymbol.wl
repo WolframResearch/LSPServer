@@ -121,80 +121,34 @@ Module[{id, params, doc, uri, ast, entry, symbolInfo, defs},
     Throw[ast]
   ];
 
-  defs = Cases[
-    ast,
-    CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {_, _}, KeyValuePattern["Definition" -> _]],
-    Infinity
-  ];
-    
-  symbolInfo = <| "name" -> #[[1]]["String"],
-                  "kind" -> $SymbolKind[#[[2]]],
-                  "range" -> <|
-                    "start" -> <| "line" -> #[[1]][[3, Key[Source], 1, 1]] - 1, "character" -> #[[1]][[3, Key[Source], 1, 2]] - 1 |>,
-                    "end" -> <| "line" -> #[[1]][[3, Key[Source], 2, 1]] - 1, "character" -> #[[1]][[3, Key[Source], 2, 2]] - 1 |> |>,
-                  "selectionRange" -> <|
-                    "start" -> <| "line" -> #[[1]][[3, Key[Source], 1, 1]] - 1, "character" -> #[[1]][[3, Key[Source], 1, 2]] - 1 |>,
-                    "end" -> <| "line" -> #[[1]][[3, Key[Source], 2, 1]] - 1, "character" -> #[[1]][[3, Key[Source], 2, 2]] - 1 |> |>
-               |>& /@ DeleteCases[findDefSymbol[#[[2, 1]]]& /@ defs, $Failed];
+  defs = Cases[ast, _[_, _, KeyValuePattern["Definitions" -> defs_]] :> defs, Infinity];
+  
+  defs = Flatten[defs];
+
+  (*
+  Source may have been abstracted away
+
+  We are only interested in definitions that have Source
+  *)
+  defs = Cases[defs, LeafNode[Symbol, _, KeyValuePattern[Source -> _]]];
+
+  symbolInfo =
+    Function[{sym}, <|
+      "name" -> sym["String"],
+      "kind" -> $SymbolKind["Function"],
+      "range" -> <|
+        "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+        "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
+      |>,
+      "selectionRange" -> <|
+        "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+        "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
+      |>
+      |>&[sym[[3, Key[Source]]] - 1]
+    ] /@ defs;
 
   {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> symbolInfo |>}
 ]]
-
-
-
-
-findDefSymbol[n:LeafNode[Symbol, _, KeyValuePattern[Source -> _]]] :=
-  {n, "Variable"}
-
-findDefSymbol[CallNode[LeafNode[Symbol, "Condition", _], {node_, _}, KeyValuePattern[Source -> _]]] :=
-  findDefSymbol[node]
-
-findDefSymbol[CallNode[LeafNode[Symbol, "Pattern", _], {_, node_}, KeyValuePattern[Source -> _]]] :=
-  findDefSymbol[node]
-
-findDefSymbol[CallNode[LeafNode[Symbol, "PatternTest", _], {node_, _}, KeyValuePattern[Source -> _]]] :=
-  findDefSymbol[node]
-
-findDefSymbol[CallNode[LeafNode[Symbol, "HoldPattern", _], {node_}, KeyValuePattern[Source -> _]]] :=
-  findDefSymbol[node]
-
-(*
-just give the first arg here
-*)
-findDefSymbol[CallNode[LeafNode[Symbol, "MessageName", _], {node_, ___}, KeyValuePattern[Source -> _]]] :=
-  (If[FailureQ[#], #, {#[[1]], "Constant"}])&[findDefSymbol[node]]
-
-findDefSymbol[CallNode[node_, _, KeyValuePattern[Source -> _]]] :=
-  (If[FailureQ[#], #, {#[[1]], "Function"}])&[findDefSymbol[node]]
-
-(*
-findDefSymbol[CallNode[LeafNode[Symbol, "HoldPattern", _], {GroupNode[GroupSquare, {_, node_, _}, _]}, _]] := findDefSymbol[node]
-*)
-
-(*
-findDefSymbol[CallNode[{node_, ___}, _, _]] := {findDefSymbol[node][[1]], "Function"}
-*)
-
-(*
-findDefSymbol[BinaryNode[Condition, {node_, _, _}, _]] := findDefSymbol[node]
-findDefSymbol[BinaryNode[Pattern, {_, _, node_}, _]] := findDefSymbol[node]
-findDefSymbol[BinaryNode[BinaryAt, {node_, _, _}, _]] := findDefSymbol[node]
-findDefSymbol[BinaryNode[PatternTest, {node_, _, _}, _]] := findDefSymbol[node]
-
-(*
-just give the first arg here
-*)
-findDefSymbol[InfixNode[MessageName, {node_, ___}, _]] := {findDefSymbol[node][[1]], "Constant"}
-
-findDefSymbol[GroupNode[GroupParen, {_, node_, _}, _]] := findDefSymbol[node]
-
-findDefSymbol[CompoundNode[PatternBlank, {_, node_}, _]] := findDefSymbol[node]
-findDefSymbol[CompoundNode[Blank, {_, node_}, _]] := findDefSymbol[node]
-*)
-
-findDefSymbol[_] :=
-  $Failed
-
 
 
 

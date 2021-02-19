@@ -121,23 +121,20 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
   namePat = StringReplace[namePat, __ ~~ "`" -> ""];
 
   (*
-  Definition may be specified with or without context
+  Definitions may be specified with or without context
   *)
   namePat = (__ ~~ "`" ~~ namePat) | namePat;
 
-  cases =
-    Cases[
-      ast,
-      CallNode[LeafNode[Symbol, "SetDelayed" | "Set", _], {lhs_, rhs_}, KeyValuePattern["Definition" -> name_ /; StringMatchQ[name, namePat]]] :> lhs,
-      Infinity
-    ];
+  cases = Flatten[Cases[ast, _[_, _, KeyValuePattern["Definitions" -> defs_ /; AnyTrue[defs, StringMatchQ[#[[2]], namePat]&]]], Infinity]];
 
   srcs = #[[3, Key[Source]]]& /@ cases;
 
-  locations = (<| "uri" -> uri,
-                  "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
-                                "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
-               |>&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs;
+  locations =
+    Function[{src},
+      <| "uri" -> uri,
+         "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+                       "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>
+      |>&[Map[Max[#, 0]&, src-1, {2}]]] /@ srcs;
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>}
 ]]

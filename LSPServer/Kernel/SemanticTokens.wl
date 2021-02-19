@@ -15,7 +15,8 @@ Needs["CodeParser`Utils`"]
 
 $SemanticTokenTypes = <|
   "variable" -> 0,
-  "parameter" -> 1
+  "parameter" -> 1,
+  "function" -> 2
 |>
 
 $SemanticTokenModifiers = <|
@@ -23,7 +24,8 @@ $SemanticTokenModifiers = <|
   "Block" -> 1,
   "shadowed" -> 2,
   "unused" -> 3,
-  "error" -> 4
+  "error" -> 4,
+  "definition" -> 5
 |>
 
 
@@ -128,7 +130,20 @@ Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
   transformed =
     Function[{source, scope, modifiers},
       {#[[1, 1]], #[[1, 2]], #[[2, 2]] - #[[1, 2]],
-        $SemanticTokenTypes[If[MemberQ[{"Module", "Block", "DynamicModule", "Internal`InheritedBlock"}, scope[[-1]]], "variable", "parameter"]],
+        
+        $SemanticTokenTypes[
+          Switch[scope,
+            {___, "Module" | "Block" | "DynamicModule" | "Internal`InheritedBlock"},
+              "variable"
+            ,
+            {___, "Defined"},
+              "function"
+            ,
+            _,
+              "parameter"
+          ]
+        ],
+        
         BitOr @@ BitShiftLeft[1, Lookup[$SemanticTokenModifiers, modifiers ~Join~ (
             Replace[scope,
               {
