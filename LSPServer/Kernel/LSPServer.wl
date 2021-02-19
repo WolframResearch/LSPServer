@@ -213,8 +213,8 @@ $CancelMap = <||>
 
 
 $DiagnosticsDelayAfterLastChange = 0.5
-$ImplicitTokensDelayAfterLastChange = 3
-$BracketMatcherDelayAfterLastChange = 5
+$ImplicitTokensDelayAfterLastChange = 3.0
+$BracketMatcherDelayAfterLastChange = 4.0
 
 
 
