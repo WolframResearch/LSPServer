@@ -5,6 +5,7 @@ Begin["`Private`"]
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeInspector`"]
+Needs["CodeInspector`DisabledRegions`"] (* for DisabledRegions *)
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Scoping`"] (* for scopingDataObject *)
@@ -33,6 +34,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
 
     <| "method" -> #, "params" -> params |>& /@ {
        "textDocument/concreteParse",
+       "textDocument/disabledRegions",
        "textDocument/runConcreteDiagnostics",
        "textDocument/aggregateParse",
        "textDocument/runAggregateDiagnostics",
@@ -43,9 +45,61 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
     }
   ]]
 
+handleContent[content:KeyValuePattern["method" -> "textDocument/disabledRegions"]] :=
+  Catch[
+  Module[{params, doc, uri, entry, cst, disabledRegions},
+
+    If[$Debug2,
+      log["textDocument/disabledRegions: enter"]
+    ];
+
+    params = content["params"];
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$ContentQueue, uri],
+      
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{}]
+    ];
+
+    entry = $OpenFilesMap[uri];
+
+    disabledRegions = Lookup[entry, "DisabledRegions", Null];
+
+    If[disabledRegions =!= Null,
+      Throw[{}]
+    ];
+    
+    cst = entry["CST"];
+
+    If[$Debug2,
+      log["before DisabledRegions"];
+    ];
+
+    disabledRegions = DisabledRegions[cst];
+
+    If[$Debug2,
+      log["after DisabledRegions"]
+    ];
+
+    If[$Debug2,
+      log["disabledRegions: ", disabledRegions]
+    ];
+    
+    entry["DisabledRegions"] = disabledRegions;
+
+    $OpenFilesMap[uri] = entry;
+
+    {}
+  ]]
+
 handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, cst, cstLints},
+  Module[{params, doc, uri, entry, cst, cstLints, disabledRegions},
 
     If[$Debug2,
       log["textDocument/runConcreteDiagnostics: enter"]
@@ -74,11 +128,13 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
     
     cst = entry["CST"];
 
+    disabledRegions = entry["DisabledRegions"];
+
     If[$Debug2,
       log["before CodeInspectCST"]
     ];
 
-    cstLints = CodeInspectCST[cst, "AggregateRules" -> <||>, "AbstractRules" -> <||>];
+    cstLints = CodeInspectCST[cst, "AggregateRules" -> <||>, "AbstractRules" -> <||>, "DisabledRegions" -> disabledRegions];
 
     If[$Debug2,
       log["after CodeInspectCST"]
@@ -97,7 +153,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, agg, aggLints},
+  Module[{params, doc, uri, entry, agg, aggLints, disabledRegions},
 
     If[$Debug2,
       log["textDocument/runAggregateDiagnostics: enter"]
@@ -126,11 +182,13 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiag
 
     agg = entry["Agg"];
 
+    disabledRegions = entry["DisabledRegions"];
+
     If[$Debug2,
       log["before CodeInspectAgg"]
     ];
 
-    aggLints = CodeInspectAgg[agg, "AbstractRules" -> <||>];
+    aggLints = CodeInspectAgg[agg, "AbstractRules" -> <||>, "DisabledRegions" -> disabledRegions];
 
     If[$Debug2,
       log["after CodeInspectAgg"]
@@ -149,7 +207,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiag
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, ast, astLints},
+  Module[{params, doc, uri, entry, ast, astLints, disabledRegions},
 
     If[$Debug2,
       log["textDocument/runAbstractDiagnostics: enter"]
@@ -178,11 +236,13 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
 
     ast = entry["AST"];
 
+    disabledRegions = entry["DisabledRegions"];
+
     If[$Debug2,
       log["before CodeInspectAST"]
     ];
 
-    astLints = CodeInspectAST[ast];
+    astLints = CodeInspectAST[ast, "DisabledRegions" -> disabledRegions];
 
     If[$Debug2,
       log["after CodeInspectAST"]

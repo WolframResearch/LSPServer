@@ -532,6 +532,9 @@ parseString[s_] :=
   ]
 
 
+(* ::CodeInspect::Push:: *)
+(* ::CodeInspect::Disable::UnexpectedCharacter:: *)
+
 interpretBox::unhandled = "unhandled: `1`"
 
 interpretBox::unhandledSeq = "unhandled: `1`\n`2`"
@@ -730,7 +733,7 @@ escapeMarkdown[s_String] :=
   }]
 
 
-BeginStaticAnalysisIgnore[]
+
 
 (*
 FIXME: maybe have some nicer replacement strings
@@ -816,7 +819,6 @@ replaceControl[s_String] :=
     "\.9f" -> "\\.9f"
   }]
 
-EndStaticAnalysisIgnore[]
 replaceLinearSyntax[s_String] :=
   StringReplace[s, {
     "\!" -> "\\!",
@@ -834,6 +836,7 @@ replaceLinearSyntax[s_String] :=
   }]
 
 
+(* ::CodeInspect::Pop:: *)
 
 (*
 Fix the terrible, terrible design mistake that prevents linear syntax embedded in strings from round-tripping
