@@ -10,6 +10,15 @@ expandContent
 expandUpdate
 LSPEvaluate
 
+
+ProcessScheduledJobs
+
+
+exitHard
+exitGracefully
+exitSemiGracefully
+
+
 handleContent
 
 
@@ -30,6 +39,9 @@ $OpenFilesMap
 $CancelMap
 
 $hrefIdCounter
+
+$ServerState
+
 
 
 $AllowedImplicitTokens
