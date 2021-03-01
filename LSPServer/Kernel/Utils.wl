@@ -107,12 +107,16 @@ Module[{srcs},
 
   srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
 
-  ((<| "code" -> tag,
-       "message" -> plainify[message],
-       "severity" -> lintSeverityToLSPSeverity[severity],
-       "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
-                     "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
-       "source" -> "wolfram lint" |>)&[Map[Max[#, 0]&, #-1, {2}]])& /@ srcs
+  Function[{src}, (<|
+    "code" -> tag,
+    "message" -> plainify[message],
+    "severity" -> lintSeverityToLSPSeverity[severity],
+    "range" -> <|
+      "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
+      "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
+    |>,
+    "source" -> "wolfram lint" |>)&[Map[Max[#, 0]&, src-1, {2}]]
+  ] /@ srcs
 ]]
 
 

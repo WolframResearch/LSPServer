@@ -18,7 +18,10 @@ Needs["CodeParser`Utils`"]
 
 (* =================   Initialize   ======================= *)
 
-initializeLSPComm["StdIO"] := StartBackgroundReaderThread[];
+initializeLSPComm["StdIO"] := (
+  StartBackgroundReaderThread[];
+  Null
+)
 
 
 (* =================   Read Message   ======================= *)
@@ -138,7 +141,7 @@ TryQueue["StdIO"] :=
 writeLSPResult["StdIO", sock_, contents_] := writeLSPResult["StdIO", contents];
 
 writeLSPResult["StdIO", contents_] :=
-Module[{bytess, bytes, line, res, errStr},
+Module[{bytess, res, errStr, ferror},
 
   Check[
     bytess = ExportByteArray[#, "JSON"]& /@ contents

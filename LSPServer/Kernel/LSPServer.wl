@@ -286,8 +286,8 @@ StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
 Module[{logFile, logFileStream,
-  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr
-  },
+  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr,
+  initializedComm},
 
   $kernelStartTime = Now;
 
@@ -428,9 +428,7 @@ Module[{logFile, logFileStream,
     
     exitHard[]
   ];
-  
 
-  $kernelEnteringLoop = Now;
   readEvalWriteLoop[$commProcess, initializedComm];
 
 ]],(*Module, 1-arg Catch*)
