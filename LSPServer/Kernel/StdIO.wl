@@ -1,7 +1,5 @@
 BeginPackage["LSPServer`StdIO`"]
 
-initializeLSPComm
-readEvalWriteLoop
 
 Begin["`Private`"]
 

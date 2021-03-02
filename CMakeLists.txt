@@ -64,11 +64,13 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Hover.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/ImplicitTokens.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Library.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/ListenSocket.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/LSPServer.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/References.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/SelectionRange.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/SemanticTokens.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/ServerDiagnostics.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Socket.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/StdIO.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Utils.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl

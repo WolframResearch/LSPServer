@@ -5,11 +5,12 @@ StartServer::usage = "StartServer[] puts the kernel into a state ready for traff
 
 RunServerDiagnostic
 
+initializeLSPComm
 
 expandContent
 expandUpdate
 LSPEvaluate
-
+readEvalWriteLoop
 
 ProcessScheduledJobs
 
@@ -90,10 +91,12 @@ Needs["LSPServer`Formatting`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`ImplicitTokens`"]
 Needs["LSPServer`Library`"]
+Needs["LSPServer`ListenSocket`"]
 Needs["LSPServer`References`"]
 Needs["LSPServer`SelectionRange`"]
 Needs["LSPServer`SemanticTokens`"]
 Needs["LSPServer`ServerDiagnostics`"]
+Needs["LSPServer`Socket`"]
 Needs["LSPServer`StdIO`"]
 Needs["LSPServer`Utils`"]
 Needs["LSPServer`Workspace`"]
