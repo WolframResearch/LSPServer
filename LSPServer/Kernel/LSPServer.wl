@@ -327,7 +327,7 @@ Module[{logFile, logFileStream,
 
   If[$Debug,
 
-    Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
+    Quiet[CreateDirectory[logDir], {CreateDirectory::filex, CreateDirectory::direx}];
 
     (*
     Cleanup existing log files
