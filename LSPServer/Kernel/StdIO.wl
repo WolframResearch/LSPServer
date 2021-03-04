@@ -18,10 +18,11 @@ Needs["CodeParser`Utils`"]
 
 (* =================   Initialize   ======================= *)
 
-initializeLSPComm["StdIO"] := (
-  StartBackgroundReaderThread[];
-  Null
-)
+(*
+May return Null or a Failure object
+*)
+initializeLSPComm["StdIO"] :=
+  StartBackgroundReaderThread[]
 
 
 (* =================   Read Message   ======================= *)
