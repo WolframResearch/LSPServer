@@ -1204,7 +1204,7 @@ Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
 
   fileName = normalizeURI[uri];
 
-  fileFormat = Automatic;
+  fileFormat = "Package";
   If[FileExtension[fileName] == "wls",
     fileFormat = "Script"
   ];
@@ -1289,7 +1289,7 @@ Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
 
   fileName = normalizeURI[uri];
 
-  fileFormat = Automatic;
+  fileFormat = "Package";
   If[FileExtension[fileName] == "wls",
     fileFormat = "Script"
   ];
