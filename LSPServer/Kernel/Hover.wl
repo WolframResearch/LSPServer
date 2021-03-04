@@ -389,15 +389,15 @@ Module[{lines, line, result, syms, usage, a1},
     ];
     *)
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, StringReplace[sym, StartOfString ~~ "System`" -> ""]],
       line = line <> "\n\nUNDOCUMENTED"
     ];
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, StringReplace[sym, StartOfString ~~ "System`" -> ""]],
       line = line <> "\n\nEXPERIMENTAL"
     ];
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, sym],
+    If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, StringReplace[sym, StartOfString ~~ "System`" -> ""]],
       line = line <> "\n\nOBSOLETE"
     ];
 
@@ -532,8 +532,8 @@ parseString[s_] :=
   ]
 
 
-(* ::CodeInspect::Push:: *)
-(* ::CodeInspect::Disable::UnexpectedCharacter:: *)
+(* CodeInspect::Push *)
+(* CodeInspect::Disable::UnexpectedCharacter *)
 
 interpretBox::unhandled = "unhandled: `1`"
 
@@ -836,7 +836,7 @@ replaceLinearSyntax[s_String] :=
   }]
 
 
-(* ::CodeInspect::Pop:: *)
+(* CodeInspect::Pop *)
 
 (*
 Fix the terrible, terrible design mistake that prevents linear syntax embedded in strings from round-tripping
