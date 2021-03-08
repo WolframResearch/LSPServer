@@ -257,9 +257,11 @@ markupSymbolToChar[LintMarkup[LintOpenExpectedOperandCharacter, ___]] := "e"
 markupSymbolToChar[LintMarkup[LintAllTimesOneCharacter, ___]] := "C"
 markupSymbolToChar[LintMarkup[LintCloseTimesOneCharacter, ___]] := "y"
 
-markupSymbolToChar[" "] := " "
+markupSymbolToChar[LintMarkup[LintUnhandledCharacter, ___]] := " "
+
 markupSymbolToChar[LintMarkup["(", ___]] := " "
 markupSymbolToChar[LintMarkup[")", ___]] := " "
+markupSymbolToChar[" "] := " "
 
 
 
