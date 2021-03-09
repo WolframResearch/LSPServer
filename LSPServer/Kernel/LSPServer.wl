@@ -115,7 +115,7 @@ TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "BuiltI
 *)
 location = "Location" /. PacletInformation["LSPServer"];
 
-WolframLanguageSyntax`Generate`$builtInFunctions = Get[FileNameJoin[{location, "Resources", "Data", "BuiltInFunctions.wl"}]]
+WolframLanguageSyntax`Generate`$builtinFunctions = Get[FileNameJoin[{location, "Resources", "Data", "BuiltinFunctions.wl"}]]
 WolframLanguageSyntax`Generate`$constants = Get[FileNameJoin[{location, "Resources", "Data", "Constants.wl"}]]
 WolframLanguageSyntax`Generate`$experimentalSymbols = Get[FileNameJoin[{location, "Resources", "Data", "ExperimentalSymbols.wl"}]]
 WolframLanguageSyntax`Generate`$obsoleteSymbols = Get[FileNameJoin[{location, "Resources", "Data", "ObsoleteSymbols.wl"}]]
