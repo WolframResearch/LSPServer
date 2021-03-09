@@ -5,6 +5,7 @@ Paclet[
   WolframVersion -> "12.0+",
   Description -> "Language Server Protocol implementation for Wolfram Language.",
   Creator ->"Brenton Bostick <brenton@wolfram.com>",
+  BuildDate -> "",
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "LSPServer`"},
     {"Documentation", Language -> "English", MainPage -> "Guides/LSPServer"},
