@@ -854,7 +854,7 @@ reassembleEmbeddedLinearSyntax[toks_] :=
 
     Fold[
       Function[{toks1, span},
-        embeddedLinearSyntax = LeafNode[String, StringJoin[#[[2]] & /@ Take[toks1, {span[[1, 1]], span[[2, 1]]}]], <||>];
+        embeddedLinearSyntax = LeafNode[String, StringJoin[#[[2]]& /@ Take[toks1, {span[[1, 1]], span[[2, 1]]}]], <||>];
         ReplacePart[Drop[toks1, {span[[1, 1]] + 1, span[[2, 1]]}], span[[1]] -> embeddedLinearSyntax]]
       ,
       toks

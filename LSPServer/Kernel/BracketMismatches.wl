@@ -321,7 +321,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
         suggestions = {}
       ];
 
-      confidenceMap = Association[MapIndexed[#1 -> #2[[1]] &, Reverse[Union[suggestions[[All, 3]]]]]];
+      confidenceMap = Association[MapIndexed[(#1 -> #2[[1]])&, Reverse[Union[suggestions[[All, 3]]]]]];
       Function[{suggestion},
         rank = confidenceMap[suggestion[[3]]];
 
@@ -388,7 +388,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
 
       lines = Merge[<|#["line"] -> #|>& /@ lines, Function[{vals}, {StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ vals, "<br>"], "</div>"], vals[[1]]["characterCount"]}]];
       
-      lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|> &, lines]
+      lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|>&, lines]
     ];
 
     If[$Debug2,
@@ -602,8 +602,8 @@ convertSuggestionToLineColumn[___] :=
 
 indexToLineColumn[index_, badChunkLines_] :=
   Module[{indexs, line, taken, lineStartIndex, column},
-    indexs = FoldList[#1 + StringLength[#2] + 1 &, 1, badChunkLines];
-    taken = TakeWhile[indexs, (# <= index) &];
+    indexs = FoldList[(#1 + StringLength[#2] + 1)&, 1, badChunkLines];
+    taken = TakeWhile[indexs, (# <= index)&];
     line = Length[taken];
     lineStartIndex = Last[taken];
     column = index - lineStartIndex + 1;
