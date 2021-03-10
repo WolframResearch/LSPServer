@@ -125,7 +125,7 @@ convert from CodeTools Lint severities to LSP severities
 *)
 lintSeverityToLSPSeverity[severity_String] :=
 Switch[severity,
-  "Formatting" | "ImplicitTimes", $DiagnosticSeverity["Hint"],
+  "Formatting" | "ImplicitTimes" | "Scoping", $DiagnosticSeverity["Hint"],
   "Remark", $DiagnosticSeverity["Information"],
   "Warning", $DiagnosticSeverity["Warning"],
   "Error" | "Fatal", $DiagnosticSeverity["Error"]
