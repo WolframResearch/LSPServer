@@ -114,7 +114,7 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
   res =
     Which[
       strs != {},
-        handleStrings[id, strs]
+        handleStrings[id, strs, positionLine]
       ,
       syms != {},
         handleSymbols[id, syms]
@@ -137,10 +137,10 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
 (*
 For strings that contain \[] or \: notation, display the decoded string
 *)
-handleStrings[id_, strsIn_] :=
+handleStrings[id_, strsIn_, positionLine_] :=
 Catch[
 Module[{lines, lineMap, originalLineNumber, line,
-  originalColumn, rules, decoded, rule, positionLine, segment1, index, result, segments,
+  originalColumn, rules, decoded, rule, segment1, index, result, segments,
   originalColumnCount, strs},
 
   (*
