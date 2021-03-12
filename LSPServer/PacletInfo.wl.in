@@ -12,13 +12,19 @@ Paclet[
     {"LibraryLink"},
     {"Resource", Root -> "Resources",
       Resources -> {
-        {"BuiltInFunctions", "Data/BuiltInFunctions.wl"},
+        {"BuiltinFunctions", "Data/BuiltinFunctions.wl"},
         {"Constants", "Data/Constants.wl"},
         {"ExperimentalSymbols", "Data/ExperimentalSymbols.wl"},
+        {"FreeCharacters", "Data/FreeCharacters.wl"},
+        {"FreeLongNames", "Data/FreeLongNames.wl"},
         {"ObsoleteSymbols", "Data/ObsoleteSymbols.wl"},
         {"SystemCharacters", "Data/SystemCharacters.wl"},
         {"SystemLongNames", "Data/SystemLongNames.wl"},
-        {"UndocumentedSymbols", "Data/UndocumentedSymbols.wl"}
+        {"UndocumentedCharacters", "Data/UndocumentedCharacters.wl"},
+        {"UndocumentedLongNames", "Data/UndocumentedLongNames.wl"},
+        {"UndocumentedSymbols", "Data/UndocumentedSymbols.wl"},
+        {"UnsupportedCharacters", "Data/UnsupportedCharacters.wl"},
+        {"UnsupportedLongNames", "Data/UnsupportedLongNames.wl"}
       }
     }
   }
