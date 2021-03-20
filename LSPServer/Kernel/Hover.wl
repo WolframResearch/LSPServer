@@ -533,7 +533,7 @@ parseString[s_] :=
 
 
 (* CodeInspect::Push *)
-(* CodeInspect::Disable::UnexpectedCharacter *)
+(* CodeInspect::Suppress::UnexpectedCharacter *)
 
 interpretBox::unhandled = "unhandled: `1`"
 

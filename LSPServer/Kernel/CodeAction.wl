@@ -46,7 +46,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/codeAction"], po
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
        "textDocument/concreteParse",
-       "textDocument/disabledRegions",
+       "textDocument/suppressedRegions",
        "textDocument/runConcreteDiagnostics",
        "textDocument/aggregateParse",
        "textDocument/runAggregateDiagnostics",

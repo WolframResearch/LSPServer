@@ -5,7 +5,7 @@ Begin["`Private`"]
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeInspector`"]
-Needs["CodeInspector`DisabledRegions`"] (* for DisabledRegions *)
+Needs["CodeInspector`SuppressedRegions`"] (* for SuppressedRegions *)
 Needs["CodeInspector`Utils`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Scoping`"] (* for scopingDataObject *)
@@ -34,7 +34,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
 
     <| "method" -> #, "params" -> params |>& /@ {
        "textDocument/concreteParse",
-       "textDocument/disabledRegions",
+       "textDocument/suppressedRegions",
        "textDocument/runConcreteDiagnostics",
        "textDocument/aggregateParse",
        "textDocument/runAggregateDiagnostics",
@@ -45,12 +45,12 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
     }
   ]]
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/disabledRegions"]] :=
+handleContent[content:KeyValuePattern["method" -> "textDocument/suppressedRegions"]] :=
   Catch[
-  Module[{params, doc, uri, entry, cst, disabledRegions},
+  Module[{params, doc, uri, entry, cst, suppressedRegions},
 
     If[$Debug2,
-      log["textDocument/disabledRegions: enter"]
+      log["textDocument/suppressedRegions: enter"]
     ];
 
     params = content["params"];
@@ -68,29 +68,29 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/disabledRegions"
 
     entry = $OpenFilesMap[uri];
 
-    disabledRegions = Lookup[entry, "DisabledRegions", Null];
+    suppressedRegions = Lookup[entry, "SuppressedRegions", Null];
 
-    If[disabledRegions =!= Null,
+    If[suppressedRegions =!= Null,
       Throw[{}]
     ];
     
     cst = entry["CST"];
 
     If[$Debug2,
-      log["before DisabledRegions"];
+      log["before SuppressedRegions"];
     ];
 
-    disabledRegions = DisabledRegions[cst];
+    suppressedRegions = SuppressedRegions[cst];
 
     If[$Debug2,
-      log["after DisabledRegions"]
+      log["after SuppressedRegions"]
     ];
 
     If[$Debug2,
-      log["disabledRegions: ", disabledRegions]
+      log["suppressedRegions: ", suppressedRegions]
     ];
     
-    entry["DisabledRegions"] = disabledRegions;
+    entry["SuppressedRegions"] = suppressedRegions;
 
     $OpenFilesMap[uri] = entry;
 
@@ -99,7 +99,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/disabledRegions"
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, cst, cstLints, disabledRegions},
+  Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
 
     If[$Debug2,
       log["textDocument/runConcreteDiagnostics: enter"]
@@ -128,13 +128,13 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
     
     cst = entry["CST"];
 
-    disabledRegions = entry["DisabledRegions"];
+    suppressedRegions = entry["SuppressedRegions"];
 
     If[$Debug2,
       log["before CodeInspectCST"]
     ];
 
-    cstLints = CodeInspectCST[cst, "AggregateRules" -> <||>, "AbstractRules" -> <||>, "DisabledRegions" -> disabledRegions];
+    cstLints = CodeInspectCST[cst, "AggregateRules" -> <||>, "AbstractRules" -> <||>, "SuppressedRegions" -> suppressedRegions];
 
     If[$Debug2,
       log["after CodeInspectCST"]
@@ -153,7 +153,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, agg, aggLints, disabledRegions},
+  Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
     If[$Debug2,
       log["textDocument/runAggregateDiagnostics: enter"]
@@ -182,13 +182,13 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiag
 
     agg = entry["Agg"];
 
-    disabledRegions = entry["DisabledRegions"];
+    suppressedRegions = entry["SuppressedRegions"];
 
     If[$Debug2,
       log["before CodeInspectAgg"]
     ];
 
-    aggLints = CodeInspectAgg[agg, "AbstractRules" -> <||>, "DisabledRegions" -> disabledRegions];
+    aggLints = CodeInspectAgg[agg, "AbstractRules" -> <||>, "SuppressedRegions" -> suppressedRegions];
 
     If[$Debug2,
       log["after CodeInspectAgg"]
@@ -207,7 +207,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiag
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, ast, astLints, disabledRegions},
+  Module[{params, doc, uri, entry, ast, astLints, suppressedRegions},
 
     If[$Debug2,
       log["textDocument/runAbstractDiagnostics: enter"]
@@ -236,13 +236,13 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
 
     ast = entry["AST"];
 
-    disabledRegions = entry["DisabledRegions"];
+    suppressedRegions = entry["SuppressedRegions"];
 
     If[$Debug2,
       log["before CodeInspectAST"]
     ];
 
-    astLints = CodeInspectAST[ast, "DisabledRegions" -> disabledRegions];
+    astLints = CodeInspectAST[ast, "SuppressedRegions" -> suppressedRegions];
 
     If[$Debug2,
       log["after CodeInspectAST"]
