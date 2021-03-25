@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     18710,        427]
-NotebookOptionsPosition[     12664,        300]
-NotebookOutlinePosition[     13136,        317]
-CellTagsIndexPosition[     13093,        314]
+NotebookDataLength[     28454,        652]
+NotebookOptionsPosition[     19117,        463]
+NotebookOutlinePosition[     19587,        480]
+CellTagsIndexPosition[     19544,        477]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -295,12 +295,175 @@ Cell["Add color provider", "Text",
 Cell["Require using File[] wrapper", "Text",
  CellChangeTimes->{{3.787934498400132*^9, 3.787934551652277*^9}},
  CellID->1058529204,ExpressionUUID->"29529b60-f83c-4729-aebc-b33151dd5ce9"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.0", "Section",
+ CellChangeTimes->{{3.822824221714437*^9, 3.822824223655924*^9}, {
+  3.825677930612143*^9, 3.825677930896702*^9}},
+ CellID->226692847,ExpressionUUID->"a9fd96d0-e542-44b4-befb-4bdec8fb3190"],
+
+Cell["April 2, 2020", "Text",
+ CellChangeTimes->{{3.822824233793511*^9, 3.822824249038164*^9}, {
+  3.825677249810317*^9, 3.8256772534210787`*^9}, {3.825677920796116*^9, 
+  3.825677925530738*^9}},
+ CellID->390689751,ExpressionUUID->"2076a6cb-a383-4523-9374-87449e4cb2e4"],
+
+Cell["Add preliminary implementation of hover", "Text",
+ CellChangeTimes->{{3.8228242562586*^9, 3.822824256805437*^9}, {
+  3.8256780074432907`*^9, 3.8256780128658257`*^9}},
+ CellID->1465136178,ExpressionUUID->"981a9034-f9cf-418a-901d-031fdc302bd1"],
+
+Cell["\<\
+Add a native library for handling stdio, and remove the Python proxy script\
+\>", "Text",
+ CellChangeTimes->{{3.82567803761438*^9, 3.825678039698862*^9}},
+ CellID->1223517994,ExpressionUUID->"7b36c682-697a-484a-bcf4-262577dd0b36"],
+
+Cell["\<\
+Keep all content as ByteArrays and introduce publishing of implicit Times\
+\>", "Text",
+ CellChangeTimes->{{3.825678067425127*^9, 3.825678068781824*^9}},
+ CellID->357830233,ExpressionUUID->"217a2695-c5d4-45d1-a6a9-cc55e7c0262e"],
+
+Cell["Add versions notification", "Text",
+ CellChangeTimes->{{3.825678099229151*^9, 3.825678100834491*^9}},
+ CellID->271717507,ExpressionUUID->"d07a955b-0eea-43ef-8e97-18933d037e63"],
+
+Cell["Add a definitions provider", "Text",
+ CellChangeTimes->{3.825678154440155*^9},
+ CellID->1137103828,ExpressionUUID->"651f4f7c-63ef-474e-bd6f-37f995886a91"],
+
+Cell["Display other implicit tokens", "Text",
+ CellChangeTimes->{{3.82567827335325*^9, 3.82567828351374*^9}},
+ CellID->588347090,ExpressionUUID->"6771e00c-96d1-42b7-9e2b-e9fd5a2ea5ff"],
+
+Cell["\<\
+
+Enable sending implicit 1, implicit All, and implicit Null to a client.
+A little language has been invented for representing implicit tokens,
+and combinations thereof, with a single character.\
+\>", "Text",
+ CellChangeTimes->{{3.82567827335325*^9, 3.825678282169992*^9}},
+ CellID->1471171331,ExpressionUUID->"34c55789-8e54-4cbf-8a03-dcdd79192932"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.1", "Section",
+ CellChangeTimes->{{3.822824221714437*^9, 3.822824223655924*^9}, {
+  3.825677930612143*^9, 3.825677958894157*^9}},
+ CellID->309817621,ExpressionUUID->"0d29b60d-eef1-4c89-af80-d4cec4d8c263"],
+
+Cell["September 16, 2020", "Text",
+ CellChangeTimes->{{3.822824233793511*^9, 3.822824249038164*^9}, {
+  3.825677249810317*^9, 3.8256772534210787`*^9}, {3.825677920796116*^9, 
+  3.825677956254467*^9}},
+ CellID->1604395819,ExpressionUUID->"67e79b65-a150-4b08-905b-b69d76f46ac2"],
+
+Cell["Initial work with formatting", "Text",
+ CellChangeTimes->{{3.8228242562586*^9, 3.822824256805437*^9}, 
+   3.825678352979578*^9},
+ CellID->1275858201,ExpressionUUID->"d4efc4d4-a2f1-4ced-82e8-ac8642105c1f"],
+
+Cell["Wire up tabSize and insertSpaces options", "Text",
+ CellID->1211934274,ExpressionUUID->"9787d104-df83-4639-8c23-270d388ca542"],
+
+Cell["Add range formatting", "Text",
+ CellID->1256221413,ExpressionUUID->"3ba4def3-759f-4cd4-a599-525fb530f2bf"],
+
+Cell["Introduce new BracketMatcher UI", "Text",
+ CellID->1112750654,ExpressionUUID->"cd500b86-5acb-4914-8ee3-fc2985b34866"],
+
+Cell["\<\
+Handle workspace/didChangeWachedFiles that comes from IntelliJ plugin\
+\>", "Text",
+ CellID->941465290,ExpressionUUID->"229819be-4031-4739-b5ed-28fa832000f3"],
+
+Cell["Add implicit tokens for ExpectedOperands", "Text",
+ CellID->1687686769,ExpressionUUID->"18c845ef-617e-4012-9523-a78081e98ac4"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.2", "Section",
+ CellChangeTimes->{{3.822824221714437*^9, 3.822824223655924*^9}},
+ CellID->1563112065,ExpressionUUID->"9744d2b3-ad51-4efc-855a-42118c79361e"],
+
+Cell["March 25, 2021", "Text",
+ CellChangeTimes->{{3.822824233793511*^9, 3.822824249038164*^9}, {
+  3.825677249810317*^9, 3.8256772534210787`*^9}},
+ CellID->1652935849,ExpressionUUID->"248582e2-5398-43dd-b0f9-203c4e67713b"],
+
+Cell["\<\
+Allow textDocument/definition to lookup symbols with or without contexts
+
+e.g., allow foo`bar to look up definition for bar and vice versa\
+\>", "Text",
+ CellChangeTimes->{{3.8228242562586*^9, 3.822824256805437*^9}, 
+   3.825678636593719*^9},
+ CellID->373638291,ExpressionUUID->"0bdf19b3-9807-4aa3-ac16-2075f5b4278c"],
+
+Cell["\<\
+Allow textDocument/hover to work with symbols and display their usage messages.
+
+The usage messages are parsed directly from the linear syntax.
+
+Add a build step to generate a file ReplacePUA.wl that provides a map for \
+converting PUA characters to ASCII approximations.
+
+Use LongNames.wl to provide a text replacement for PUA characters that cannot \
+render properly in other editors\
+\>", "Text",
+ CellID->987517007,ExpressionUUID->"d2d2d93e-715b-47d4-b23b-6a1766845aeb"],
+
+Cell["\<\
+Add a background thread for reading from stdin. This thread will write to a \
+queue that the server will read on its main thread.
+
+The server will look at the queue and determine if any of the messages can be \
+discarded.
+
+For example, a long sequence of textDocument/didChange requests do not need \
+to be processed. Only the final one needs to be processed.
+
+Similarly, other requests that may be in the queue before a \
+textDocument/didChange may also be discarded.
+
+Do a little work on only reparsing if needed.\
+\>", "Text",
+ CellID->725572664,ExpressionUUID->"0605ebf2-5249-4a92-b4c2-f3f187d6788b"],
+
+Cell["Handle textDocument/documentSymbol", "Text",
+ CellID->1869236555,ExpressionUUID->"925dd56b-b319-418a-a4a9-4821ad4df71d"],
+
+Cell["\<\
+Handle more color literals and also handle textDocument/colorPresentation\
+\>", "Text",
+ CellID->738870068,ExpressionUUID->"089f27d4-7be2-4f6f-9849-ecd6291095a9"],
+
+Cell["\<\
+LSP clients will have a 10 second timeout for starting the kernel. After \
+that, a dialog is presented explaining that there is a problem and diagnostic \
+code is presented to run in a notebook.\
+\>", "Text",
+ CellID->1699531679,ExpressionUUID->"f4a81587-43b5-4bc6-aaf1-64e46a025579"],
+
+Cell["Introduce delays for running various methods.", "Text",
+ CellID->1106588811,ExpressionUUID->"43b608ef-a0a0-41f9-913a-886c142c5944"],
+
+Cell["Implementation of textDocument/selectionRange", "Text",
+ CellID->322472350,ExpressionUUID->"4421c7d6-cb80-4536-adef-2e196868c068"],
+
+Cell["Initial implementation of semantic tokens", "Text",
+ CellID->1977273069,ExpressionUUID->"a39a8dbb-bfb1-4155-9e37-a30544b0df83"]
 }, Open  ]]
 }, Open  ]]
 },
 WindowSize->{700, 770},
 WindowMargins->{{47, Automatic}, {Automatic, 15}},
-FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (December 3, 2020)",
+FrontEndVersion->"12.3 for Mac OS X x86 (64-bit) (March 21, 2021)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TutorialPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"b8199d78-6642-4165-884b-946d6f0d866c"
@@ -427,6 +590,68 @@ Cell[12269, 290, 178, 2, 23, "Text",ExpressionUUID->"cbccfa93-9e37-406a-b7b1-257
  CellID->1092395801],
 Cell[12450, 294, 186, 2, 23, "Text",ExpressionUUID->"29529b60-f83c-4729-aebc-b33151dd5ce9",
  CellID->1058529204]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[12673, 301, 212, 3, 43, "Section",ExpressionUUID->"a9fd96d0-e542-44b4-befb-4bdec8fb3190",
+ CellID->226692847],
+Cell[12888, 306, 270, 4, 23, "Text",ExpressionUUID->"2076a6cb-a383-4523-9374-87449e4cb2e4",
+ CellID->390689751],
+Cell[13161, 312, 248, 3, 23, "Text",ExpressionUUID->"981a9034-f9cf-418a-901d-031fdc302bd1",
+ CellID->1465136178],
+Cell[13412, 317, 240, 4, 23, "Text",ExpressionUUID->"7b36c682-697a-484a-bcf4-262577dd0b36",
+ CellID->1223517994],
+Cell[13655, 323, 238, 4, 23, "Text",ExpressionUUID->"217a2695-c5d4-45d1-a6a9-cc55e7c0262e",
+ CellID->357830233],
+Cell[13896, 329, 182, 2, 23, "Text",ExpressionUUID->"d07a955b-0eea-43ef-8e97-18933d037e63",
+ CellID->271717507],
+Cell[14081, 333, 160, 2, 23, "Text",ExpressionUUID->"651f4f7c-63ef-474e-bd6f-37f995886a91",
+ CellID->1137103828],
+Cell[14244, 337, 184, 2, 23, "Text",ExpressionUUID->"6771e00c-96d1-42b7-9e2b-e9fd5a2ea5ff",
+ CellID->588347090],
+Cell[14431, 341, 358, 7, 110, "Text",ExpressionUUID->"34c55789-8e54-4cbf-8a03-dcdd79192932",
+ CellID->1471171331]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[14826, 353, 212, 3, 43, "Section",ExpressionUUID->"0d29b60d-eef1-4c89-af80-d4cec4d8c263",
+ CellID->309817621],
+Cell[15041, 358, 276, 4, 23, "Text",ExpressionUUID->"67e79b65-a150-4b08-905b-b69d76f46ac2",
+ CellID->1604395819],
+Cell[15320, 364, 210, 3, 23, "Text",ExpressionUUID->"d4efc4d4-a2f1-4ced-82e8-ac8642105c1f",
+ CellID->1275858201],
+Cell[15533, 369, 132, 1, 23, "Text",ExpressionUUID->"9787d104-df83-4639-8c23-270d388ca542",
+ CellID->1211934274],
+Cell[15668, 372, 112, 1, 23, "Text",ExpressionUUID->"3ba4def3-759f-4cd4-a599-525fb530f2bf",
+ CellID->1256221413],
+Cell[15783, 375, 123, 1, 23, "Text",ExpressionUUID->"cd500b86-5acb-4914-8ee3-fc2985b34866",
+ CellID->1112750654],
+Cell[15909, 378, 168, 3, 23, "Text",ExpressionUUID->"229819be-4031-4739-b5ed-28fa832000f3",
+ CellID->941465290],
+Cell[16080, 383, 132, 1, 23, "Text",ExpressionUUID->"18c845ef-617e-4012-9523-a78081e98ac4",
+ CellID->1687686769]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[16249, 389, 164, 2, 43, "Section",ExpressionUUID->"9744d2b3-ad51-4efc-855a-42118c79361e",
+ CellID->1563112065],
+Cell[16416, 393, 223, 3, 23, "Text",ExpressionUUID->"248582e2-5398-43dd-b0f9-203c4e67713b",
+ CellID->1652935849],
+Cell[16642, 398, 327, 7, 81, "Text",ExpressionUUID->"0bdf19b3-9807-4aa3-ac16-2075f5b4278c",
+ CellID->373638291],
+Cell[16972, 407, 484, 11, 231, "Text",ExpressionUUID->"d2d2d93e-715b-47d4-b23b-6a1766845aeb",
+ CellID->987517007],
+Cell[17459, 420, 614, 15, 306, "Text",ExpressionUUID->"0605ebf2-5249-4a92-b4c2-f3f187d6788b",
+ CellID->725572664],
+Cell[18076, 437, 126, 1, 23, "Text",ExpressionUUID->"925dd56b-b319-418a-a4a9-4821ad4df71d",
+ CellID->1869236555],
+Cell[18205, 440, 172, 3, 23, "Text",ExpressionUUID->"089f27d4-7be2-4f6f-9849-ecd6291095a9",
+ CellID->738870068],
+Cell[18380, 445, 294, 5, 40, "Text",ExpressionUUID->"f4a81587-43b5-4bc6-aaf1-64e46a025579",
+ CellID->1699531679],
+Cell[18677, 452, 137, 1, 23, "Text",ExpressionUUID->"43b608ef-a0a0-41f9-913a-886c142c5944",
+ CellID->1106588811],
+Cell[18817, 455, 136, 1, 23, "Text",ExpressionUUID->"4421c7d6-cb80-4536-adef-2e196868c068",
+ CellID->322472350],
+Cell[18956, 458, 133, 1, 23, "Text",ExpressionUUID->"a39a8dbb-bfb1-4155-9e37-a30544b0df83",
+ CellID->1977273069]
 }, Open  ]]
 }, Open  ]]
 }
