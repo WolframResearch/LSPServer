@@ -291,7 +291,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
     scopingData = entry["ScopingData"];
 
     If[$Debug2,
-      log["scopingData (up to 20): ", UpTo[scopingData, 20]]
+      log["scopingData (up to 20): ", Take[scopingData, UpTo[20]]]
     ];
 
     (*
