@@ -261,7 +261,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagnostics"]] :=
   Catch[
-  Module[{params, doc, uri, entry, scopingLints, scopingData, filtered},
+  Module[{params, doc, uri, entry, scopingLints, scopingData, filtered, suppressedRegions, isActive},
 
     If[$Debug2,
       log["textDocument/runScopingDiagnostics: enter"]
@@ -303,6 +303,15 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
 
     scopingLints = Flatten[scopingLints];
 
+    (*
+    Filter out suppressed
+    *)
+    suppressedRegions = entry["SuppressedRegions"];
+
+    isActive = makeIsActiveFunc[suppressedRegions];
+
+    scopingLints = Select[scopingLints, isActive];
+    
     (*
     If $SemanticTokens, then only keep:
     errors
@@ -476,6 +485,40 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnosti
         "params" -> <| "uri" -> uri,
                        "diagnostics" -> diagnostics |> |>}
   ]]
+
+
+
+
+(*
+returns a function lint -> True|False
+*)
+makeIsActiveFunc[suppressedRegions_] :=
+  Function[{lint},
+    AllTrue[suppressedRegions,
+      Function[{region},
+        !SourceMemberQ[region[[1;;2]], lint] ||
+          AllTrue[region[[3]],
+            Function[{suppressed}, isTagActive[lint, suppressed]]
+          ]
+      ]
+    ]
+  ]
+
+
+isTagActive[InspectionObject[tag1_, _, _, KeyValuePattern["Argument" -> arg1_]], {tag2_, arg2_}] :=
+  !(tag1 === tag2 && arg1 === arg2)
+
+(*
+The lint has an Argument, but there is no argument in the suppressed
+*)
+isTagActive[InspectionObject[_, _, _, KeyValuePattern["Argument" -> _]], {_}] :=
+  True
+
+isTagActive[InspectionObject[tag1_, _, _, _], {tag2_, _}] :=
+  !(tag1 === tag2)
+
+isTagActive[InspectionObject[tag1_, _, _, _], {tag2_}] :=
+  !(tag1 === tag2)
 
 
 End[]
