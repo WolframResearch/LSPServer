@@ -108,7 +108,7 @@ Module[{srcs},
   srcs = { data[Source] } ~Join~ Lookup[data, "AdditionalSources", {}];
 
   Function[{src}, (<|
-    "code" -> tag,
+    "code" -> If[KeyExistsQ[data, "Argument"], tag <> "::" <> data["Argument"], tag],
     "message" -> plainify[message],
     "severity" -> lintSeverityToLSPSeverity[severity],
     "range" -> <|
