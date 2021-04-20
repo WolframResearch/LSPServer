@@ -18,6 +18,6 @@ If LSPServer takes more than 5 seconds to launch Sublime returns "time out" erro
 
 * Text from [Sublime Text Language server protocol documentation](https://lsp.readthedocs.io/en/latest/).
 
-Set tcp_mode to "host", leave tcp_port unset for automatic port selection. 
-```tcp_port``` can be set if eg. debugging a server. You may want to check 
-out the LSP source and extend the ```TCP_CONNECT_TIMEOUT```.
+    > Set ```tcp_mode``` to "host", leave ```tcp_port``` unset for automatic port selection. ```tcp_port``` can be set if eg. debugging a server. You may want to check out the LSP source and extend the ```TCP_CONNECT_TIMEOUT```.
+
+* [Sublimelsp sourcecode for timeout](https://github.com/sublimelsp/LSP/blob/master/plugin/core/transports.py#L18).
