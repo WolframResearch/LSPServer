@@ -289,8 +289,8 @@ StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
 Module[{logFile, logFileStream,
-  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr,
-  initializedComm},
+  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr
+  },
 
   $kernelStartTime = Now;
 
@@ -998,7 +998,7 @@ Module[{id},
     If[$Debug2,
       log["$CancelMap: ", $CancelMap]
     ];
-
+    
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
@@ -1097,6 +1097,8 @@ handleContentAfterShutdown[content:KeyValuePattern["method" -> "exit"]] :=
     If[$Debug2,
       log["exit after shutdown: enter"]
     ];
+
+    If[Head[initializedComm] ===SocketObject, Close[initializedComm]];
 
     exitGracefully[]
   ]

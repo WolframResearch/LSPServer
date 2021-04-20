@@ -24,10 +24,10 @@ initializeLSPComm["ListenSocket"] := SocketOpen[5555, "TCP"]
 
 (* Call-back function for SocketListen *)
 
-processData[DataByteArray_, sock_, SourceSocket_] := 
+processData[dataByteArray_, sourceSocket_] := 
 Module[{dataString, finalMsg, contentsIn, content, contents},
 
-  dataString = ByteArrayToString @ DataByteArray;
+  dataString = ByteArrayToString @ dataByteArray;
 
   finalMsg = findMessageParts[lspMsgAssoc["msgInQue"] <> dataString];
 
@@ -57,14 +57,14 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 
     (* write out evaluated results to the client *)
 
-    writeLSPResult["Socket", SourceSocket, contents];
+    writeLSPResult["Socket", sourceSocket, contents];
 
   ];
 
 
 ];
 
-readEvalWriteLoop["ListenSocket", sock_]:= SocketListen[sock, processData[#DataByteArray, #Socket, #SourceSocket]&, HandlerFunctionsKeys -> {"DataByteArray", "Socket", "SourceSocket"}];
+readEvalWriteLoop["ListenSocket", sock_]:= SocketListen[sock, processData[#DataByteArray, #SourceSocket]&, HandlerFunctionsKeys -> {"DataByteArray", "SourceSocket"}];
 
 End[]
 

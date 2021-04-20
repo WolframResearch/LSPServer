@@ -60,7 +60,7 @@ msgContainsQ[str_] :=
 findMessageParts[str_] :=
   Module[{numStrs, msgLength, headerPosition},
     If[checkContent[lspMsgAssoc["msgInQue"] <> str],
-      If[checkStartPosition["" <> str] && checkMsgLength[str],
+      If[checkStartPosition[str] && checkMsgLength[str],
         numStrs = First @ StringCases[str, "Content-Length: " ~~ length:NumberString :> length];
         msgLength = ToExpression[numStrs];
         headerPosition = Flatten @ StringPosition[str, "Content-Length: " <> numStrs <> "\r\n\r\n"];
@@ -146,9 +146,14 @@ TryQueue["Socket", sockObj_] :=
 
 
 writeSocket["Socket", socket_, header_, body_] :=
-  Module[{},
-    BinaryWrite[socket, StringToByteArray @ header];
-    BinaryWrite[socket, body];
+  Module[{headerWrite, bodyWrite},
+    headerWrite = BinaryWrite[socket, StringToByteArray @ header];
+    bodyWrite = BinaryWrite[socket, body];
+    If[
+      FailureQ[headerWrite] && FailureQ[bodyWrite],
+      If[$Debug2, log["Write failure to client."]];
+      exitHard[]
+    ]
   ];
 
 (* contents is a list of Associations *)
