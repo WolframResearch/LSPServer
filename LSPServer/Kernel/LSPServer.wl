@@ -18,6 +18,7 @@ ProcessScheduledJobs
 exitHard
 exitGracefully
 exitSemiGracefully
+shutdownLSPComm
 
 
 handleContent
@@ -1098,8 +1099,6 @@ handleContentAfterShutdown[content:KeyValuePattern["method" -> "exit"]] :=
       log["exit after shutdown: enter"]
     ];
 
-    If[Head[initializedComm] ===SocketObject, Close[initializedComm]];
-
     exitGracefully[]
   ]
 
@@ -1666,6 +1665,7 @@ exitGracefully[] := (
   log["\n\n"];
   log["KERNEL IS EXITING GRACEFULLY"];
   log["\n\n"];
+  shutdownLSPComm[$commProcess, initializedComm];
   Pause[1];Exit[0]
 )
 
@@ -1685,6 +1685,7 @@ exitSemiGracefully[] := (
   log["\n\n"];
   log["KERNEL IS EXITING SEMI-GRACEFULLY"];
   log["\n\n"];
+  shutdownLSPComm[$commProcess, initializedComm];
   Pause[1];Exit[1]
 )
 
@@ -1704,6 +1705,7 @@ exitHard[] := (
   log["\n\n"];
   log["KERNEL IS EXITING HARD"];
   log["\n\n"];
+  shutdownLSPComm[$commProcess, initializedComm];
   Pause[1];Exit[1]
 )
 

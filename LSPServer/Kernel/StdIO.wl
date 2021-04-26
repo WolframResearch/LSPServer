@@ -298,6 +298,10 @@ Module[{content, contents},
   ](*While*)
 ];
 
+(* ============================ ShutDown ============================= *)
+shutdownLSPComm["StdIO"] := shutdownLSPComm["StdIO", Null];
+shutdownLSPComm["StdIO", Null] := Pause[0.01];
+
 End[]
 
 EndPackage[]

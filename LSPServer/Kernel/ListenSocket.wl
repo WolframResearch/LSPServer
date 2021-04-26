@@ -29,7 +29,7 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 
   dataString = ByteArrayToString @ dataByteArray;
 
-  finalMsg = findMessageParts[lspMsgAssoc["msgInQue"] <> dataString];
+  finalMsg = findMessageParts[lspMsgAssoc["msgInQueue"] <> dataString];
 
   contentsIn = {ImportString[lspMsgAssoc["lspMsg"], "RawJSON"]};
 
@@ -65,6 +65,9 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 ];
 
 readEvalWriteLoop["ListenSocket", sock_]:= SocketListen[sock, processData[#DataByteArray, #SourceSocket]&, HandlerFunctionsKeys -> {"DataByteArray", "SourceSocket"}];
+
+(* ============================ ShutDown ============================= *)
+shutdownLSPComm["ListenSocket", sockObject_]:= Close[sockObject];
 
 End[]
 

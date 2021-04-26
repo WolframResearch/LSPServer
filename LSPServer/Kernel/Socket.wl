@@ -17,7 +17,7 @@ Needs["LSPServer`Library`"]
 (* ================   Socket functions   ==================== *)
 (* ========================================================== *)
 
-lspMsgAssoc = <|"lspMsg" -> "", "msgInQue" -> ""|>;
+lspMsgAssoc = <|"lspMsg" -> "", "msgInQueue" -> ""|>;
 
 (* =================   Initialize   ======================= *)
 
@@ -32,15 +32,15 @@ checkContent[str_] := StringContainsQ[str, "Content-Length: "];
 checkStartPosition[str_] := First @ Flatten @ StringPosition[str, "Content"] === 1;
 
 checkMsgLength[str_] :=
-  Module[{numStrs, pos, reqdLength, maxMsgLength},
+  Module[{numStrs, pos, requiredLength, maxMsgLength},
     (* Position of the header *)
     numStrs = StringCases[str, "Content-Length: " ~~ length:NumberString :> length];
-    reqdLength = ToExpression[First[numStrs]];
+    requiredLength = ToExpression[First[numStrs]];
     (* Extract the header*)
     pos = StringPosition[str, "Content-Length: " <> # <> "\r\n\r\n"]& /@ numStrs // Flatten;
     maxMsgLength = StringLength @ StringTake[str, {pos[[2]] + 1, StringLength[str]}];
 
-    maxMsgLength >= reqdLength
+    maxMsgLength >= requiredLength
   ];
 
 msgContainsQ[str_] :=
@@ -59,19 +59,19 @@ msgContainsQ[str_] :=
 
 findMessageParts[str_] :=
   Module[{numStrs, msgLength, headerPosition},
-    If[checkContent[lspMsgAssoc["msgInQue"] <> str],
+    If[checkContent[lspMsgAssoc["msgInQueue"] <> str],
       If[checkStartPosition[str] && checkMsgLength[str],
         numStrs = First @ StringCases[str, "Content-Length: " ~~ length:NumberString :> length];
         msgLength = ToExpression[numStrs];
         headerPosition = Flatten @ StringPosition[str, "Content-Length: " <> numStrs <> "\r\n\r\n"];
 
         lspMsgAssoc["lspMsg"]   = StringTake[str, {headerPosition[[2]] + 1, headerPosition[[2]] + msgLength}];
-        lspMsgAssoc["msgInQue"] = StringTake[str, {headerPosition[[2]] + 1 + msgLength, StringLength[str]}];
+        lspMsgAssoc["msgInQueue"] = StringTake[str, {headerPosition[[2]] + 1 + msgLength, StringLength[str]}];
         ,
-        lspMsgAssoc["msgInQue"] = lspMsgAssoc["msgInQue"] <> str;
+        lspMsgAssoc["msgInQueue"] = lspMsgAssoc["msgInQueue"] <> str;
       ]
       ,
-      lspMsgAssoc["msgInQue"] = lspMsgAssoc["msgInQue"] <> str;
+      lspMsgAssoc["msgInQueue"] = lspMsgAssoc["msgInQueue"] <> str;
     ];
     lspMsgAssoc
   ];
@@ -91,30 +91,35 @@ readMessage["Socket", sockObj_] :=
   Module[{sockMessage},
     (* First check if a valid msg is available in the que *)
     (* When a valid message is available in the queue: No need to read new message from socket *)
-    If[msgContainsQ[lspMsgAssoc["msgInQue"]],
+    If[msgContainsQ[lspMsgAssoc["msgInQueue"]],
       If[$Debug2,
         log["Valid message is availble in the MessageQueue :> "];
-        log["\nmsgInQue :> \n"];
-        log[InputForm[lspMsgAssoc["msgInQue"]]];
+        log["\nmsgInQueue :> \n"];
+        log[InputForm[lspMsgAssoc["msgInQueue"]]];
       ];
       sockMessage = "";
       ,
       (* When no valid message is available in the queue: read from socket *)
       If[$Debug2,
         log["No valid message is availble in the MessageQueue :> "];
-        log["\nmsgInQue :> \n"];
-        log[InputForm[lspMsgAssoc["msgInQue"]]];
+        log["\nmsgInQueue :> \n"];
+        log[InputForm[lspMsgAssoc["msgInQueue"]]];
       ];
-      Pause[0.05];
+      
       sockMessage = SocketReadMessage[sockObj];
+
       If[FailureQ[sockMessage],
-        sockMessage = ""
-        ,
-        sockMessage = ByteArrayToString[sockMessage]
+        If[$Debug2,
+          log["Read failure from client.\n"]
+        ];
+        exitHard[]
       ];
+
+      sockMessage = ByteArrayToString[sockMessage];
+
     ];
     (* Extract a valid message from the queue and update  lspMsgAssoc *)
-    sockMessage = findMessageParts[lspMsgAssoc["msgInQue"] <> sockMessage];
+    sockMessage = findMessageParts[lspMsgAssoc["msgInQueue"] <> sockMessage];
     {ImportString[lspMsgAssoc["lspMsg"], "RawJSON"]}
   ];
 
@@ -147,11 +152,20 @@ TryQueue["Socket", sockObj_] :=
 
 writeSocket["Socket", socket_, header_, body_] :=
   Module[{headerWrite, bodyWrite},
+  
     headerWrite = BinaryWrite[socket, StringToByteArray @ header];
-    bodyWrite = BinaryWrite[socket, body];
+
     If[
-      FailureQ[headerWrite] && FailureQ[bodyWrite],
-      If[$Debug2, log["Write failure to client."]];
+      FailureQ[headerWrite],
+      If[$Debug2, log["Message-header write failure to client."]];
+      exitHard[]
+    ];
+
+    bodyWrite = BinaryWrite[socket, body];
+
+    If[
+      FailureQ[bodyWrite],
+      If[$Debug2, log["Message-body write failure to client."]];
       exitHard[]
     ]
   ];
@@ -220,6 +234,9 @@ Module[{content, contents},
 
   ](*While*)
 ];
+
+(* ============================ ShutDown ============================= *)
+shutdownLSPComm["Socket", sockObject_]:= Close[sockObject];
 
 End[]
 
