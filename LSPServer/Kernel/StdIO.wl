@@ -299,8 +299,7 @@ Module[{content, contents},
 ];
 
 (* ============================ ShutDown ============================= *)
-shutdownLSPComm["StdIO"] := shutdownLSPComm["StdIO", Null];
-shutdownLSPComm["StdIO", Null] := Pause[0.01];
+shutdownLSPComm["StdIO", _] := Null;
 
 End[]
 

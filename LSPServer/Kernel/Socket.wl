@@ -236,7 +236,8 @@ Module[{content, contents},
 ];
 
 (* ============================ ShutDown ============================= *)
-shutdownLSPComm["Socket", sockObject_]:= Close[sockObject];
+shutdownLSPComm["Socket", s_SocketObject]:= Close[s];
+shutdownLSPComm["Socket", _]:= Null;
 
 End[]
 

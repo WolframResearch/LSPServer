@@ -76,7 +76,8 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 readEvalWriteLoop["ListenSocket", sock_]:= SocketListen[sock, processData[#DataByteArray, #SourceSocket]&, HandlerFunctionsKeys -> {"DataByteArray", "SourceSocket"}];
 
 (* ============================ ShutDown ============================= *)
-shutdownLSPComm["ListenSocket", sockObject_]:= Close[sockObject];
+shutdownLSPComm["ListenSocket", s_SocketObject]:= Close[s];
+shutdownLSPComm["ListenSocket", _]:= Null;
 
 End[]
 
