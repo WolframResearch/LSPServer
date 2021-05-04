@@ -297,7 +297,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
     (*
     Filter those that have non-empty modifiers
     *)
-    filtered = Cases[scopingData, scopingDataObject[_, _, {_, ___}]];
+    filtered = Cases[scopingData, scopingDataObject[_, _, {_, ___}, _]];
 
     scopingLints = scopingDataObjectToLints /@ filtered;
 
