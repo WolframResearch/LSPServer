@@ -27,6 +27,15 @@ initializeLSPComm["ListenSocket"] := SocketOpen[5555, "TCP"]
 processData[dataByteArray_, sourceSocket_] := 
 Module[{dataString, finalMsg, contentsIn, content, contents},
 
+  If[!ByteArrayQ[dataByteArray],
+
+    log["\n\n"];
+    log["invalid ByteArray: ", dataByteArray];
+    log["\n\n"];
+
+    exitHard[]
+  ];
+
   dataString = ByteArrayToString @ dataByteArray;
 
   finalMsg = findMessageParts[lspMsgAssoc["msgInQueue"] <> dataString];
