@@ -304,12 +304,27 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
     scopingLints = Flatten[scopingLints];
 
     (*
-    If $SemanticTokens, then only keep the errors
+    If $SemanticTokens, then only keep:
+    errors
 
-    All other lints will be marked up as semantic highlighting only
+    These will be semantic highlighted AND shown in diagnostics
+    Everything else will just be semantic highlighted
+
+
+    If NOT $SemanticTokens, then only keep:
+    errors
+    unused variables
+
+    Everything else, such as shadowed and unused parameters is a bit too noisy
     *)
     If[$SemanticTokens,
-      scopingLints = Cases[scopingLints, InspectionObject[_, _, "Error" | "Fatal", _]]
+      scopingLints =
+        Cases[scopingLints, InspectionObject[_, _, "Error" | "Fatal", _]]
+      ,
+      scopingLints =
+        Cases[scopingLints,
+          InspectionObject[_, _, "Error" | "Fatal", _] |
+            InspectionObject["UnusedVariable", _, "Scoping", _]]
     ];
 
     If[$Debug2,
