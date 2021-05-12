@@ -319,11 +319,11 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
     *)
     If[$SemanticTokens,
       scopingLints =
-        Cases[scopingLints, InspectionObject[_, _, "Error" | "Fatal", _]]
+        Cases[scopingLints, InspectionObject[_, _, "Warning" | "Error" | "Fatal", _]]
       ,
       scopingLints =
         Cases[scopingLints,
-          InspectionObject[_, _, "Error" | "Fatal", _] |
+          InspectionObject[_, _, "Warning" | "Error" | "Fatal", _] |
             InspectionObject["UnusedVariable", _, "Scoping", _]]
     ];
 
