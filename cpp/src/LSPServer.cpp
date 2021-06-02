@@ -37,6 +37,8 @@ struct Message {
 };
 
 
+int libraryError;
+
 std::thread readerThread;
 
 int backgroundReaderThreadError;
@@ -54,13 +56,17 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     
+    libraryError = 0;
+
 #ifdef _WIN32
     
     switch (_fileno(stdin)) {
         case -1:
-        case -2:
+        case -2: {
             fprintf(stderr, "WolframLibrary_initialize: stdin is not associated with an input stream\n");
-            return 1;
+            libraryError = 1;
+            return 0;
+        }
     }
 
     //
@@ -79,16 +85,19 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
                 break;
         }
         
-        return 2;
+        libraryError = 2;
+        return 0;
     }
 
 
 
     switch (_fileno(stdout)) {
         case -1:
-        case -2:
+        case -2: {
             fprintf(stderr, "WolframLibrary_initialize: stdout is not associated with an output stream\n");
-            return 1;
+            libraryError = 1;
+            return 0;
+        }
     }
 
     //
@@ -114,10 +123,11 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
                 break;
         }
         
-        return 2;
+        libraryError = 2;
+        return 0;
     }
 #endif // _WIN32
-    
+
     return 0;
 }
 
@@ -129,12 +139,21 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 
 DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
+    if (libraryError != 0) {
+
+        MArgument_setInteger(Res, libraryError);
+
+        return LIBRARY_NO_ERROR;
+    }
+
     backgroundReaderThreadError = 0;
     
     readerThread = std::thread(threadBody);
     
     readerThread.detach();
     
+    MArgument_setInteger(Res, 0);
+
     return LIBRARY_NO_ERROR;
 }
 

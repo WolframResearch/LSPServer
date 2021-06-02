@@ -22,7 +22,17 @@ Needs["CodeParser`Utils`"]
 May return Null or a Failure object
 *)
 initializeLSPComm["StdIO"] :=
-  StartBackgroundReaderThread[]
+Catch[
+Module[{},
+  libErr = StartBackgroundReaderThread[];
+  If[libErr != 0,
+    (*
+    For example, on Windows, running WolframKernel.exe from command prompt will give library error 1
+    *)
+    Throw[Failure["LSPServerNativeLibraryError", <|"NativeLibraryError" -> libErr|>]]
+  ];
+  Null
+]]
 
 
 (* =================   Read Message   ======================= *)
