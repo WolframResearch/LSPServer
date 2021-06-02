@@ -113,9 +113,17 @@ RunServerDiagnostic[command:{_String...}] :=
     it is a property of ProcessLink that ReadByteArray[stdOut, EndOfBuffer] will return {} if there is no content yet
     *)
     bytes = ReadByteArray[stdOut, EndOfBuffer];
+    If[bytes === EndOfFile,
+      Print["ERROR: Unexpected EndOfFile; exiting hard"];
+      Throw[exitHard[proc]]
+    ];
     While[bytes === {},
       Pause[0.1];
       bytes = ReadByteArray[stdOut, EndOfBuffer];
+      If[bytes === EndOfFile,
+        Print["ERROR: Unexpected EndOfFile; exiting hard"];
+        Throw[exitHard[proc]]
+      ];
     ];
     str = "";
     str = str <> ByteArrayToString[bytes];
@@ -124,6 +132,10 @@ RunServerDiagnostic[command:{_String...}] :=
     *)
     Pause[0.2];
     bytes = ReadByteArray[stdOut, EndOfBuffer];
+    If[bytes === EndOfFile,
+      Print["ERROR: Unexpected EndOfFile; exiting hard"];
+      Throw[exitHard[proc]]
+    ];
     str = str <> ByteArrayToString[bytes];
 
     If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
@@ -173,9 +185,17 @@ RunServerDiagnostic[command:{_String...}] :=
     it is a property of ProcessLink that ReadByteArray[stdOut, EndOfBuffer] will return {} if there is no content yet
     *)
     bytes = ReadByteArray[stdOut, EndOfBuffer];
+    If[bytes === EndOfFile,
+      Print["ERROR: Unexpected EndOfFile; exiting hard"];
+      Throw[exitHard[proc]]
+    ];
     While[bytes === {},
       Pause[0.1];
       bytes = ReadByteArray[stdOut, EndOfBuffer];
+      If[bytes === EndOfFile,
+        Print["ERROR: Unexpected EndOfFile; exiting hard"];
+        Throw[exitHard[proc]]
+      ];
     ];
     str = "";
     str = str <> ByteArrayToString[bytes];
@@ -184,6 +204,10 @@ RunServerDiagnostic[command:{_String...}] :=
     *)
     Pause[0.2];
     bytes = ReadByteArray[stdOut, EndOfBuffer];
+    If[bytes === EndOfFile,
+      Print["ERROR: Unexpected EndOfFile; exiting hard"];
+      Throw[exitHard[proc]]
+    ];
     str = str <> ByteArrayToString[bytes];
 
     If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
@@ -266,9 +290,17 @@ RunServerDiagnostic[command:{_String...}] :=
     it is a property of ProcessLink that ReadByteArray[stdOut, EndOfBuffer] will return {} if there is no content yet
     *)
     bytes = ReadByteArray[stdOut, EndOfBuffer];
+    If[bytes === EndOfFile,
+      Print["ERROR: Unexpected EndOfFile; exiting hard"];
+      Throw[exitHard[proc]]
+    ];
     While[bytes === {},
       Pause[0.1];
       bytes = ReadByteArray[stdOut, EndOfBuffer];
+      If[bytes === EndOfFile,
+        Print["ERROR: Unexpected EndOfFile; exiting hard"];
+        Throw[exitHard[proc]]
+      ];
     ];
     str = "";
     str = str <> ByteArrayToString[bytes];
@@ -277,6 +309,10 @@ RunServerDiagnostic[command:{_String...}] :=
     *)
     Pause[0.2];
     bytes = ReadByteArray[stdOut, EndOfBuffer];
+    If[bytes === EndOfFile,
+      Print["ERROR: Unexpected EndOfFile; exiting hard"];
+      Throw[exitHard[proc]]
+    ];
     str = str <> ByteArrayToString[bytes];
 
     If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
