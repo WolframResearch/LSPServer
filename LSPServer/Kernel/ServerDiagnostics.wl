@@ -105,7 +105,7 @@ RunServerDiagnostic[command:{_String...}] :=
     Pause[0.2];
 
     If[ProcessStatus[proc] != "Running",
-      Print["ERROR: Language Server kernel is not running; exiting hard"];
+      Print["ERROR: Language Server kernel is not running after writing initialize; exiting hard"];
       Throw[exitHard[proc]]
     ];
 
@@ -177,7 +177,7 @@ RunServerDiagnostic[command:{_String...}] :=
     Pause[0.2];
 
     If[ProcessStatus[proc] != "Running",
-      Print["ERROR: Language Server kernel is not running; exiting hard"];
+      Print["ERROR: Language Server kernel is not running after writing diagnostics; exiting hard"];
       Throw[exitHard[proc]]
     ];
 
@@ -282,7 +282,7 @@ RunServerDiagnostic[command:{_String...}] :=
     Pause[0.2];
 
     If[ProcessStatus[proc] != "Running",
-      Print["ERROR: Language Server kernel is not running; exiting hard"];
+      Print["ERROR: Language Server kernel is not running after writing shutdown; exiting hard"];
       Throw[exitHard[proc]]
     ];
 
