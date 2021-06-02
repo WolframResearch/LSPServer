@@ -95,7 +95,16 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
 
     If[$Debug2,
       log["after CodeInspectImplicitTokensAgg"];
-      log["implicitTokens (up to 20): ", Take[implicitTokens, UpTo[20]]]
+      log["implicitTokens (up to 20): ", Replace[Take[implicitTokens, UpTo[20]], {
+          (*
+          Do not print the internals
+          *)
+          InfixNode[Times | Comma | CompoundExpression, _, _] :> InfixNode[Times, "\[Ellipsis]", "\[Ellipsis]"],
+          BinaryNode[Span, _, _] :> BinaryNode[Span, "\[Ellipsis]", "\[Ellipsis]"],
+          TernaryNode[Span, _, _] :> TernaryNode[Span, "\[Ellipsis]", "\[Ellipsis]"],
+          ErrorNode[Token`Error`ExpectedOperand, _, _] :> ErrorNode[Token`Error`ExpectedOperand, "\[Ellipsis]", "\[Ellipsis]"]
+        }, {1}
+      ]]
     ];
 
     If[$Debug2,
