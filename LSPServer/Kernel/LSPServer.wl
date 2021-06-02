@@ -327,7 +327,11 @@ Module[{logFile, logFileStream,
 
   If[$Debug,
 
-    Quiet[CreateDirectory[logDir], {CreateDirectory::filex, CreateDirectory::direx}];
+    If[$VersionNumber >= 12.3,
+      Quiet[CreateDirectory[logDir], {CreateDirectory::eexist}];
+      ,
+      Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
+    ];
 
     (*
     Cleanup existing log files
