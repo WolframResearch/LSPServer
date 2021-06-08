@@ -37,7 +37,7 @@ struct Message {
 };
 
 
-int libraryError;
+int startupError;
 
 std::thread readerThread;
 
@@ -56,15 +56,19 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     
-    libraryError = 0;
+    startupError = 0;
 
 #ifdef _WIN32
     
     switch (_fileno(stdin)) {
-        case -1:
+        case -1: {
+            fprintf(stderr, "WolframLibrary_initialize: stdin _fileno error, errno: %d\n", errno);
+            startupError = FILENO_ERROR;
+            return 0;
+        }
         case -2: {
             fprintf(stderr, "WolframLibrary_initialize: stdin is not associated with an input stream\n");
-            libraryError = 1;
+            startupError = FILENO_NOT_STREAM;
             return 0;
         }
     }
@@ -74,28 +78,25 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     //
     
     auto result = _setmode(_fileno(stdin), _O_BINARY);
-    if (result == -1) {
-        
-        switch (errno) {
-            case EBADF:
-                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdin: bad file descriptor\n");
-                break;
-            case EINVAL:
-                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdin: invalid mode argument\n");
-                break;
+    switch (result) {
+        case -1: {
+            fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdin, errno: %d\n", errno);
+            startupError = SETMODE_ERROR;
+            return 0;
         }
-        
-        libraryError = 2;
-        return 0;
     }
 
 
 
     switch (_fileno(stdout)) {
-        case -1:
+        case -1: {
+            fprintf(stderr, "WolframLibrary_initialize: stdout _fileno error, errno: %d\n", errno);
+            startupError = FILENO_ERROR;
+            return 0;
+        }
         case -2: {
             fprintf(stderr, "WolframLibrary_initialize: stdout is not associated with an output stream\n");
-            libraryError = 1;
+            startupError = FILENO_NOT_STREAM;
             return 0;
         }
     }
@@ -107,24 +108,18 @@ DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     // "If you have not written data to the stream, you do not have to flush the code."
     //
 //    if (fflush(stdout)) {
-//        fprintf(stderr, "WolframLibrary_initialize: fflush failed before setting _O_BINARY mode on stdin\n");
-//        return 1;
+//        fprintf(stderr, "WolframLibrary_initialize: fflush failed before setting _O_BINARY mode on stdout\n");
+//        startupError = FFLUSH_ERROR;
+//        return 0;
 //    }
     
     result = _setmode(_fileno(stdout), _O_BINARY);
-    if (result == -1) {
-        
-        switch (errno) {
-            case EBADF:
-                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdout: bad file descriptor\n");
-                break;
-            case EINVAL:
-                fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdout: invalid mode argument\n");
-                break;
+    switch (result) {
+        case -1: {
+            fprintf(stderr, "WolframLibrary_initialize: cannot set _O_BINARY mode on stdout, errno: %d\n", errno);
+            startupError = SETMODE_ERROR;
+            return 0;
         }
-        
-        libraryError = 2;
-        return 0;
     }
 #endif // _WIN32
 
@@ -139,9 +134,9 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 
 DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (libraryError != 0) {
+    if (startupError != 0) {
 
-        MArgument_setInteger(Res, libraryError);
+        MArgument_setInteger(Res, startupError);
 
         return LIBRARY_NO_ERROR;
     }

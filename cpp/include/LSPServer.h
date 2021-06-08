@@ -41,6 +41,10 @@
 #endif
 
 
+constexpr int FILENO_ERROR = 1;
+constexpr int FILENO_NOT_STREAM = 2;
+constexpr int SETMODE_ERROR = 3;
+
 constexpr int FREAD_FAILED = 1;
 constexpr int UNEXPECTED_LINEFEED = 2;
 constexpr int EXPECTED_LINEFEED = 3;

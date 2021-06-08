@@ -23,13 +23,13 @@ May return Null or a Failure object
 *)
 initializeLSPComm["StdIO"] :=
 Catch[
-Module[{},
-  libErr = StartBackgroundReaderThread[];
-  If[libErr != 0,
+Module[{startupError},
+  startupError = StartBackgroundReaderThread[];
+  If[startupError != 0,
     (*
     For example, on Windows, running WolframKernel.exe from command prompt will give library error 1
     *)
-    Throw[Failure["LSPServerNativeLibraryError", <|"NativeLibraryError" -> libErr|>]]
+    Throw[Failure["LSPServerNativeLibraryStartupError", <|"StartupError" -> startupError|>]]
   ];
   Null
 ]]
