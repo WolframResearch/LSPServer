@@ -59,6 +59,17 @@ RunServerDiagnostic[command:{_String...}] :=
         Print["ERROR: code is not a string: ", run];
         Throw[False]
       ];
+
+      If[$OperatingSystem == "Windows" && StringContainsQ[run, "\""],
+        (*
+        work around bug 410895, all quotes are stripped from StartProcess on Windows
+
+        convert e.g., Print["Foo`"] into ToExpression[FromCharacterCode[{80, 114, 105, 110, 116, 91, 34, 70, 111, 111, 96, 34, 93}]]
+
+        evaluates the same expr, except that the only characters passed on command-line are letters, digits, space, comma, [] and {}
+        *)
+        run = "ToExpression[FromCharacterCode[" <> ToString[ToCharacterCode[run]] <> "]]"
+      ];
       ,
       (*
       already WARNED about missing -run
