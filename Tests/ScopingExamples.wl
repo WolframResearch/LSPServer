@@ -50,7 +50,7 @@ Table[i, {i, nblks}, {blksize}]
 Block[{pred},
 (*     ^ unused *)
   Function[{pred},
-(*           ^ shadowed *)
+(*          ^ shadowed *)
       pred
 (*    ^ shadowed *)
    ]
