@@ -368,7 +368,7 @@ Module[{logFile, logFileStream,
       ]
     ];
 
-    logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF8"];
+    logFileStream = OpenWrite[logFile, CharacterEncoding -> "UTF-8"];
 
     If[FailureQ[logFileStream],
       
