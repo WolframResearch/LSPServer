@@ -8,8 +8,6 @@ Doing "LSP: Restart Servers" in Sublime returns "address already in use" errors
 Sublime tries to connect to the same port before the kernel closes down.
 
 
-
-
 ## Timeout issue
 
 If LSPServer takes more than 5 seconds to launch Sublime returns "time out" error.
@@ -22,4 +20,7 @@ If LSPServer takes more than 5 seconds to launch Sublime returns "time out" erro
 
 * [Sublimelsp sourcecode for timeout](https://github.com/sublimelsp/LSP/blob/master/plugin/core/transports.py#L18).
 
-* [Plans for supporting multiple clients from a single LSP server?](https://github.com/microsoft/language-server-protocol/issues/1160).
+
+## Multiple clients support plans
+
+* [Plans for supporting multiple clients from a single LSP server?](https://github.com/microsoft/language-server-protocol/issues/1160)
