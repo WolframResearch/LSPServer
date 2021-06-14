@@ -60,10 +60,12 @@ RunServerDiagnostic[command:{_String...}] :=
         Throw[False]
       ];
 
-      If[$OperatingSystem == "Windows" && StringContainsQ[run, "\""],
+      If[TrueQ[$WorkaroundBug410895],
         (*
         work around bug 410895, all quotes are stripped from StartProcess on Windows
 
+        this was fixed in 12.4
+        
         convert e.g., Print["Foo`"] into ToExpression[FromCharacterCode[{80, 114, 105, 110, 116, 91, 34, 70, 111, 111, 96, 34, 93}]]
 
         evaluates the same expr, except that the only characters passed on command-line are letters, digits, space, comma, [] and {}
