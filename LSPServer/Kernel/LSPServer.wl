@@ -290,7 +290,7 @@ StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
 Module[{logFile, logFileStream,
-  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr
+  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr, readEvalWriteCycle
   },
 
   $kernelStartTime = Now;
@@ -440,7 +440,15 @@ Module[{logFile, logFileStream,
     exitHard[]
   ];
 
-  readEvalWriteLoop[$commProcess, initializedComm];
+  readEvalWriteCycle = readEvalWriteLoop[$commProcess, initializedComm];
+
+  If[FailureQ[readEvalWriteCycle],
+    log["\n\n"];
+    log["Read-Eval-Write-Loop failed: ", readEvalWriteCycle];
+    log["\n\n"];
+    
+    exitHard[]
+  ];
 
 ]],(*Module, 1-arg Catch*)
 _,

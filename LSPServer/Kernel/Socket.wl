@@ -88,38 +88,45 @@ queueEmptyQ["Socket"] :=
   ];
 
 readMessage["Socket", sockObj_] :=
-  Module[{sockMessage},
+  Module[{sockMessage, lspMsgEmptyQ},
     (* First check if a valid msg is available in the que *)
     (* When a valid message is available in the queue: No need to read new message from socket *)
     If[msgContainsQ[lspMsgAssoc["msgInQueue"]],
+
       If[$Debug2,
         log["Valid message is availble in the MessageQueue :> "];
         log["\nmsgInQueue :> \n"];
         log[InputForm[lspMsgAssoc["msgInQueue"]]];
       ];
-      sockMessage = "";
+      findMessageParts[lspMsgAssoc["msgInQueue"]];
       ,
+
       (* When no valid message is available in the queue: read from socket *)
       If[$Debug2,
         log["No valid message is availble in the MessageQueue :> "];
         log["\nmsgInQueue :> \n"];
         log[InputForm[lspMsgAssoc["msgInQueue"]]];
       ];
-      
-      sockMessage = SocketReadMessage[sockObj];
 
-      If[FailureQ[sockMessage],
-        If[$Debug2,
-          log["Read failure from client.\n"]
+      lspMsgEmptyQ = True;
+      While[lspMsgEmptyQ,
+        sockMessage = SocketReadMessage[sockObj];
+
+        If[FailureQ[sockMessage],
+          If[$Debug2,
+            log["Read failure from client.\n"]
+          ];
+          exitHard[]
         ];
-        exitHard[]
+
+        sockMessage = ByteArrayToString[sockMessage];
+        lspMsgEmptyQ = Not @ msgContainsQ @ (lspMsgAssoc["msgInQueue"] <> sockMessage);
+        (* Extract a valid message from the queue and update  lspMsgAssoc *)
+        findMessageParts[lspMsgAssoc["msgInQueue"] <> sockMessage];
       ];
 
-      sockMessage = ByteArrayToString[sockMessage];
-
     ];
-    (* Extract a valid message from the queue and update  lspMsgAssoc *)
-    sockMessage = findMessageParts[lspMsgAssoc["msgInQueue"] <> sockMessage];
+
     {ImportString[lspMsgAssoc["lspMsg"], "RawJSON"]}
   ];
 
