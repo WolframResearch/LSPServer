@@ -974,7 +974,10 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
           (*
           disable_bracket_matcher_display_insertion_text is an undocumented, debug command
           *)
-          "disable_bracket_matcher_display_insertion_text"
+          "disable_bracket_matcher_display_insertion_text",
+          "roundtrip_responsiveness_test",
+          "ping_pong_responsiveness_test",
+          "payload_responsiveness_test"
         }
       |>}, Flatten]
   ];
