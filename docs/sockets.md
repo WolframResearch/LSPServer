@@ -22,6 +22,9 @@ If LSPServer takes more than 5 seconds to launch Sublime returns "time out" erro
 
 * [Sublimelsp sourcecode for timeout](https://github.com/sublimelsp/LSP/blob/master/plugin/core/transports.py#L18).
 
+### Socket support
+* [Client-hosted tcp connection and client managing the socket life cycle](https://github.com/sublimelsp/LSP/issues/513)
+
 ## VSCode
 
 ### Opening the port
