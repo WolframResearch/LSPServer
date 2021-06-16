@@ -21,7 +21,7 @@ RunServerDiagnostic[command:{_String...}] :=
   Module[{proc, stdIn, stdOut, assoc, bytes, str, cases, case, len, content, lenStr, runPosition, run, toTest,
     lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
     lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate,
-    contentStr, res, kernelVersion},
+    contentStr, res, kernelVersion, startServerString, startServer, startServerArgs},
 
     Print["Running Language Server diagnostic..."];
 
@@ -58,6 +58,22 @@ RunServerDiagnostic[command:{_String...}] :=
         ,
         Print["ERROR: code is not a string: ", run];
         Throw[False]
+      ];
+
+      startServerString = StringCases[run, ss:("StartServer[" ~~ ___ ~~ "]" ~~ EndOfString) :> ss];
+      If[Length[startServerString] == 1,
+        startServerString = startServerString[[1]];
+        
+        Block[{StartServer},
+          startServer = ToExpression[startServerString];
+          startServerArgs = startServer /. StartServer[logDir_String : "", opts:OptionsPattern[]] :> {logDir, {opts}};
+          
+          If[(Global`CommunicationMethod /. startServerArgs[[2]]) == "Socket",
+            Print["ERROR: CommunicationMethod \"Socket\" not implemented for RunServerDiagnostic", run];
+            Throw[False]
+          ]
+        ]
+
       ];
 
       If[TrueQ[$WorkaroundBug410895],
