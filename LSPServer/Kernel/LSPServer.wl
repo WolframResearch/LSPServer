@@ -427,7 +427,10 @@ Module[{logFile, logFileStream,
 
   If[FailureQ[initializedComm],
     log["\n\n"];
-    log["Initialization failed: ", initializedComm];
+    (*
+    //InputForm to work-around bug 411375
+    *)
+    log["Initialization failed: ", initializedComm //InputForm];
     log["\n\n"];
     
     exitHard[]
