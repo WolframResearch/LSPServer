@@ -1,16 +1,15 @@
 
-## Restart Servers
+# Sublime Text (ST)
 
-Doing "LSP: Restart Servers" in Sublime returns "address already in use" errors
+## Unsolved issues
 
-### Description
+### 1. Restart Servers
 
-Sublime tries to connect to the same port before the kernel closes down.
+Doing "LSP: Restart Servers" in ST returns "address already in use" errors. As ST tries to connect to the same port before the kernel closes down ST finds the port is already in use. 
 
+Wolfram kernel takes few seconds to close down. Opening ST after kernel close restarts the server and works properly.
 
-## Sublime
-
-### Timeout issue
+### 2. Timeout issue
 
 If LSPServer takes more than 5 seconds to launch Sublime returns "time out" error.
 
@@ -22,10 +21,95 @@ If LSPServer takes more than 5 seconds to launch Sublime returns "time out" erro
 
 * [Sublimelsp sourcecode for timeout](https://github.com/sublimelsp/LSP/blob/master/plugin/core/transports.py#L18).
 
-### Socket support
+## Important links
 * [Client-hosted tcp connection and client managing the socket life cycle](https://github.com/sublimelsp/LSP/issues/513)
 
-## VSCode
+## Setting for Socket based communication
+Settings for socket based communication is given below:
+
+### When clinet opens the port
+
+Modify ```/Users/user-name/Library/Application Support/Sublime Text 3/Packages/User/LSP.sublime-settings``` file. We call this ```Socket``` mode of communication.
+
+We can modify this file from Sublime Text menu : ```Sublime Text > Preferences > Package Settings > LSP > Settings```.
+
+Setting for communication through ```Socket``` mode:
+
+```{
+  "log_debug": true,
+  "log_server": true,
+  "log_stderr": true,
+  "log_payloads": true,
+  "clients":
+  {
+    "wolfram":
+    {
+      "enabled": true,
+      "command":
+        [
+          "C:\\Program Files\\Wolfram Research\\Mathematica\\12.1.1\\WolframKernel.exe",
+          "-noinit",
+          "-noprompt",
+          "-nopaclet",
+          "-noicon",
+          "-run",
+          "Needs[\"LSPServer`\"];LSPServer`StartServer[\"CommunicationMethod\" -> \"Socket\"]"
+        ],
+      "scopes": ["source.wolfram"],
+      "syntaxes": "/Users/suman/Documents/WRI/External-Repo/Sublime-WolframLanguage/WolframLanguage.sublime-syntax",
+      "languageId": "wolfram",
+      "initializationOptions": { },
+      "tcp_mode": "host",
+      "tcp_port": 5555
+    }
+  }
+}
+```
+Note that currently Mathematica version 12.1.1 can be used for this mode. Later versions need few issues to be fixed.
+
+### When server opens the port
+
+Modify ```/Users/user-name/Library/Application Support/Sublime Text 3/Packages/User/LSP.sublime-settings``` file. We call this ```ListenSocket``` mode of communication.
+
+We can modify this file from Sublime Text menu : ```Sublime Text > Preferences > Package Settings > LSP > Settings```.
+
+Setting for communication through ```ListenSocket``` mode:
+
+```{
+  "log_debug": true,
+  "log_server": true,
+  "log_stderr": true,
+  "log_payloads": true,
+  "clients":
+  {
+    "wolfram":
+    {
+      "enabled": true,
+      "command":
+        [
+          "C:\\Program Files\\Wolfram Research\\Mathematica\\12.1.1\\WolframKernel.exe",
+          "-noinit",
+          "-noprompt",
+          "-nopaclet",
+          "-noicon",
+          "-run",
+          "Needs[\"LSPServer`\"];LSPServer`StartServer[\"CommunicationMethod\" -> \"LestenSocket\"]"
+        ],
+      "scopes": ["source.wolfram"],
+      "syntaxes": "/Users/suman/Documents/WRI/External-Repo/Sublime-WolframLanguage/WolframLanguage.sublime-syntax",
+      "languageId": "wolfram",
+      "initializationOptions": { },
+      "tcp_mode": "",
+      "tcp_port": 5555
+    }
+  }
+}
+```
+This mode is used to support multi-client communication with single ```LSPServer```.
+
+# VSCode
+
+## Important links
 
 ### Opening the port
 * [For connection timing issues the server is actually a client and the client is the server in terms of opening the ports.](https://github.com/microsoft/language-server-protocol/issues/604)
@@ -34,3 +118,6 @@ If LSPServer takes more than 5 seconds to launch Sublime returns "time out" erro
 ## Multiple clients support plans
 
 * [Plans for supporting multiple clients from a single LSP server?](https://github.com/microsoft/language-server-protocol/issues/1160)
+
+## Setting for Socket based communication
+We can use third-party VSCode plugin to communicate with our LSPServer. We are working to get Socket support for our VSCode plugin. 
