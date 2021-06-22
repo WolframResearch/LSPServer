@@ -111,6 +111,13 @@ Setting for communication through ```ListenSocket``` mode:
 ```
 This mode is used to support multi-client communication with single ```LSPServer```.
 
+## Multiple clients support
+As communication through ```ListenSocket``` mode is possible in ST, ```LSPServer``` is capable of multiple client support. Currently this feature is working for ST in Mac-OS-X. Initial tests of this feature is done using three different instances of STs. We have seen all the three STs could communicate with the ```LSPServer```.
+
+### Setting for Multiple clients support
+
+All of the different STs should have the same setting as described in the sub-section: ```When server opens the port``` under ```Setting for Socket based communication```.
+
 # VSCode
 
 ## Important links
