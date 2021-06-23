@@ -27,7 +27,7 @@ If LSPServer takes more than 5 seconds to launch Sublime returns "time out" erro
 ## Setting for Socket based communication
 Settings for socket based communication is given below:
 
-### When clinet opens the port
+### When client opens the port
 
 Modify ```/Users/user-name/Library/Application Support/Sublime Text 3/Packages/User/LSP.sublime-settings``` file. We call this ```Socket``` mode of communication.
 
@@ -65,7 +65,11 @@ Setting for communication through ```Socket``` mode:
   }
 }
 ```
-Note that currently Mathematica version 12.1.1 can be used for this mode. Later versions need few issues to be fixed.
+We recommend using Mathematica version 12.1.1 for this mode. Although sometimes ST socket support works properly with later versions but we see the following issues to be fixed: 
+
+* Server successfully connects to the socket opened by the client but never reads a message from the client.
+* Server fails to connect to the socket opened by the client and returns ```Failed socket operation```.
+
 
 ### When server opens the port
 
@@ -93,7 +97,7 @@ Setting for communication through ```ListenSocket``` mode:
           "-nopaclet",
           "-noicon",
           "-run",
-          "Needs[\"LSPServer`\"];LSPServer`StartServer[\"CommunicationMethod\" -> \"LestenSocket\"]"
+          "Needs[\"LSPServer`\"];LSPServer`StartServer[\"CommunicationMethod\" -> \"ListenSocket\"]"
         ],
       "scopes": ["source.wolfram"],
       "syntaxes": "/Users/suman/Documents/WRI/External-Repo/Sublime-WolframLanguage/WolframLanguage.sublime-syntax",
@@ -120,4 +124,4 @@ This mode is used to support multi-client communication with single ```LSPServer
 * [Plans for supporting multiple clients from a single LSP server?](https://github.com/microsoft/language-server-protocol/issues/1160)
 
 ## Setting for Socket based communication
-We can use third-party VSCode plugin to communicate with our LSPServer. We are working to get Socket support for our VSCode plugin. 
+We are working to get Socket support for our VSCode plugin. 
