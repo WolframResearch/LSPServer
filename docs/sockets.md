@@ -112,11 +112,41 @@ Setting for communication through ```ListenSocket``` mode:
 This mode is used to support multi-client communication with single ```LSPServer```.
 
 ## Multiple clients support
+
 As communication through ```ListenSocket``` mode is possible in ST, ```LSPServer``` is capable of multiple client support. Currently this feature is working for ST in Mac-OS-X. Initial tests of this feature is done using three different instances of STs. We have seen all the three STs could communicate with the ```LSPServer```.
 
-### Setting for Multiple clients support
+### I. Client setting for Multiple clients support
 
 All of the different STs should have the same setting as described in the sub-section: ```When server opens the port``` under ```Setting for Socket based communication```.
+
+### II. Timing Tests
+
+Timing tests in the multi-client mode are done in `Sublime Text 3`. Settings and results of the timing tests are dicussed below:
+
+#### Settings
+
+Three different instances of ST3s are open in the `ListenSocket` mode. All the different instances of STs started communicating with `LSPServer`. In each of the instances `Round Trip Timing Test` were done. 
+
+#### results
+Typical `Round Trip Timing` data and correponding data range is shown here. No significant delay was observed while switching the window and getting responses from the `LSPServer`.
+__________________________________________________________
+|         | ST3-Window-1 | ST3-Window-2 | ST3-Window-3 |
+|---      | --- | --- | --- |
+|Round Trip Timing   | 20 ms| 20 ms| 20 ms|
+|Data Range      | 10 - 30 ms | 10 - 30 ms| 10 - 30 ms|
+__________________________________________________________
+
+### III. Issues
+* Socket timeout issue comes sometime especially in the slower machines. Restarting ST generally solve this sissue. Improvement in ST4 may solve this issue.
+
+* All the different instances of the ST3 opens a WolframKernel. Only the first kernel lives. The second and third kernel closes down with error message: `Address already in use (code 48)`. So finally all the ST3 communicate through the kernel launched by the first ST3.
+
+  TODO: If a WolframKernel is launched in the ListenSocket mode, we can try not to launch another kernel. 
+
+* If any of the instances of the ST3 is closed then the kernel is shut down by the server. 
+
+    TODO: This issue needs to be fixed in the server side.
+
 
 # VSCode
 
