@@ -121,7 +121,7 @@ All of the different STs should have the same setting as described in the sub-se
 
 ### II. Timing Tests
 
-Timing tests in the multi-client mode are done in `Sublime Text 3`. Settings and results of the timing tests are dicussed below:
+Timing tests in the multi-client mode are done in `Sublime Text 3`. Settings and results of the timing tests are discussed below:
 
 #### Settings
 
@@ -137,7 +137,7 @@ __________________________________________________________
 __________________________________________________________
 
 ### III. Issues
-* Socket timeout issue comes sometime especially in the slower machines. Restarting ST generally solve this sissue. Improvement in ST4 may solve this issue.
+* Socket timeout issue comes sometime especially in the slower machines. Restarting ST generally solve this issue. Improvement in ST4 may solve this issue.
 
 * All the different instances of the ST3 opens a WolframKernel. Only the first kernel lives. The second and third kernel closes down with error message: `Address already in use (code 48)`. So finally all the ST3 communicate through the kernel launched by the first ST3.
 
