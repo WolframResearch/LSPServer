@@ -134,7 +134,7 @@ This uses func := func = def idiom and is fast
 loadAllFuncs[]
 
 
-$DefaultConfidenceLevel = 0.95
+$DefaultConfidenceLevel = 0.75
 
 $CodeActionLiteralSupport = False
 
