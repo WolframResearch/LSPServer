@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     23958,        598]
-NotebookOptionsPosition[     18691,        521]
-NotebookOutlinePosition[     19181,        540]
-CellTagsIndexPosition[     19138,        537]
+NotebookDataLength[     25181,        620]
+NotebookOptionsPosition[     19729,        541]
+NotebookOutlinePosition[     20218,        560]
+CellTagsIndexPosition[     20175,        557]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -346,6 +346,9 @@ Cell[CellGroupData[{
 Cell["usage messages", "Section",ExpressionUUID->"050c69fd-1ed3-4dfd-bbfb-3d60b5b18b0b"],
 
 Cell[BoxData[
+ RowBox[{"Quit", "[", "]"}]], "Input",ExpressionUUID->"cfec6bb5-42ed-480f-9ad8-40a03f2e43b5"],
+
+Cell[BoxData[
  RowBox[{"<<", "LSPServer`"}]], "Input",
  CellChangeTimes->{{3.810409645921224*^9, 
   3.810409647650895*^9}},ExpressionUUID->"7bef4caa-842f-40f8-ba2e-\
@@ -356,11 +359,6 @@ Cell[BoxData[
  CellChangeTimes->{{3.810409670932296*^9, 
   3.8104096727287207`*^9}},ExpressionUUID->"294c859d-b8ee-46af-8340-\
 d583e4231d47"],
-
-Cell[BoxData["$ProcessID"], "Input",
- CellChangeTimes->{{3.810410668046412*^9, 
-  3.810410669692587*^9}},ExpressionUUID->"7f1e06ec-37de-4cfc-a02f-\
-bb745cf7094c"],
 
 Cell[BoxData[
  RowBox[{
@@ -384,6 +382,13 @@ Cell[BoxData[
 Cell[BoxData[
  RowBox[{
   RowBox[{"start", "=", "1"}], ";"}]], "Input",ExpressionUUID->"402af7bb-6dbc-4b67-948e-6d224de3949c"],
+
+Cell["GridBox is really common:", "Text",ExpressionUUID->"40594836-44aa-4fd3-bb6b-8f5b92a8a115"],
+
+Cell[BoxData[
+ RowBox[{"Off", "[", 
+  RowBox[{"LSPServer`Hover`Private`interpretBox", "::", "unhandledgridbox"}], 
+  "]"}]], "Input",ExpressionUUID->"80ec5dc3-b7cc-4ff4-bccf-d7ea1ff63105"],
 
 Cell[BoxData[{
  RowBox[{
@@ -415,116 +420,131 @@ Cell[BoxData[{
        RowBox[{"StringQ", "[", "usage", "]"}]}], ",", 
       RowBox[{"Continue", "[", "]"}]}], "]"}], ";", "\[IndentingNewLine]", 
     RowBox[{"xPrint", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
-    RowBox[{"a1", "=", 
+    RowBox[{"Check", "[", "\[IndentingNewLine]", 
      RowBox[{
-      RowBox[{"LSPServer`Hover`Private`reassembleEmbeddedLinearSyntax", "[", 
-       RowBox[{"CodeTokenize", "[", "usage", "]"}], "]"}], "/.", " ", 
-      RowBox[{"{", "\[IndentingNewLine]", 
-       RowBox[{
+      RowBox[{
+       RowBox[{"a1", "=", 
         RowBox[{
-         RowBox[{"LeafNode", "[", 
-          RowBox[{"Token`Newline", ",", "_", ",", "_"}], "]"}], "\[Rule]", 
-         "\"\<\\n\\n\>\""}], ",", "\[IndentingNewLine]", 
-        RowBox[{
-         RowBox[{"LeafNode", "[", 
-          RowBox[{"Token`LinearSyntax`Bang", ",", "_", ",", "_"}], "]"}], 
-         "\[Rule]", "\"\<\>\""}], ",", "\[IndentingNewLine]", 
-        RowBox[{
-         RowBox[{"LeafNode", "[", 
-          RowBox[{"Token`LinearSyntaxBlob", ",", "s_", ",", "_"}], "]"}], 
-         "\[RuleDelayed]", 
          RowBox[{
-         "LSPServer`Hover`Private`parseLinearSyntaxBlob", "[", "s", "]"}]}], 
-        ",", "\[IndentingNewLine]", 
-        RowBox[{
-         RowBox[{"LeafNode", "[", 
-          RowBox[{"String", ",", "s1_", ",", "_"}], "]"}], "\[RuleDelayed]", 
-         RowBox[{"LSPServer`Hover`Private`parseString", "[", "s1", "]"}]}], 
-        ",", "\[IndentingNewLine]", 
-        RowBox[{
-         RowBox[{"LeafNode", "[", 
-          RowBox[{"_", ",", "s_", ",", "_"}], "]"}], "\[RuleDelayed]", 
-         RowBox[{"LSPServer`Hover`Private`escapeMarkdown", "[", 
-          RowBox[{"LSPServer`ReplacePUA`replacePUA", "[", "s", "]"}], "]"}]}],
-         ",", "\[IndentingNewLine]", 
-        RowBox[{
-         RowBox[{"ErrorNode", "[", 
-          RowBox[{"_", ",", "s_", ",", "_"}], "]"}], "\[RuleDelayed]", 
-         RowBox[{"LSPServer`Hover`Private`escapeMarkdown", "[", 
-          RowBox[{"LSPServer`ReplacePUA`replacePUA", "[", "s", "]"}], 
-          "]"}]}]}], "}"}]}]}], ";", "\[IndentingNewLine]", 
-    RowBox[{"b1", "=", 
-     RowBox[{"StringJoin", "[", "a1", "]"}]}], ";", "\[IndentingNewLine]", 
-    RowBox[{"If", "[", 
-     RowBox[{
-      RowBox[{"!", 
-       RowBox[{"StringQ", "[", "b1", "]"}]}], ",", "\[IndentingNewLine]", 
-      RowBox[{
-       RowBox[{"Print", "[", 
-        RowBox[{
-         RowBox[{"Style", "[", 
-          RowBox[{"\"\<not a string! \>\"", ",", "Red", ",", "Bold"}], "]"}], 
-         ",", "i", ",", "\"\< \>\"", ",", "name"}], "]"}], ";", 
-       "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "b1", "]"}], ";"}]}], "\[IndentingNewLine]", 
-     "]"}], ";", "\[IndentingNewLine]", 
-    RowBox[{"b1", "=", 
-     RowBox[{"LSPServer`ReplacePUA`replacePUA", "[", "b1", "]"}]}], ";", 
-    "\[IndentingNewLine]", 
-    RowBox[{"If", "[", 
-     RowBox[{
-      RowBox[{"StringContainsQ", "[", 
-       RowBox[{"b1", ",", "\"\<\[UnknownGlyph]\>\""}], "]"}], ",", 
-      "\[IndentingNewLine]", 
-      RowBox[{
-       RowBox[{"Print", "[", 
-        RowBox[{
-         RowBox[{"Style", "[", 
-          RowBox[{"\"\<unhandled box! \>\"", ",", "Red", ",", "Bold"}], "]"}],
-          ",", "i", ",", "\"\< \>\"", ",", "name"}], "]"}], ";", 
-       "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "b1", "]"}], ";"}]}], "\[IndentingNewLine]", 
-     "]"}], ";", "\[IndentingNewLine]", 
-    RowBox[{"puaChars", "=", 
-     RowBox[{"Select", "[", 
-      RowBox[{
-       RowBox[{"Characters", "[", "b1", "]"}], ",", 
-       RowBox[{
-        RowBox[{"16^^e000", "<=", 
-         RowBox[{
-          RowBox[{"ToCharacterCode", "[", "#", "]"}], "[", 
-          RowBox[{"[", "1", "]"}], "]"}], "<=", "16^^f8ff"}], "&"}]}], 
-      "]"}]}], ";", "\[IndentingNewLine]", 
-    RowBox[{"If", "[", 
-     RowBox[{
-      RowBox[{"puaChars", "\[NotEqual]", 
-       RowBox[{"{", "}"}]}], ",", 
-      RowBox[{
-       RowBox[{"Print", "[", 
-        RowBox[{
-         RowBox[{"Style", "[", 
+         "LSPServer`Hover`Private`reassembleEmbeddedLinearSyntax", "[", 
+          RowBox[{"CodeTokenize", "[", "usage", "]"}], "]"}], "/.", " ", 
+         RowBox[{"{", "\[IndentingNewLine]", 
           RowBox[{
-          "\"\<PUA unicode character! \>\"", ",", "Red", ",", "Bold"}], "]"}],
-          ",", "i", ",", "\"\< \>\"", ",", "name"}], "]"}], ";", 
-       "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "puaChars", "]"}], ";", "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
-       RowBox[{"Print", "[", "b1", "]"}], ";"}]}], "\[IndentingNewLine]", 
-     "]"}], ";"}], "\[IndentingNewLine]", ",", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"LeafNode", "[", 
+             RowBox[{"Token`Newline", ",", "_", ",", "_"}], "]"}], "\[Rule]", 
+            "\"\<\\n\\n\>\""}], ",", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"LeafNode", "[", 
+             RowBox[{"Token`LinearSyntax`Bang", ",", "_", ",", "_"}], "]"}], 
+            "\[Rule]", "\"\<\>\""}], ",", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"LeafNode", "[", 
+             RowBox[{"Token`LinearSyntaxBlob", ",", "s_", ",", "_"}], "]"}], 
+            "\[RuleDelayed]", 
+            RowBox[{
+            "LSPServer`Hover`Private`parseLinearSyntaxBlob", "[", "s", 
+             "]"}]}], ",", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"LeafNode", "[", 
+             RowBox[{"String", ",", "s1_", ",", "_"}], "]"}], 
+            "\[RuleDelayed]", 
+            RowBox[{"LSPServer`Hover`Private`parseString", "[", "s1", "]"}]}],
+            ",", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"LeafNode", "[", 
+             RowBox[{"_", ",", "s_", ",", "_"}], "]"}], "\[RuleDelayed]", 
+            RowBox[{"LSPServer`Hover`Private`escapeMarkdown", "[", 
+             RowBox[{
+             "LSPServer`ReplaceLongNamePUA`replaceLongNamePUA", "[", "s", 
+              "]"}], "]"}]}], ",", "\[IndentingNewLine]", 
+           RowBox[{
+            RowBox[{"ErrorNode", "[", 
+             RowBox[{"_", ",", "s_", ",", "_"}], "]"}], "\[RuleDelayed]", 
+            RowBox[{"LSPServer`Hover`Private`escapeMarkdown", "[", 
+             RowBox[{
+             "LSPServer`ReplaceLongNamePUA`replaceLongNamePUA", "[", "s", 
+              "]"}], "]"}]}]}], "}"}]}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"b1", "=", 
+        RowBox[{"StringJoin", "[", "a1", "]"}]}], ";", "\[IndentingNewLine]", 
+       
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{"!", 
+          RowBox[{"StringQ", "[", "b1", "]"}]}], ",", "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"xPrint", "[", 
+           RowBox[{
+            RowBox[{"Style", "[", 
+             RowBox[{"\"\<not a string! \>\"", ",", "Red", ",", "Bold"}], 
+             "]"}], ",", "i", ",", "\"\< \>\"", ",", "name"}], "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"xPrint", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"xPrint", "[", "b1", "]"}], ";"}]}], "\[IndentingNewLine]", 
+        "]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"b1", "=", 
+        RowBox[{
+        "LSPServer`ReplaceLongNamePUA`replaceLongNamePUA", "[", "b1", "]"}]}],
+        ";", "\[IndentingNewLine]", 
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{"StringContainsQ", "[", 
+          RowBox[{"b1", ",", "\"\<\[UnknownGlyph]\>\""}], "]"}], ",", 
+         "\[IndentingNewLine]", 
+         RowBox[{
+          RowBox[{"xPrint", "[", 
+           RowBox[{
+            RowBox[{"Style", "[", 
+             RowBox[{"\"\<unhandled box! \>\"", ",", "Red", ",", "Bold"}], 
+             "]"}], ",", "i", ",", "\"\< \>\"", ",", "name"}], "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"xPrint", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"xPrint", "[", "b1", "]"}], ";"}]}], "\[IndentingNewLine]", 
+        "]"}], ";", "\[IndentingNewLine]", 
+       RowBox[{"puaChars", "=", 
+        RowBox[{"Select", "[", 
+         RowBox[{
+          RowBox[{"Characters", "[", "b1", "]"}], ",", 
+          RowBox[{
+           RowBox[{"16^^e000", "<=", 
+            RowBox[{
+             RowBox[{"ToCharacterCode", "[", "#", "]"}], "[", 
+             RowBox[{"[", "1", "]"}], "]"}], "<=", "16^^f8ff"}], "&"}]}], 
+         "]"}]}], ";", "\[IndentingNewLine]", 
+       RowBox[{"If", "[", 
+        RowBox[{
+         RowBox[{"puaChars", "\[NotEqual]", 
+          RowBox[{"{", "}"}]}], ",", 
+         RowBox[{
+          RowBox[{"Print", "[", 
+           RowBox[{
+            RowBox[{"Style", "[", 
+             RowBox[{
+             "\"\<PUA unicode character! \>\"", ",", "Red", ",", "Bold"}], 
+             "]"}], ",", "i", ",", "\"\< \>\"", ",", "name"}], "]"}], ";", 
+          "\[IndentingNewLine]", 
+          RowBox[{"Print", "[", "puaChars", "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"Print", "[", "usage", "]"}], ";", "\[IndentingNewLine]", 
+          RowBox[{"Print", "[", "b1", "]"}], ";"}]}], "\[IndentingNewLine]", 
+        "]"}], ";"}], "\[IndentingNewLine]", ",", "\[IndentingNewLine]", 
+      RowBox[{"Print", "[", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<message: \>\"", ",", "Red", ",", "Bold"}], "]"}], ",", 
+        "i", ",", "\"\< \>\"", ",", "name"}], "]"}]}], "\[IndentingNewLine]", 
+     "]"}]}], "\[IndentingNewLine]", ",", "\[IndentingNewLine]", 
    RowBox[{"{", 
     RowBox[{"i", ",", "start", ",", 
      RowBox[{"Length", "[", "names", "]"}]}], "}"}]}], "\[IndentingNewLine]", 
   "]"}]}], "Input",ExpressionUUID->"ab7c0316-9d4b-47b7-a6c5-0593d21c77b4"]
-}, Closed]]
+}, Open  ]]
 },
-WindowSize->{890, 1042},
+WindowSize->{1676, 1009},
 WindowMargins->{{6, Automatic}, {Automatic, 2}},
 TaggingRules->{"TryRealOnly" -> False},
 CellLabelAutoDelete->True,
 TrackCellChangeTimes->False,
-FrontEndVersion->"12.2 for Mac OS X x86 (64-bit) (October 3, 2020)",
+FrontEndVersion->"12.4 for Mac OS X x86 (64-bit) (June 27, 2021)",
 StyleDefinitions->"Default.nb",
 ExpressionUUID->"5a593db6-98eb-468e-9ecb-c9be7f6c8a37"
 ]
@@ -591,15 +611,17 @@ Cell[10903, 316, 815, 24, 30, "Input",ExpressionUUID->"212642e2-97a7-49a9-bc6c-a
 }, Closed]],
 Cell[CellGroupData[{
 Cell[11755, 345, 88, 0, 53, "Section",ExpressionUUID->"050c69fd-1ed3-4dfd-bbfb-3d60b5b18b0b"],
-Cell[11846, 347, 180, 4, 30, "Input",ExpressionUUID->"7bef4caa-842f-40f8-ba2e-4733f5cfc2e3"],
-Cell[12029, 353, 183, 4, 30, "Input",ExpressionUUID->"294c859d-b8ee-46af-8340-d583e4231d47"],
-Cell[12215, 359, 162, 3, 30, "Input",ExpressionUUID->"7f1e06ec-37de-4cfc-a02f-bb745cf7094c"],
-Cell[12380, 364, 225, 6, 30, "Input",ExpressionUUID->"729de959-dd71-47cf-8d2b-6f6088fe223f"],
-Cell[12608, 372, 187, 4, 30, "Input",ExpressionUUID->"07dcaa18-0d0f-41aa-b359-67154b4125ae"],
-Cell[12798, 378, 146, 3, 30, "Input",ExpressionUUID->"61daa1b1-80d9-4ffd-9f0a-a4551db62a68"],
-Cell[12947, 383, 126, 2, 30, "Input",ExpressionUUID->"402af7bb-6dbc-4b67-948e-6d224de3949c"],
-Cell[13076, 387, 5599, 131, 753, "Input",ExpressionUUID->"ab7c0316-9d4b-47b7-a6c5-0593d21c77b4"]
-}, Closed]]
+Cell[11846, 347, 107, 1, 30, "Input",ExpressionUUID->"cfec6bb5-42ed-480f-9ad8-40a03f2e43b5"],
+Cell[11956, 350, 180, 4, 30, "Input",ExpressionUUID->"7bef4caa-842f-40f8-ba2e-4733f5cfc2e3"],
+Cell[12139, 356, 183, 4, 30, "Input",ExpressionUUID->"294c859d-b8ee-46af-8340-d583e4231d47"],
+Cell[12325, 362, 225, 6, 30, "Input",ExpressionUUID->"729de959-dd71-47cf-8d2b-6f6088fe223f"],
+Cell[12553, 370, 187, 4, 30, "Input",ExpressionUUID->"07dcaa18-0d0f-41aa-b359-67154b4125ae"],
+Cell[12743, 376, 146, 3, 30, "Input",ExpressionUUID->"61daa1b1-80d9-4ffd-9f0a-a4551db62a68"],
+Cell[12892, 381, 126, 2, 30, "Input",ExpressionUUID->"402af7bb-6dbc-4b67-948e-6d224de3949c"],
+Cell[13021, 385, 96, 0, 35, "Text",ExpressionUUID->"40594836-44aa-4fd3-bb6b-8f5b92a8a115"],
+Cell[13120, 387, 188, 3, 30, "Input",ExpressionUUID->"80ec5dc3-b7cc-4ff4-bccf-d7ea1ff63105"],
+Cell[13311, 392, 6402, 146, 841, "Input",ExpressionUUID->"ab7c0316-9d4b-47b7-a6c5-0593d21c77b4"]
+}, Open  ]]
 }
 ]
 *)

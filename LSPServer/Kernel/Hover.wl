@@ -537,6 +537,8 @@ parseString[s_] :=
 
 interpretBox::unhandled = "unhandled: `1`"
 
+interpretBox::unhandledgridbox = "unhandled GridBox"
+
 interpretBox::unhandledSeq = "unhandled: `1`\n`2`"
 
 interpretBox::unhandled2 = "FIXME: unhandled: `1`"
@@ -554,6 +556,9 @@ TR symbol instead of "TR"
 
 interpretBox[StyleBox[a_, "TI", ___Rule]] :=
   {"*", interpretBox[a], "*"}
+
+interpretBox[StyleBox[a_, Bold, ___Rule]] :=
+  {"**", interpretBox[a], "**"}
 
 interpretBox[StyleBox[a_, _String, ___Rule]] :=
   interpretBox[a]
@@ -597,7 +602,7 @@ interpretBox[UnderoverscriptBox[a_, b_, c_, ___Rule]] :=
   interpretBox /@ {a, "+", b, "%", c}
 
 interpretBox[GridBox[_, ___Rule]] := (
-  Message[interpretBox::unhandled, "GridBox"];
+  Message[interpretBox::unhandledgridbox];
   "\[UnknownGlyph]"
 )
 
@@ -608,6 +613,11 @@ interpretBox[CheckboxBox[_]] := (
 
 interpretBox[CheckboxBox[_, _]] := (
   Message[interpretBox::unhandled, "CheckboxBox"];
+  "\[UnknownGlyph]"
+)
+
+interpretBox[DynamicBox[_, ___]] := (
+  Message[interpretBox::unhandled, "DynamicBox"];
   "\[UnknownGlyph]"
 )
 
