@@ -532,8 +532,8 @@ parseString[s_] :=
   ]
 
 
-(* CodeInspect::Push *)
-(* CodeInspect::Suppress::UnexpectedCharacter *)
+(* :!CodeAnalysis::BeginBlock:: *)
+(* :!CodeAnalysis::Disable::UnexpectedCharacter:: *)
 
 interpretBox::unhandled = "unhandled: `1`"
 
@@ -836,7 +836,7 @@ replaceLinearSyntax[s_String] :=
   }]
 
 
-(* CodeInspect::Pop *)
+(* :!CodeAnalysis::EndBlock:: *)
 
 (*
 Fix the terrible, terrible design mistake that prevents linear syntax embedded in strings from round-tripping
