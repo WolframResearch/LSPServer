@@ -127,7 +127,7 @@ readMessage["Socket", sockObj_] :=
 
     ];
 
-    {ImportString[lspMsgAssoc["lspMsg"], "RawJSON"]}
+    {Developer`ReadRawJSONString[lspMsgAssoc["lspMsg"]]}
   ];
 
 (* Read + Expand + Update *)
@@ -182,7 +182,7 @@ writeLSPResult["Socket", sockObject_, contents_] :=
   Module[{bytess, line, bytes},
 
     Check[
-      bytess = ExportByteArray[#, "JSON"]& /@ contents
+      bytess = StringToByteArray[Developer`WriteRawJSONString[#]]& /@ contents
 
       ,
       log["\n\n"];

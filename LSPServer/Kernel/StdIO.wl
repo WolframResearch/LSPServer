@@ -132,7 +132,7 @@ TryQueue["StdIO"] :=
         log["...\n"]
       ];
 
-      content = ImportByteArray[bytesIn, "RawJSON"];
+      content = Developer`ReadRawJSONString[ByteArrayToString[bytesIn]];
 
       AppendTo[contentsIn, content]
       ,
@@ -153,7 +153,7 @@ writeLSPResult["StdIO", contents_] :=
 Module[{bytess, res, errStr, ferror},
 
   Check[
-    bytess = ExportByteArray[#, "JSON"]& /@ contents
+    bytess = StringToByteArray[Developer`WriteRawJSONString[#]& /@ contents
 
     ,
     log["\n\n"];

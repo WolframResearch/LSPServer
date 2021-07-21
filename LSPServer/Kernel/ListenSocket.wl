@@ -40,7 +40,7 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 
   finalMsg = findMessageParts[lspMsgAssoc["msgInQueue"] <> dataString];
 
-  contentsIn = {ImportString[lspMsgAssoc["lspMsg"], "RawJSON"]};
+  contentsIn = {Developer`ReadRawJSONString[lspMsgAssoc["lspMsg"]]};
 
   expandUpdate[contentsIn];
 
