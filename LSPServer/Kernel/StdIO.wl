@@ -153,7 +153,7 @@ writeLSPResult["StdIO", contents_] :=
 Module[{bytess, res, errStr, ferror},
 
   Check[
-    bytess = StringToByteArray[Developer`WriteRawJSONString[#]& /@ contents
+    bytess = StringToByteArray[Developer`WriteRawJSONString[#]]& /@ contents
 
     ,
     log["\n\n"];
