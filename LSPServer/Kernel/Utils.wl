@@ -109,7 +109,7 @@ Module[{srcs},
 
   Function[{src}, (<|
     "code" -> If[KeyExistsQ[data, "Argument"], tag <> "\[VeryThinSpace]\:25bb\[VeryThinSpace]" <> data["Argument"], tag],
-    "message" -> plainify[message],
+    "message" -> StringJoin[Riffle[plainify /@ ({message} ~Join~ Lookup[data, "AdditionalDescriptions", {}]), "\n"]],
     "severity" -> lintSeverityToLSPSeverity[severity],
     "range" -> <|
       "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
