@@ -40,6 +40,9 @@ RunServerDiagnostic[command:{_String...}] :=
     If[!MemberQ[command, "-noicon"],
       Print["ERROR: -noicon is not in command"];
     ];
+    If[!MemberQ[command, "-nostartuppaclets"],
+      Print["ERROR: -nostartuppaclets is not in command"];
+    ];
     If[!MemberQ[command, "-run"],
       Print["ERROR: -run is not in command"];
     ];
@@ -80,7 +83,7 @@ RunServerDiagnostic[command:{_String...}] :=
         (*
         work around bug 410895, all quotes are stripped from StartProcess on Windows
 
-        this was fixed in 12.4
+        this was fixed in 13
         
         convert e.g., Print["Foo`"] into ToExpression[FromCharacterCode[{80, 114, 105, 110, 116, 91, 34, 70, 111, 111, 96, 34, 93}]]
 
