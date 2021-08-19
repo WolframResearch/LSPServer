@@ -1,3 +1,5 @@
+(* ::Package::"Tags"-><|"NoVariables" -> <|"Module" -> <|Enabled -> False|>|>|>:: *)
+
 BeginPackage["LSPServer`"]
 
 StartServer::usage = "StartServer[] puts the kernel into a state ready for traffic from the client.\
