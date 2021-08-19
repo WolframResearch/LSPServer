@@ -42,7 +42,7 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 
   contentsIn = {Developer`ReadRawJSONString[lspMsgAssoc["lspMsg"]]};
 
-  expandUpdate[contentsIn];
+  expandContentsAndAppendToContentQueue[contentsIn];
 
   ProcessScheduledJobs[];
 
@@ -71,15 +71,15 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
   ];
 
 
-];
+]
 
-readEvalWriteLoop["ListenSocket", sock_]:= SocketListen[sock, processData[#DataByteArray, #SourceSocket]&, HandlerFunctionsKeys -> {"DataByteArray", "SourceSocket"}];
+readEvalWriteLoop["ListenSocket", sock_] := SocketListen[sock, processData[#DataByteArray, #SourceSocket]&, HandlerFunctionsKeys -> {"DataByteArray", "SourceSocket"}]
 
 (* ============================ ShutDown ============================= *)
-shutdownLSPComm["ListenSocket", s_SocketObject]:= Close[s];
-shutdownLSPComm["ListenSocket", _]:= Null;
+shutdownLSPComm["ListenSocket", s_SocketObject] := Close[s]
+
+shutdownLSPComm["ListenSocket", _] := Null
 
 End[]
 
 EndPackage[]
-

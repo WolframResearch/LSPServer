@@ -10,7 +10,9 @@ RunServerDiagnostic
 initializeLSPComm
 
 expandContent
-expandUpdate
+
+expandContentsAndAppendToContentQueue
+
 LSPEvaluate
 readEvalWriteLoop
 
@@ -241,31 +243,37 @@ $CancelMap = <||>
 
 
 
-expandUpdate[contentsIn_] :=
-  Module[{tempQue},
+(*
+Expands contents and appends to $ContentQueue
 
-    If[!MatchQ[contentsIn, {_?AssociationQ...}],
+Returns Null
+*)
+expandContentsAndAppendToContentQueue[contentsIn_] :=
+  Module[{contents},
+
+    contents = contentsIn;
+
+    If[!MatchQ[contents, {_?AssociationQ...}],
       log["\n\n"];
-      log["Internal assert 1 failed: list of Associations: ", contentsIn];
+      log["Internal assert 1 failed: list of Associations: ", contents];
       log["\n\n"];
 
       exitHard[]
     ];
 
-    preScanForCancels[contentsIn];
+    preScanForCancels[contents];
 
     (*
     Now expand new contents
     *)
 
-    tempQue = expandContents[contentsIn];
+    contents = expandContents[contents];
 
-    $ContentQueue = $ContentQueue ~ Join ~ tempQue;
+    $ContentQueue = $ContentQueue ~ Join ~ contents;
 
     If[$Debug2,
       log["appending to $ContentQueue"];
-      log["$ContentQueue (up to 20): ", #["method"]& /@ Take[$ContentQueue,
-         UpTo[20]]]
+      log["$ContentQueue (up to 20): ", #["method"]& /@ Take[$ContentQueue, UpTo[20]]]
     ];
 
     
@@ -292,8 +300,7 @@ StartServer[logDir_String:"", OptionsPattern[]] :=
 Catch[
 Catch[
 Module[{logFile, logFileStream,
-  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr, readEvalWriteCycle
-  },
+  logFileName, logFileCounter, oldLogFiles, now, quantity30days, dateStr, readEvalWriteCycle},
 
   $kernelStartTime = Now;
 
@@ -429,20 +436,20 @@ Module[{logFile, logFileStream,
   Handle any initialization failures or other errors.
   *)
 
-  initializedComm = initializeLSPComm[$commProcess];
+  $initializedComm = initializeLSPComm[$commProcess];
 
-  If[FailureQ[initializedComm],
+  If[FailureQ[$initializedComm],
     log["\n\n"];
     (*
     //InputForm to work-around bug 411375
     *)
-    log["Initialization failed: ", initializedComm //InputForm];
+    log["Initialization failed: ", $initializedComm //InputForm];
     log["\n\n"];
     
     exitHard[]
   ];
 
-  readEvalWriteCycle = readEvalWriteLoop[$commProcess, initializedComm];
+  readEvalWriteCycle = readEvalWriteLoop[$commProcess, $initializedComm];
 
   If[FailureQ[readEvalWriteCycle],
     log["\n\n"];
@@ -486,6 +493,10 @@ preScanForCancels[contents:{_?AssociationQ ...}] :=
   ]
 
 
+(*
+Input: list of Associations
+Returns: list of Associations
+*)
 expandContents[contentsIn_] :=
 Module[{contents, lastContents},
 
@@ -1675,7 +1686,7 @@ exitGracefully[] := (
   log["\n\n"];
   log["KERNEL IS EXITING GRACEFULLY"];
   log["\n\n"];
-  shutdownLSPComm[$commProcess, initializedComm];
+  shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];Exit[0]
 )
 
@@ -1695,7 +1706,7 @@ exitSemiGracefully[] := (
   log["\n\n"];
   log["KERNEL IS EXITING SEMI-GRACEFULLY"];
   log["\n\n"];
-  shutdownLSPComm[$commProcess, initializedComm];
+  shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];Exit[1]
 )
 
@@ -1715,7 +1726,7 @@ exitHard[] := (
   log["\n\n"];
   log["KERNEL IS EXITING HARD"];
   log["\n\n"];
-  shutdownLSPComm[$commProcess, initializedComm];
+  shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];Exit[1]
 )
 

@@ -10,14 +10,14 @@ Begin["`Private`"]
 
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
-Needs["CodeParser`Utils`"]
 Needs["LSPServer`Library`"]
+Needs["CodeParser`Utils`"]
 
 (* ========================================================== *)
 (* ================   Socket functions   ==================== *)
 (* ========================================================== *)
 
-lspMsgAssoc = <|"lspMsg" -> "", "msgInQueue" -> ""|>;
+lspMsgAssoc = <|"lspMsg" -> "", "msgInQueue" -> ""|>
 
 (* =================   Initialize   ======================= *)
 
@@ -27,9 +27,9 @@ initializeLSPComm["Socket"] := SocketConnect[5555, "TCP"]
 
 (* ===============   Message validity check    =============== *)
 
-checkContent[str_] := StringContainsQ[str, "Content-Length: "];
+checkContent[str_] := StringContainsQ[str, "Content-Length: "]
 
-checkStartPosition[str_] := First @ Flatten @ StringPosition[str, "Content"] === 1;
+checkStartPosition[str_] := First @ Flatten @ StringPosition[str, "Content"] === 1
 
 checkMsgLength[str_] :=
   Module[{numStrs, pos, requiredLength, maxMsgLength},
@@ -41,7 +41,7 @@ checkMsgLength[str_] :=
     maxMsgLength = StringLength @ StringTake[str, {pos[[2]] + 1, StringLength[str]}];
 
     maxMsgLength >= requiredLength
-  ];
+  ]
 
 msgContainsQ[str_] :=
   Module[{res},
@@ -74,7 +74,7 @@ findMessageParts[str_] :=
       lspMsgAssoc["msgInQueue"] = lspMsgAssoc["msgInQueue"] <> str;
     ];
     lspMsgAssoc
-  ];
+  ]
 
 
 
@@ -85,11 +85,11 @@ queueEmptyQ["Socket"] :=
   Module[{getMethods},
     getMethods = #["method"]& /@ $ContentQueue;
     MatchQ[getMethods, {}]
-  ];
+  ]
 
 readMessage["Socket", sockObj_] :=
   Module[{sockMessage, lspMsgEmptyQ},
-    (* First check if a valid msg is available in the que *)
+    (* First check if a valid msg is available in the queue *)
     (* When a valid message is available in the queue: No need to read new message from socket *)
     If[msgContainsQ[lspMsgAssoc["msgInQueue"]],
 
@@ -128,7 +128,7 @@ readMessage["Socket", sockObj_] :=
     ];
 
     {Developer`ReadRawJSONString[lspMsgAssoc["lspMsg"]]}
-  ];
+  ]
 
 (* Read + Expand + Update *)
 
@@ -146,7 +146,7 @@ TryQueue["Socket", sockObj_] :=
         Throw[Null]
       ];
       contentsIn = readMessage["Socket", sockObj];
-      expandUpdate[contentsIn];
+      expandContentsAndAppendToContentQueue[contentsIn];
       Null
     ]
   ]
@@ -175,11 +175,11 @@ writeSocket["Socket", socket_, header_, body_] :=
       If[$Debug2, log["Message-body write failure to client."]];
       exitHard[]
     ]
-  ];
+  ]
 
 (* contents is a list of Associations *)
 writeLSPResult["Socket", sockObject_, contents_] :=
-  Module[{bytess, line, bytes},
+  Module[{bytess, line},
 
     Check[
       bytess = StringToByteArray[Developer`WriteRawJSONString[#]]& /@ contents
@@ -208,7 +208,7 @@ writeLSPResult["Socket", sockObject_, contents_] :=
       ,
       {bytes, bytess}
     ](*Do bytess*)
-  ];
+  ]
 
 
   (* ================= Read Write Loop =============================== *)
@@ -240,11 +240,12 @@ Module[{content, contents},
     writeLSPResult["Socket", sock, contents];
 
   ](*While*)
-];
+]
 
 (* ============================ ShutDown ============================= *)
-shutdownLSPComm["Socket", s_SocketObject]:= Close[s];
-shutdownLSPComm["Socket", _]:= Null;
+shutdownLSPComm["Socket", s_SocketObject] := Close[s]
+
+shutdownLSPComm["Socket", _] := Null
 
 End[]
 

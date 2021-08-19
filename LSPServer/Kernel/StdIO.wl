@@ -141,13 +141,13 @@ TryQueue["StdIO"] :=
 
     bytessIn = {};
 
-    expandUpdate[contentsIn]
-    
-  ]];
+    expandContentsAndAppendToContentQueue[contentsIn]
+
+  ]]
 
 (* ================   Write Message   ======================= *)
 (* contents is a list of Associations *)
-writeLSPResult["StdIO", sock_, contents_] := writeLSPResult["StdIO", contents];
+writeLSPResult["StdIO", sock_, contents_] := writeLSPResult["StdIO", contents]
 
 writeLSPResult["StdIO", contents_] :=
 Module[{bytess, res, errStr, ferror},
@@ -296,10 +296,10 @@ Module[{content, contents},
     writeLSPResult["StdIO", sock, contents];
 
   ](*While*)
-];
+]
 
 (* ============================ ShutDown ============================= *)
-shutdownLSPComm["StdIO", _] := Null;
+shutdownLSPComm["StdIO", _] := Null
 
 End[]
 
