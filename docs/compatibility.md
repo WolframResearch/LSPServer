@@ -7,6 +7,11 @@
 LSPServer has source compatibility with 12.0+
 
 
+## FrontEnd Compatibility
+
+Any source .wl files that have `(* ::Package::"Tags" *)` or `(* ::Code::Initialization::"Tags" *)` syntax may only be edited with a version 12.3+ FE 
+
+
 ## WolframVersion
 
 WolframVersion in PacletInfo is 12.1+ to maintain the same minimum required version as CodeParser
