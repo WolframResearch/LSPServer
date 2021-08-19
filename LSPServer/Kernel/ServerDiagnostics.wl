@@ -41,7 +41,7 @@ RunServerDiagnostic[command:{_String...}] :=
       Print["ERROR: -noicon is not in command"];
     ];
     If[!MemberQ[command, "-nostartuppaclets"],
-      Print["ERROR: -nostartuppaclets is not in command"];
+      Print["WARNING: -nostartuppaclets is not in command"];
     ];
     If[!MemberQ[command, "-run"],
       Print["ERROR: -run is not in command"];
