@@ -10,10 +10,10 @@
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
 NotebookDataPosition[       158,          7]
-NotebookDataLength[     28454,        652]
-NotebookOptionsPosition[     19117,        463]
-NotebookOutlinePosition[     19587,        480]
-CellTagsIndexPosition[     19544,        477]
+NotebookDataLength[     30530,        700]
+NotebookOptionsPosition[     20476,        497]
+NotebookOutlinePosition[     20947,        514]
+CellTagsIndexPosition[     20904,        511]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
@@ -458,12 +458,46 @@ Cell["Implementation of textDocument/selectionRange", "Text",
 
 Cell["Initial implementation of semantic tokens", "Text",
  CellID->1977273069,ExpressionUUID->"a39a8dbb-bfb1-4155-9e37-a30544b0df83"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["1.3", "Section",
+ CellChangeTimes->{{3.822824221714437*^9, 3.822824223655924*^9}, {
+  3.838716672284525*^9, 3.838716672417585*^9}},
+ CellID->1431183876,ExpressionUUID->"1b9fbe04-0b3d-4cb3-8d51-747ff63e211f"],
+
+Cell["August 30, 2021", "Text",
+ CellChangeTimes->{{3.822824233793511*^9, 3.822824249038164*^9}, {
+  3.825677249810317*^9, 3.8256772534210787`*^9}, {3.8387166767133427`*^9, 
+  3.838716679783908*^9}},
+ CellID->2090557532,ExpressionUUID->"f46a1af1-8736-4e70-a49e-1a09d9e320e0"],
+
+Cell["\<\
+Notes on compatibility have been added to docs/compatibility.md\
+\>", "Text",
+ CellChangeTimes->{{3.83871668933077*^9, 3.8387166900471363`*^9}, 
+   3.838722578810452*^9},
+ CellID->1479494259,ExpressionUUID->"3a5290f2-552d-4048-9807-18cb93ba1534"],
+
+Cell["\<\
+work around bug 410895, all quotes are stripped from StartProcess on Windows\
+\>", "Text",
+ CellID->31665008,ExpressionUUID->"bacb5296-57d3-4d59-84d9-450ee37f7845"],
+
+Cell["Experimental support for sockets", "Text",
+ CellChangeTimes->{{3.838722734701641*^9, 3.8387227425963087`*^9}},
+ CellID->207354744,ExpressionUUID->"d8636453-dcef-4948-a2ac-252604b2f59f"],
+
+Cell["Experimental support for multiple clients", "Text",
+ CellChangeTimes->{{3.838722768489832*^9, 3.838722774915703*^9}},
+ CellID->672737097,ExpressionUUID->"c47f15ab-e1ab-4707-b479-0d6842357f5c"]
 }, Open  ]]
 }, Open  ]]
 },
 WindowSize->{700, 770},
 WindowMargins->{{47, Automatic}, {Automatic, 15}},
-FrontEndVersion->"12.3 for Mac OS X x86 (64-bit) (March 21, 2021)",
+FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (August 18, 2021)",
 StyleDefinitions->FrontEnd`FileName[{"Wolfram"}, "TutorialPageStyles.nb", 
   CharacterEncoding -> "UTF-8"],
 ExpressionUUID->"b8199d78-6642-4165-884b-946d6f0d866c"
@@ -652,6 +686,20 @@ Cell[18817, 455, 136, 1, 23, "Text",ExpressionUUID->"4421c7d6-cb80-4536-adef-2e1
  CellID->322472350],
 Cell[18956, 458, 133, 1, 23, "Text",ExpressionUUID->"a39a8dbb-bfb1-4155-9e37-a30544b0df83",
  CellID->1977273069]
+}, Open  ]],
+Cell[CellGroupData[{
+Cell[19126, 464, 213, 3, 43, "Section",ExpressionUUID->"1b9fbe04-0b3d-4cb3-8d51-747ff63e211f",
+ CellID->1431183876],
+Cell[19342, 469, 275, 4, 23, "Text",ExpressionUUID->"f46a1af1-8736-4e70-a49e-1a09d9e320e0",
+ CellID->2090557532],
+Cell[19620, 475, 256, 5, 23, "Text",ExpressionUUID->"3a5290f2-552d-4048-9807-18cb93ba1534",
+ CellID->1479494259],
+Cell[19879, 482, 174, 3, 23, "Text",ExpressionUUID->"bacb5296-57d3-4d59-84d9-450ee37f7845",
+ CellID->31665008],
+Cell[20056, 487, 191, 2, 23, "Text",ExpressionUUID->"d8636453-dcef-4948-a2ac-252604b2f59f",
+ CellID->207354744],
+Cell[20250, 491, 198, 2, 23, "Text",ExpressionUUID->"c47f15ab-e1ab-4707-b479-0d6842357f5c",
+ CellID->672737097]
 }, Open  ]]
 }, Open  ]]
 }
