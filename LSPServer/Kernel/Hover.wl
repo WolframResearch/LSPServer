@@ -506,9 +506,13 @@ containsUnicodeCharacterQ[str_String] :=
 
 
 parseLinearSyntaxBlob[s_] :=
-  Block[{$Context = "LSPServer`Hover`Private`"},
-    interpretBox[Quiet[ToExpression[s]]]
-  ]
+Module[{res},
+  res = Quiet[ToExpression[s]];
+  If[FailureQ[res],
+    Message[interpretBox::failed];
+  ];
+  interpretBox[res]
+]
 
 parseString[s_] :=
   Module[{a1, unquoted, hasStartingQuote, hasEndingQuote},
@@ -539,9 +543,11 @@ interpretBox::unhandled = "unhandled: `1`"
 
 interpretBox::unhandledgridbox = "unhandled GridBox"
 
-interpretBox::unhandledSeq = "unhandled: `1`\n`2`"
+interpretBox::unhandledSeq = "unhandled: letter sequence that should probably be a RowBox: \n`1`\nIf this looks like boxes, then this is a strange usage message."
 
-interpretBox::unhandled2 = "FIXME: unhandled: `1`"
+interpretBox::unhandled2 = "unhandled: `1`. If this looks like a correct box, then please add to interpretBox. Otherwise, this is a strange usage message."
+
+interpretBox::failed = "unhandled: Linear syntax could not be parsed by ToExpression."
 
 interpretBox[RowBox[children_]] :=
   interpretBox /@ children
@@ -650,7 +656,7 @@ Sanity check that the box that starts with a letter is actually a single word or
 *)
 interpretBox[s_String /; StringStartsQ[s, LetterCharacter | "$"] &&
   !StringMatchQ[s, (WordCharacter | "$" | " " | "`" | "_" | "/" | "\[FilledRightTriangle]") ...]] := (
-  Message[interpretBox::unhandledSeq, "letter sequence that probably should be a RowBox: ", s];
+  Message[interpretBox::unhandledSeq, s];
   "\[UnknownGlyph]"
 )
 
@@ -658,7 +664,6 @@ interpretBox[s_String] :=
   escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]]
 
 interpretBox[$Failed] := (
-  Message[interpretBox::unhandled, $Failed];
   "\[UnknownGlyph]"
 )
 
@@ -848,12 +853,16 @@ replaceLinearSyntax[s_String] :=
 
 (* :!CodeAnalysis::EndBlock:: *)
 
+
+reassembleEmbeddedLinearSyntax::unhandled = "Unbalanced openers and closers."
+
 (*
 Fix the terrible, terrible design mistake that prevents linear syntax embedded in strings from round-tripping
 
 TODO: dump explanation about terrible, terrible design mistake here
 *)
 reassembleEmbeddedLinearSyntax[toks_] :=
+Catch[
   Module[{embeddedLinearSyntax, openerPoss, closerPoss},
 
     openerPoss = Position[toks, LeafNode[String, s_ /; StringCount[s, "\("] == 1 && StringCount[s, "\)"] == 0, _]];
@@ -861,6 +870,11 @@ reassembleEmbeddedLinearSyntax[toks_] :=
     closerPoss = Position[toks,
       LeafNode[String, s_ /; StringCount[s, "\("] == 0 && StringCount[s, "\)"] == 1, _] |
         ErrorNode[Token`Error`UnterminatedString, s_ /; StringCount[s, "\("] == 0 && StringCount[s, "\)"] == 1, _]];
+
+    If[Length[openerPoss] != Length[closerPoss],
+      Message[reassembleEmbeddedLinearSyntax::unhandled];
+      Throw[toks]
+    ];
 
     Fold[
       Function[{toks1, span},
@@ -872,6 +886,7 @@ reassembleEmbeddedLinearSyntax[toks_] :=
       Transpose[{openerPoss, closerPoss}] //Reverse
     ]
   ]
+]
 
 
 End[]
