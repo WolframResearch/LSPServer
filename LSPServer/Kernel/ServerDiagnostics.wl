@@ -104,7 +104,7 @@ RunServerDiagnostic[command:{_String...}] :=
     toTest = command;
     toTest = Delete[toTest, runPosition[[1]] + 1];
     toTest = Delete[toTest, 1];
-    toTest = DeleteCases[toTest, "-noinit" | "-noprompt" | "-nopaclet" | "-noicon" | "-run"];
+    toTest = DeleteCases[toTest, "-noinit" | "-noprompt" | "-nopaclet" | "-nostartuppaclets" | "-noicon" | "-run"];
 
     If[toTest != {},
       Print["WARNING: There are unrecognized arguments to Language Server kernel: ", toTest];
