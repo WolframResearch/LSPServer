@@ -10,7 +10,7 @@ Paclet[
   Updating -> Automatic,
   Extensions -> {
     {"Kernel", Root -> "Kernel", Context -> "LSPServer`"},
-    {"Documentation", Language -> "English", MainPage -> "Guides/LSPServer"},
+    {"Documentation", Language -> All, MainPage -> "Guides/LSPServer"},
     {"LibraryLink"},
     {"Resource", Root -> "Resources",
       Resources -> {
