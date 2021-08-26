@@ -86,6 +86,29 @@ $ImplicitTokensDelayAfterLastChange
 
 Begin["`Private`"]
 
+
+(*
+setup Startup Messages handling
+
+There may be internal errors in LSPServer that emit messages during Needs["LSPServer`"]
+
+These messages are exceptionally hard to handle because any code for handling has not yet been loaded
+
+The messages may cause unexplained hangs in clients
+
+So manually set $Messages to a tmp file and then handle the messages later
+*)
+$startupMessagesFile = OpenWrite[]
+
+If[!FailureQ[$startupMessagesFile],
+  $oldMessages = $Messages;
+  $Messages = {$startupMessagesFile}
+  ,
+  $startupMessagesText = "OpenWrite[] failed while setting up Startup Messages handling"
+]
+
+
+
 Needs["LSPServer`BracketMismatches`"]
 Needs["LSPServer`CodeAction`"]
 Needs["LSPServer`Color`"]
@@ -429,6 +452,15 @@ Module[{logFile, logFileStream,
 
   log["Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)"];
   log["\n\n"];
+
+
+  If[$startupMessagesText =!= "",
+    log["\n\n"];
+    log["There were messages on startup: ", $startupMessagesText];
+    log["\n\n"];
+    
+    exitHard[]
+  ];
 
 
   (*
@@ -1729,6 +1761,24 @@ exitHard[] := (
   shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];Exit[1]
 )
+
+
+(*
+now cleanup Startup Messages handling
+*)
+Module[{name},
+
+  If[!FailureQ[$startupMessagesFile],
+
+    name = Close[$startupMessagesFile];
+
+    $startupMessagesText = Import[name, "Text"];
+
+    DeleteFile[name];
+
+    $Messages = $oldMessages
+  ]
+]
 
 
 End[]
