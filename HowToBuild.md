@@ -7,7 +7,6 @@ LSPServer uses C++11 features and requires a compiler that can support at least 
 LSPServer uses CMake to generate build scripts.
 
 Here is an example transcript using the default make generator to build LSPServer:
-
 ```
 cd lspserver
 mkdir build
@@ -20,18 +19,16 @@ The result is a directory named `paclet` that contains the WL package source cod
 
 Inside a kernel session you may then install the paclet by evaluating:
 ```
-PacletInstall["/path/to/build/paclet/LSPServer-1.3.paclet"]
+PacletInstall["/path/to/build/paclet/LSPServer-1.4.paclet"]
 ```
 
-Specify `MATHEMATICA_INSTALL_DIR` if you have Mathematica installed in a non-default location:
-
+Specify `MATHEMATICA_INSTALL_DIR` if you have Wolfram System installed in a non-default location:
 ```
 cmake -DMATHEMATICA_INSTALL_DIR=/Applications/Mathematica123.app/Contents/ ..
 cmake --build .
 ```
 
 On Windows:
-
 ```
 cmake -DMATHEMATICA_INSTALL_DIR="C:/Program Files/Wolfram Research/Mathematica/12.3" ..
 cmake --build .

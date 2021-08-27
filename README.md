@@ -1,75 +1,88 @@
 # LSPServer
 
-LSPServer is a package that implements the Language Server Protocol for Wolfram Language.
+LSPServer is a package that implements the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) for Wolfram Language and allows a Wolfram Language kernel to run as an LSP server.
 
-[Language Server Protocol](https://microsoft.github.io/language-server-protocol/)
+LSPServer implements several LSP features:
+* Code diagnostics
+* Suggestions for fixes
+* Formatting files and selections
+* Semantic highlighting
+* Expand / shrink selection
+* Outline
+* Color swatches
+* Symbol references
+* Documentation on hover
+
+This repo is for users who are interested in adding LSP support for Wolfram Language to LSP clients.
+
+There are official Wolfram LSP clients for [Sublime Text](https://github.com/WolframResearch/Sublime-WolframLanguage) and [Visual Studio Code](https://github.com/WolframResearch/vscode-wolfram).
 
 
 ## Setup
 
-LSPServer depends on the CodeParser paclet and the CodeInspector paclet. Make sure that the paclets can be found on your system:
+LSPServer depends on [CodeParser](https://github.com/WolframResearch/codeparser), [CodeInspector](https://github.com/WolframResearch/codeinspector), and [CodeFormatter](https://github.com/WolframResearch/codeformatter).
+
+Install LSPServer paclet and dependencies from the public paclet server:
 ```
-Needs["CodeParser`"]
-Needs["CodeInspector`"]
-Needs["CodeFormatter`"]
+PacletInstall["CodeParser"]
+PacletInstall["CodeInspector"]
+PacletInstall["CodeFormatter"]
+PacletInstall["LSPServer"]
+```
+
+[Build and install the LSPServer paclet locally](HowToBuild.md)
+
+
+## Using LSPServer
+
+99% of users will not need to worry about using LSPServer directly. LSPServer is used internally when an LSP client launches a Wolfram kernel as an LSP server. This all happens in the background.
+
+But it can be useful to run LSPServer when developing a new LSP client.
+
+Create a file named server.wl:
+```
 Needs["LSPServer`"]
+
+StartServer[]
 ```
 
-[CodeParser on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
-[CodeInspector on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
-[CodeFormatter on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
-[LSPServer on github.com](https://github.com/<<TODO_placeholder_for_actual_link>>)
+And run from the command-line:
+```
+brenton@brenton2maclap % WolframKernel -noprompt -run Get\[\"server.wl\"\]
+14:03:48.605 $CommandLine: {WolframKernel, -noprompt, -run, Get["server.wl"]}
+14:03:48.607 
 
-Install LSPServer and dependencies from the CodeTools paclet server:
+
+14:03:48.608 $commProcess: StdIO
+14:03:48.608 
+
+
+14:03:48.608 $ProcessID: 54603
+14:03:48.609 
+
+
+14:03:48.609 $ParentProcessID: 54582
+14:03:48.609 
+
+
+14:03:48.609 Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)
+14:03:48.610 
 ```
-PacletUpdate["CodeParser", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-PacletUpdate["CodeInspector", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-PacletUpdate["CodeFormatter", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-PacletUpdate["LSPServer", "Site" -> "<<TODO_placeholder_for_actual_link>>", "UpdateSites" -> True]
-```
+
+Notice the proper character escapes on the command-line.
+
+The kernel process is blocked waiting on input to its stdin.
+
+Properly formed LSP JSON-RPC can be sent to the kernel, and the kernel would send its response to stdout.
 
 
 ## Troubleshooting
 
-If there is any output written to the kernel's stdout, then this will break the protocol with LSP clients.
-
-For example, any messages that are produced when running the startup code will break the protocol and must be fixed first.
-
+Make sure that the paclets can be found on your system:
 ```
-/Applications/Mathematica.app/Contents/MacOS/WolframKernel -noprompt -run Needs["LSPServer`"];LSPServer`StartServer[]
-
-Get::noopen: Cannot open CodeParser`.
-
-Needs::nocont: Context CodeParser` was not created when Needs was evaluated.
-
-Get::noopen: Cannot open CodeParser`.
-
-Needs::nocont: Context CodeParser` was not created when Needs was evaluated.
-
-Get::noopen: Cannot open CodeParser`.
-
-General::stop: Further output of Get::noopen will be suppressed during this calculation.
-
-Needs::nocont: Context CodeParser` was not created when Needs was evaluated.
-
-General::stop: Further output of Needs::nocont will be suppressed during this calculation.
+Needs["LSPServer`"]
 ```
 
-
-
-Make sure that the required paclets are up-to-date:
-CodeParser
-CodeInspector
-CodeFormatter
-LSPServer
-
-
-remove older paclets
-
-
-
-
-### Debugging
 
 ### Server settings
 
@@ -80,11 +93,3 @@ Give a string argument to StartServer[]. This is a directory that kernel logs wi
 ```
 Needs["LSPServer`"];LSPServer`StartServer["/path/to/log/directory/"]
 ```
-
-
-
-
-
-
-
-
