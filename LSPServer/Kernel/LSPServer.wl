@@ -49,6 +49,13 @@ $hrefIdCounter
 $ServerState
 
 
+(*
+Send a notification after sending response to initialize
+
+This notification is used to notify clients if the kernel took too long to start
+*)
+$AfterInitialize
+
 
 $AllowedImplicitTokens
 
@@ -756,7 +763,7 @@ returns: a list of associations (possibly empty), each association represents JS
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
   codeActionProviderValue, initializationOptions, implicitTokens,
-  bracketMatcher, debugBracketMatcher, clientName, semanticTokensProviderValue, semanticTokens},
+  bracketMatcher, debugBracketMatcher, clientName, semanticTokensProviderValue, semanticTokens, afterInitialize},
 
   If[$Debug2,
     log["initialize: enter"];
@@ -772,6 +779,12 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
     If[$Debug2,
       log["initializationOptions: ", initializationOptions]
+    ];
+
+    If[KeyExistsQ[initializationOptions, "afterInitialize"],
+      afterInitialize = initializationOptions["afterInitialize"];
+
+      $AfterInitialize = afterInitialize
     ];
 
     (*
@@ -823,6 +836,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
 
   If[$Debug2,
+    log["$AfterInitialize: ", $AfterInitialize];
     log["$AllowedImplicitTokens: ", $AllowedImplicitTokens];
     log["$BracketMatcher: ", $BracketMatcher];
     log["$DebugBracketMatcher: ", $DebugBracketMatcher];
@@ -973,7 +987,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     log["time to intialize: ", $kernelInitializeTime - $kernelStartTime]
   ];
 
-  {<| "jsonrpc" -> "2.0", "id" -> id,
+  contents = {<| "jsonrpc" -> "2.0", "id" -> id,
       "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
                                          "textDocumentSync" -> <| "openClose" -> True,
                                                                   "save" -> <| "includeText" -> False |>,
@@ -991,7 +1005,13 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
                                          "semanticTokensProvider" -> semanticTokensProviderValue
                                      |>
                  |>
-  |>}
+  |>};
+
+  If[$AfterInitialize,
+    contents = contents ~Join~ {<| "jsonrpc" -> "2.0", "method" -> "wolfram/afterInitialize" |>}
+  ];
+
+  contents
 ]
 
 

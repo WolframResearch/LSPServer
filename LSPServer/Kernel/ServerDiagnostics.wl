@@ -129,7 +129,17 @@ RunServerDiagnostic[command:{_String...}] :=
     (*
     initialize
     *)
-    assoc = <|"method" -> "initialize", "id" -> 1, "params" -> <|"capabilities" -> <|"textDocument" -> <|"codeAction" -> <||>|>|>|>|>;
+    assoc = <|"method" -> "initialize", "id" -> 1, "params" -> <|
+        "initializationOptions" -> <|
+          "afterInitialize" -> True
+        |>,
+        "capabilities" -> <|
+          "textDocument" -> <|
+            "codeAction" -> <||>
+          |>
+        |>
+      |>
+    |>;
     bytes = ExportByteArray[assoc, "JSON"];
     len = Length[bytes];
 
