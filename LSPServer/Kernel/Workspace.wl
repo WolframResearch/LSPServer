@@ -35,6 +35,9 @@ Module[{params, id, command},
   command = params["command"];
 
   Switch[command,
+    (*
+    enable_bracket_matcher_debug_mode is an undocumented debug command
+    *)
     "enable_bracket_matcher_debug_mode",
       $DebugBracketMatcher = True;
       (*
@@ -42,6 +45,9 @@ Module[{params, id, command},
       *)
       {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
+    (*
+    disable_bracket_matcher_debug_mode is an undocumented debug command
+    *)
     "disable_bracket_matcher_debug_mode",
       $DebugBracketMatcher = False;
       (*
@@ -49,18 +55,34 @@ Module[{params, id, command},
       *)
       {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
-    (* "enable_bracket_matcher_design_colors",
-      $BracketMatcherUseDesignColors = True
+    (*
+    enable_bracket_matcher_design_colors is an undocumented debug command
+    *)
+    "enable_bracket_matcher_design_colors",
+      $BracketMatcherUseDesignColors = True;
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
+    (*
+    disable_bracket_matcher_design_colors is an undocumented debug command
+    *)
     "disable_bracket_matcher_design_colors",
-      $BracketMatcherUseDesignColors = False
-    , *)
-    (* "enable_bracket_matcher_display_insertion_text",
-      $BracketMatcherDisplayInsertionText = True
+      $BracketMatcherUseDesignColors = False;
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
+    (*
+    enable_bracket_matcher_display_insertion_text is an undocumented debug command
+    *)
+    "enable_bracket_matcher_display_insertion_text",
+      $BracketMatcherDisplayInsertionText = True;
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
+    ,
+    (*
+    disable_bracket_matcher_display_insertion_text is an undocumented debug command
+    *)
     "disable_bracket_matcher_display_insertion_text",
-      $BracketMatcherDisplayInsertionText = False
-    , *)
+      $BracketMatcherDisplayInsertionText = False;
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
+    ,
     _,
       If[$Debug,
         log["UNSUPPORTED COMMAND: ", command]

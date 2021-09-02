@@ -951,12 +951,30 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     $ExecuteCommandProvider =
       Merge[{$ExecuteCommandProvider, <|
         "commands" -> {
+          (*
+          enable_bracket_matcher_debug_mode is an undocumented, debug command
+          *)
           "enable_bracket_matcher_debug_mode",
-          "disable_bracket_matcher_debug_mode"(* ,
+          (*
+          disable_bracket_matcher_debug_mode is an undocumented, debug command
+          *)
+          "disable_bracket_matcher_debug_mode",
+          (*
+          enable_bracket_matcher_design_colors is an undocumented, debug command
+          *)
           "enable_bracket_matcher_design_colors",
-          "disable_bracket_matcher_design_colors" *)(* ,
+          (*
+          disable_bracket_matcher_design_colors is an undocumented, debug command
+          *)
+          "disable_bracket_matcher_design_colors",
+          (*
+          nable_bracket_matcher_display_insertion_text is an undocumented, debug command
+          *)
           "enable_bracket_matcher_display_insertion_text",
-          "disable_bracket_matcher_display_insertion_text" *)
+          (*
+          disable_bracket_matcher_display_insertion_text is an undocumented, debug command
+          *)
+          "disable_bracket_matcher_display_insertion_text"
         }
       |>}, Flatten]
   ];
