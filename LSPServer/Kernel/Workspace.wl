@@ -83,6 +83,9 @@ Module[{params, id, command},
       $BracketMatcherDisplayInsertionText = False;
       {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}
     ,
+    (*
+    roundtrip_responsiveness_test is an undocumented, debug command
+    *)
     "roundtrip_responsiveness_test",
 
       If[$Debug2, log["roundtrip_responsiveness_test:> \n\n"]];
@@ -90,12 +93,18 @@ Module[{params, id, command},
 
       {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <|"method" -> "roundTripTest"|>}
     ,
+    (*
+    ping_pong_responsiveness_test is an undocumented, debug command
+    *)
     "ping_pong_responsiveness_test",
 
       If[$Debug2, log["ping_pong_responsiveness_test:> \n\n"]];
 
       {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <|"method" -> "pingPongTest"|>}    
     ,
+    (*
+    payload_responsiveness_test is an undocumented, debug command
+    *)
     "payload_responsiveness_test",
 
       If[$Debug2, log["payload_responsiveness_test:> \n\n"]];

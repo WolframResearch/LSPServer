@@ -199,7 +199,20 @@ $ML4CodeTimeLimit = 0.4
 
 
 $ExecuteCommandProvider = <|
-  "commands" -> {}
+  "commands" -> {
+    (*
+    roundtrip_responsiveness_test is an undocumented, debug command
+    *)
+    "roundtrip_responsiveness_test",
+    (*
+    ping_pong_responsiveness_test is an undocumented, debug command
+    *)
+    "ping_pong_responsiveness_test",
+    (*
+    payload_responsiveness_test is an undocumented, debug command
+    *)
+    "payload_responsiveness_test"
+  }
 |>
 
 
@@ -974,10 +987,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
           (*
           disable_bracket_matcher_display_insertion_text is an undocumented, debug command
           *)
-          "disable_bracket_matcher_display_insertion_text",
-          "roundtrip_responsiveness_test",
-          "ping_pong_responsiveness_test",
-          "payload_responsiveness_test"
+          "disable_bracket_matcher_display_insertion_text"
         }
       |>}, Flatten]
   ];
