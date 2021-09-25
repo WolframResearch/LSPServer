@@ -17,9 +17,6 @@ $MinimumRecommendedCodeToolsVersion = 1.2
 $MinimumRecommendedKernelVersion = 12.1
 
 
-$DoAfterInitialize = True
-
-
 RunServerDiagnostic[command:{_String...}] :=
   Catch[
   Module[{proc, stdIn, stdOut, assoc, bytes, str, cases, case, len, content, lenStr, runPosition, run, toTest,
@@ -132,9 +129,7 @@ RunServerDiagnostic[command:{_String...}] :=
     initialize
     *)
     assoc = <|"method" -> "initialize", "id" -> 1, "params" -> <|
-        "initializationOptions" -> <|
-          "afterInitialize" -> $DoAfterInitialize
-        |>,
+        "initializationOptions" -> <||>,
         "capabilities" -> <|
           "textDocument" -> <|
             "codeAction" -> <||>
@@ -217,77 +212,6 @@ RunServerDiagnostic[command:{_String...}] :=
     Print["initialize was successful."];
 
 
-    If[$DoAfterInitialize,
-    (*
-    afterInitialize
-    *)
-    Pause[0.2];
-
-    If[ProcessStatus[proc] != "Running",
-      Print["ERROR: Language Server kernel is not running after writing initialize; exiting hard"];
-      Throw[exitHard[proc]]
-    ];
-
-    (*
-    it is a property of ProcessLink that ReadByteArray[stdOut, EndOfBuffer] will return {} if there is no content yet
-    *)
-    bytes = ReadByteArray[stdOut, EndOfBuffer];
-    If[bytes === EndOfFile,
-      Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
-    ];
-    
-    While[bytes === {} && str == "",
-      Pause[0.1];
-      bytes = ReadByteArray[stdOut, EndOfBuffer];
-      If[bytes === EndOfFile,
-        Print["ERROR: Unexpected EndOfFile; exiting hard"];
-        Throw[exitHard[proc]]
-      ];
-    ];
-    str = str <> ByteArrayToString[bytes];
-    (*
-    Do one more read after sufficient time
-    *)
-    Pause[0.2];
-    bytes = ReadByteArray[stdOut, EndOfBuffer];
-    If[bytes === EndOfFile,
-      Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
-    ];
-    str = str <> ByteArrayToString[bytes];
-
-    If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
-
-      Print["Read from language server kernel:"];
-      Print[str];
-      diagnoseStdOut[str];
-
-      Print["ERROR: Unrecognized header; exiting hard"];
-      Throw[exitHard[proc]]
-    ];
-
-    case = cases[[1]];
-    {lenStr, contentStr} = case;
-    len = ToExpression[lenStr];
-
-    If[!TrueQ[len <= StringLength[contentStr]],
-
-      Print["Read from language server kernel:"];
-      Print[str];
-
-      Print["ERROR: Bad Content-Length; exiting hard 1"];
-      Throw[exitHard[proc]]
-    ];
-
-    (*
-    
-    *)
-    str = StringDrop[contentStr, len];
-    contentStr = StringTake[contentStr, len];
-
-    Print["after initialize."];
-    ];
 
 
     (*
