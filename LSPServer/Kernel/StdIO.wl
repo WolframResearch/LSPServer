@@ -85,36 +85,40 @@ TryQueue["StdIO"] :=
       ]
     ];
 
-    LockQueue[];
+    (*
+    NOTE: when targeting 12.2 as minimum source version, Internal`WithLocalSettings -> WithCleanup
+    *)
+    Internal`WithLocalSettings[
+      LockQueue[]
+      ,
 
-    queueSize = GetQueueSize[];
+      queueSize = GetQueueSize[];
 
-    If[queueSize == 0,
+      If[queueSize == 0,
+        Throw[Null]
+      ];
 
-      UnlockQueue[];
+      If[$Debug2,
+          log["\n\n"];
+          log["messages in queue: ", queueSize];
+          log["\n\n"]
+      ];
 
-      Throw[Null]
+      bytessIn = {};
+      Do[
+
+        frontMessageSize = GetFrontMessageSize[];
+
+        bytes = PopQueue[frontMessageSize];
+
+        AppendTo[bytessIn, bytes]
+        , 
+        queueSize
+      ]
+
+      ,
+      UnlockQueue[]
     ];
-
-    If[$Debug2,
-        log["\n\n"];
-        log["messages in queue: ", queueSize];
-        log["\n\n"]
-    ];
-
-    bytessIn = {};
-    Do[
-
-      frontMessageSize = GetFrontMessageSize[];
-
-      bytes = PopQueue[frontMessageSize];
-
-      AppendTo[bytessIn, bytes]
-      , 
-      queueSize
-    ];
-
-    UnlockQueue[];
 
     contentsIn = {};
     Do[
