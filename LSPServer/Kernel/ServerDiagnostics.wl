@@ -22,30 +22,42 @@ RunServerDiagnostic[command:{_String...}] :=
   Module[{proc, stdIn, stdOut, assoc, bytes, str, cases, case, len, content, lenStr, runPosition, run, toTest,
     lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
     lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate,
-    contentStr, res, kernelVersion, startServerString, startServer, startServerArgs},
+    contentStr, res, kernelVersion, startServerString, startServer, startServerArgs, serverStartTime, serverInitializeTime},
 
     Print["Running Language Server diagnostic..."];
 
+    Print[];
+    Print["Kernel that is running RunServerDiagnostic[] ($CommandLine[[1]]): ", $CommandLine[[1]]];
+    Print["Kernel that RunServerDiagnostic[] will start (RunServerDiagnostic[{kernel, ...}]): ", command[[1]]];
+    If[command[[1]] =!= $CommandLine[[1]],
+      Print["ERROR: RunServerDiagnostic[] must be run with same kernel that RunServerDiagnostic[] will start."];
+      Throw[False]
+    ];
     If[!StringStartsQ[ToLowerCase[FileBaseName[command[[1]]]], "wolframkernel"],
       Print["WARNING: Command for Wolfram Language Server does not start with 'WolframKernel': ", command[[1]]];
     ];
+    Print[];
+
     If[!MemberQ[command, "-noinit"],
       Print["WARNING: -noinit is not in command"];
     ];
     If[!MemberQ[command, "-noprompt"],
       Print["ERROR: -noprompt is not in command"];
+      Throw[False]
     ];
     If[!MemberQ[command, "-nopaclet"],
       Print["WARNING: -nopaclet is not in command"];
     ];
     If[!MemberQ[command, "-noicon"],
       Print["ERROR: -noicon is not in command"];
+      Throw[False]
     ];
     If[!MemberQ[command, "-nostartuppaclets"],
       Print["WARNING: -nostartuppaclets is not in command"];
     ];
     If[!MemberQ[command, "-run"],
       Print["ERROR: -run is not in command"];
+      Throw[False]
     ];
 
 
@@ -110,8 +122,16 @@ RunServerDiagnostic[command:{_String...}] :=
     ];
 
 
+    serverStartTime = Now;
+
     Print["Starting Language Server kernel with command: ", command];
     proc = StartProcess[command];
+
+    (*
+    Only kill process here
+    Do not Print anything, Print output in a task will go to Messages Window
+    *)
+    $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
 
     Print[];
     Print["If any messages are printed below, they must be fixed."];
@@ -149,7 +169,8 @@ RunServerDiagnostic[command:{_String...}] :=
 
     If[ProcessStatus[proc] != "Running",
       Print["ERROR: Language Server kernel is not running after writing initialize; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     (*
@@ -158,14 +179,26 @@ RunServerDiagnostic[command:{_String...}] :=
     bytes = ReadByteArray[stdOut, EndOfBuffer];
     If[bytes === EndOfFile,
       Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
+    ];
+    If[MatchQ[bytes, _ReadByteArray],
+      Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+      exitHard[proc];
+      Throw[False]
     ];
     While[bytes === {} && str == "",
       Pause[0.1];
       bytes = ReadByteArray[stdOut, EndOfBuffer];
       If[bytes === EndOfFile,
         Print["ERROR: Unexpected EndOfFile; exiting hard"];
-        Throw[exitHard[proc]]
+        exitHard[proc];
+      Throw[False]
+      ];
+      If[MatchQ[bytes, _ReadByteArray],
+        Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+        exitHard[proc];
+        Throw[False]
       ];
     ];
     str = str <> ByteArrayToString[bytes];
@@ -176,7 +209,13 @@ RunServerDiagnostic[command:{_String...}] :=
     bytes = ReadByteArray[stdOut, EndOfBuffer];
     If[bytes === EndOfFile,
       Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
+    ];
+    If[MatchQ[bytes, _ReadByteArray],
+      Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+      exitHard[proc];
+      Throw[False]
     ];
     str = str <> ByteArrayToString[bytes];
 
@@ -187,7 +226,8 @@ RunServerDiagnostic[command:{_String...}] :=
       diagnoseStdOut[str];
 
       Print["ERROR: Unrecognized header; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     case = cases[[1]];
@@ -200,18 +240,15 @@ RunServerDiagnostic[command:{_String...}] :=
       Print[str];
 
       Print["ERROR: Bad Content-Length; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
-    (*
-    
-    *)
     str = StringDrop[contentStr, len];
-    contentStr = StringTake[contentStr, len];
+
+    serverInitializeTime = Now;
 
     Print["initialize was successful."];
-
-
 
 
     (*
@@ -228,7 +265,8 @@ RunServerDiagnostic[command:{_String...}] :=
 
     If[ProcessStatus[proc] != "Running",
       Print["ERROR: Language Server kernel is not running after writing diagnostics; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     (*
@@ -237,14 +275,26 @@ RunServerDiagnostic[command:{_String...}] :=
     bytes = ReadByteArray[stdOut, EndOfBuffer];
     If[bytes === EndOfFile,
       Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
+    ];
+    If[MatchQ[bytes, _ReadByteArray],
+      Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+      exitHard[proc];
+      Throw[False]
     ];
     While[bytes === {} && str == "",
       Pause[0.1];
       bytes = ReadByteArray[stdOut, EndOfBuffer];
       If[bytes === EndOfFile,
         Print["ERROR: Unexpected EndOfFile; exiting hard"];
-        Throw[exitHard[proc]]
+        exitHard[proc];
+        Throw[False]
+      ];
+      If[MatchQ[bytes, _ReadByteArray],
+        Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+        exitHard[proc];
+        Throw[False]
       ];
     ];
     str = str <> ByteArrayToString[bytes];
@@ -255,7 +305,13 @@ RunServerDiagnostic[command:{_String...}] :=
     bytes = ReadByteArray[stdOut, EndOfBuffer];
     If[bytes === EndOfFile,
       Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
+    ];
+    If[MatchQ[bytes, _ReadByteArray],
+      Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+      exitHard[proc];
+      Throw[False]
     ];
     str = str <> ByteArrayToString[bytes];
 
@@ -266,7 +322,8 @@ RunServerDiagnostic[command:{_String...}] :=
       diagnoseStdOut[str];
 
       Print["ERROR: Unrecognized header; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     case = cases[[1]];
@@ -279,12 +336,10 @@ RunServerDiagnostic[command:{_String...}] :=
       Print[str];
 
       Print["ERROR: Bad Content-Length; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
-    (*
-    
-    *)
     str = StringDrop[contentStr, len];
     contentStr = StringTake[contentStr, len];
 
@@ -338,7 +393,8 @@ RunServerDiagnostic[command:{_String...}] :=
 
     If[ProcessStatus[proc] != "Running",
       Print["ERROR: Language Server kernel is not running after writing shutdown; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     (*
@@ -347,14 +403,26 @@ RunServerDiagnostic[command:{_String...}] :=
     bytes = ReadByteArray[stdOut, EndOfBuffer];
     If[bytes === EndOfFile,
       Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
+    ];
+    If[MatchQ[bytes, _ReadByteArray],
+      Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+      exitHard[proc];
+      Throw[False]
     ];
     While[bytes === {} && str == "",
       Pause[0.1];
       bytes = ReadByteArray[stdOut, EndOfBuffer];
       If[bytes === EndOfFile,
         Print["ERROR: Unexpected EndOfFile; exiting hard"];
-        Throw[exitHard[proc]]
+        exitHard[proc];
+        Throw[False]
+      ];
+      If[MatchQ[bytes, _ReadByteArray],
+        Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+        exitHard[proc];
+        Throw[False]
       ];
     ];
     str = str <> ByteArrayToString[bytes];
@@ -365,7 +433,13 @@ RunServerDiagnostic[command:{_String...}] :=
     bytes = ReadByteArray[stdOut, EndOfBuffer];
     If[bytes === EndOfFile,
       Print["ERROR: Unexpected EndOfFile; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
+    ];
+    If[MatchQ[bytes, _ReadByteArray],
+      Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
+      exitHard[proc];
+      Throw[False]
     ];
     str = str <> ByteArrayToString[bytes];
 
@@ -375,7 +449,8 @@ RunServerDiagnostic[command:{_String...}] :=
       Print[str];
 
       Print["ERROR: Unrecognized header; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     case = cases[[1]];
@@ -388,12 +463,10 @@ RunServerDiagnostic[command:{_String...}] :=
       Print[str];
 
       Print["ERROR: Bad Content-Length; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
-
-    (*
     
-    *)
     str = StringDrop[contentStr, len];
     contentStr = StringTake[contentStr, len];
 
@@ -415,10 +488,20 @@ RunServerDiagnostic[command:{_String...}] :=
 
     If[ProcessStatus[proc] != "Finished",
       Print["ERROR: Language Server kernel is not finished; exiting hard"];
-      Throw[exitHard[proc]]
+      exitHard[proc];
+      Throw[False]
     ];
 
     Print["exit was successful."];
+
+    TaskRemove[$timeoutTask];
+
+    Print["INFO: Time to initialize server: ", (serverInitializeTime - serverStartTime)];
+
+    If[(serverInitializeTime - serverStartTime) > Quantity[10, "Seconds"],
+      Print["ERROR: Time to initialize server was greater than 10 seconds"];
+      Throw[False]
+    ];
 
     Print["No problems found."];
 
@@ -612,22 +695,39 @@ handleContent[content:KeyValuePattern["method" -> "diagnostics"]] :=
 
 
 exitHard[proc_] :=
-  Module[{code},
+Catch[
+Module[{code},
 
-    reportStdOut[proc];
-    reportStdErr[proc];
+  reportStdOut[proc];
+  reportStdErr[proc];
 
-    If[ProcessStatus[proc] != "Finished",
-      Print["Killing process"];
-      KillProcess[proc];
-    ];
+  If[$timeout,
+    Print["Process timed out after 30 seconds."];
 
     code = ProcessInformation[proc, "ExitCode"];
+    Print["INFO: Exit code: ", code];
 
-    Print["Exit code: ", code];
+    Throw[Null]
+  ];
 
-    False
-  ]
+  TaskRemove[$timeoutTask];
+
+  If[ProcessStatus[proc] == "Finished",
+    
+    Print["Process already finished."];
+
+    code = ProcessInformation[proc, "ExitCode"];
+    Print["INFO: Exit code: ", code];
+    
+    Throw[Null]
+  ];
+
+  Print["Killing process."];
+  KillProcess[proc];
+
+  code = ProcessInformation[proc, "ExitCode"];
+  Print["INFO: Exit code: ", code];
+]]
 
 
 (*
@@ -648,6 +748,10 @@ reportStdOut[proc_] :=
           Print[str]
         ,
         arr === EndOfFile,
+          Break[]
+        ,
+        MatchQ[arr, _ReadByteArray],
+          Print["error reading stdout from language server: ReadByteArray returned unevaluated"];
           Break[]
         ,
         True,
@@ -672,6 +776,10 @@ reportStdErr[proc_] :=
           Print[str]
         ,
         arr === EndOfFile,
+          Break[]
+        ,
+        MatchQ[arr, _ReadByteArray],
+          Print["error reading stderr from language server: ReadByteArray returned unevaluated"];
           Break[]
         ,
         True,
