@@ -599,22 +599,45 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
   build date checking
   *)
 
+  Quiet[
+  Check[
   lspServerBuildDate = DateObject[{lspServerBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  ,
+  warningFunc["Messages while parsing LSPServer BuildDate: " <> ToString[$MessageList]]
+  ]];
+
+  Quiet[
+  Check[
   codeParserBuildDate = DateObject[{codeParserBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  ,
+  warningFunc["Messages while parsing CodeParser BuildDate: " <> ToString[$MessageList]]
+  ]];
+
+  Quiet[
+  Check[
   codeInspectorBuildDate = DateObject[{codeInspectorBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  ,
+  warningFunc["Messages while parsing CodeInspector BuildDate: " <> ToString[$MessageList]]
+  ]];
+
+  Quiet[
+  Check[
   codeFormatterBuildDate = DateObject[{codeFormatterBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  ,
+  warningFunc["Messages while parsing CodeFormatter BuildDate: " <> ToString[$MessageList]]
+  ]];
 
   If[!DateObjectQ[lspServerBuildDate],
-    warningFunc["LSPServer BuildDate cannot be parsed: " <> ToString[lspServerBuildDate]]
+    warningFunc["LSPServer BuildDate cannot be parsed: " <> ToString[lspServerBuildDate, InputForm]]
   ];
   If[!DateObjectQ[codeParserBuildDate],
-    warningFunc["CodeParser BuildDate cannot be parsed: " <> ToString[codeParserBuildDate]]
+    warningFunc["CodeParser BuildDate cannot be parsed: " <> ToString[codeParserBuildDate, InputForm]]
   ];
   If[!DateObjectQ[codeInspectorBuildDate],
-    warningFunc["CodeInspector BuildDate cannot be parsed: " <> ToString[codeInspectorBuildDate]]
+    warningFunc["CodeInspector BuildDate cannot be parsed: " <> ToString[codeInspectorBuildDate, InputForm]]
   ];
   If[!DateObjectQ[codeFormatterBuildDate],
-    warningFunc["CodeFormatter BuildDate cannot be parsed: " <> ToString[codeFormatterBuildDate]]
+    warningFunc["CodeFormatter BuildDate cannot be parsed: " <> ToString[codeFormatterBuildDate, InputForm]]
   ];
 
   quantity10Days = Quantity[10, "Days"];
