@@ -116,6 +116,17 @@ set(GENERATED_WL_PACLET_KERNEL_SOURCES
 CheckWolframKernel()
 CheckPacletInfo()
 
+#
+# Force re-configure if PacletInfo.wl.in changes, e.g. paclet version is changed and name of .paclet has changed
+#
+set_property(
+	DIRECTORY
+	APPEND
+	PROPERTY
+		CMAKE_CONFIGURE_DEPENDS
+	${PACLETINFO_IN_SOURCE}
+)
+
 
 #
 # Version 12 introduced NumericArrays in LibraryLink
