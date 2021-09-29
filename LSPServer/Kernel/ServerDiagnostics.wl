@@ -30,7 +30,7 @@ RunServerDiagnostic[command:{_String...}] :=
     Print["Kernel that is running RunServerDiagnostic[] ($CommandLine[[1]]): ", $CommandLine[[1]]];
     Print["Kernel that RunServerDiagnostic[] will start (RunServerDiagnostic[{kernel, ...}]): ", command[[1]]];
     If[command[[1]] =!= $CommandLine[[1]],
-      Print["ERROR: RunServerDiagnostic[] must be run with same kernel that RunServerDiagnostic[] will start."];
+      Print["WARNING: RunServerDiagnostic[] should be run with same kernel that RunServerDiagnostic[] will start."];
       Throw[False]
     ];
     If[!StringStartsQ[ToLowerCase[FileBaseName[command[[1]]]], "wolframkernel"],
