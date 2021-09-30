@@ -725,9 +725,6 @@ exitHard[proc_] :=
 Catch[
 Module[{code},
 
-  reportStdOut[proc];
-  reportStdErr[proc];
-
   If[$timeout,
     Print["Process timed out after 30 seconds."];
 
@@ -738,6 +735,9 @@ Module[{code},
   ];
 
   TaskRemove[$timeoutTask];
+
+  reportStdOut[proc];
+  reportStdErr[proc];
 
   If[ProcessStatus[proc] == "Finished",
     
@@ -769,20 +769,22 @@ reportStdOut[proc_] :=
       arr = ReadByteArray[stdOut, EndOfBuffer];
 
       Which[
+        arr == {},
+          Print["INFO: stdout from language server: (empty)"];
+        ,
         ByteArrayQ[arr],
           str = ByteArrayToString[arr];
-          Print["stdout from language server:"];
-          Print[str]
+          Print["INFO: stdout from language server: ", str];
         ,
         arr === EndOfFile,
           Break[]
         ,
         MatchQ[arr, _ReadByteArray],
-          Print["error reading stdout from language server: ReadByteArray returned unevaluated"];
+          Print["ERROR: stdout from language server: << ReadByteArray returned unevaluated >>"];
           Break[]
         ,
         True,
-          Print["error reading stdout from language server: ", arr];
+          Print["ERROR: stdout from language server: ", arr];
           Break[]
       ]
     ]
@@ -797,20 +799,22 @@ reportStdErr[proc_] :=
       arr = ReadByteArray[stdErr, EndOfBuffer];
 
       Which[
+        arr == {},
+          Print["INFO: stderr from language server: (empty)"];
+        ,
         ByteArrayQ[arr],
           str = ByteArrayToString[arr];
-          Print["stderr from language server:"];
-          Print[str]
+          Print["INFO: stderr from language server: ", str];
         ,
         arr === EndOfFile,
           Break[]
         ,
         MatchQ[arr, _ReadByteArray],
-          Print["error reading stderr from language server: ReadByteArray returned unevaluated"];
+          Print["ERROR: stderr from language server: << ReadByteArray returned unevaluated >>"];
           Break[]
         ,
         True,
-          Print["error reading stderr from language server: ", arr];
+          Print["ERROR: stderr from language server: ", arr];
           Break[]
       ]
     ]
