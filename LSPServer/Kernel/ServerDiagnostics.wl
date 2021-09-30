@@ -26,12 +26,16 @@ RunServerDiagnostic[command:{_String...}] :=
 
     Print["Running Language Server diagnostic..."];
 
+    If[$startupMessagesText =!= "",
+      Print["There were messages when loading LSPServer` package: ", $startupMessagesText];
+      Throw[False]
+    ];
+
     Print[];
     Print["Kernel that is running RunServerDiagnostic[] ($CommandLine[[1]]): ", $CommandLine[[1]]];
     Print["Kernel that RunServerDiagnostic[] will start (RunServerDiagnostic[{kernel, ...}]): ", command[[1]]];
     If[command[[1]] =!= $CommandLine[[1]],
       Print["WARNING: RunServerDiagnostic[] should be run with same kernel that RunServerDiagnostic[] will start."];
-      Throw[False]
     ];
     If[!StringStartsQ[ToLowerCase[FileBaseName[command[[1]]]], "wolframkernel"],
       Print["WARNING: Command for Wolfram Language Server does not start with 'WolframKernel': ", command[[1]]];

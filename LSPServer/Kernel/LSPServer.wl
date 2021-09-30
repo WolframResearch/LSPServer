@@ -83,6 +83,9 @@ $DiagnosticsDelayAfterLastChange
 $ImplicitTokensDelayAfterLastChange
 
 
+$startupMessagesText
+
+
 Begin["`Private`"]
 
 
@@ -468,7 +471,7 @@ Module[{logFile, logFileStream,
 
   If[$startupMessagesText =!= "",
     log["\n\n"];
-    log["There were messages on startup: ", $startupMessagesText];
+    log["There were messages when loading LSPServer` package: ", $startupMessagesText];
     log["\n\n"];
     
     exitHard[]
