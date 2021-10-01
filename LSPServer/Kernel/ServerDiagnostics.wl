@@ -605,28 +605,37 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
 
   Quiet[
   Check[
+  (*
+  Was:
   lspServerBuildDate = DateObject[{lspServerBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  
+  but as discussed here:
+  https://github.com/WolframResearch/vscode-wolfram/issues/2
+
+  it is more robust to use FromDateString with "Language" -> "en" option
+  *)
+  lspServerBuildDate = FromDateString[lspServerBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
   ,
   warningFunc["Messages while parsing LSPServer BuildDate: " <> ToString[$MessageList]]
   ]];
 
   Quiet[
   Check[
-  codeParserBuildDate = DateObject[{codeParserBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  codeParserBuildDate = FromDateString[codeParserBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
   ,
   warningFunc["Messages while parsing CodeParser BuildDate: " <> ToString[$MessageList]]
   ]];
 
   Quiet[
   Check[
-  codeInspectorBuildDate = DateObject[{codeInspectorBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  codeInspectorBuildDate = FromDateString[codeInspectorBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
   ,
   warningFunc["Messages while parsing CodeInspector BuildDate: " <> ToString[$MessageList]]
   ]];
 
   Quiet[
   Check[
-  codeFormatterBuildDate = DateObject[{codeFormatterBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+  codeFormatterBuildDate = FromDateString[codeFormatterBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
   ,
   warningFunc["Messages while parsing CodeFormatter BuildDate: " <> ToString[$MessageList]]
   ]];
