@@ -167,8 +167,19 @@ RunServerDiagnostic[command:{_String...}] :=
     str = "";
 
     Print["Writing initialize..."];
-    BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
-    BinaryWrite[stdIn, bytes];
+    res = Quiet[BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"], {BinaryWrite::errfile}]
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+    res = Quiet[BinaryWrite[stdIn, bytes], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+
     Pause[0.2];
 
     If[ProcessStatus[proc] != "Running",
@@ -197,7 +208,7 @@ RunServerDiagnostic[command:{_String...}] :=
       If[bytes === EndOfFile,
         Print["ERROR: Unexpected EndOfFile; exiting hard"];
         exitHard[proc];
-      Throw[False]
+        Throw[False]
       ];
       If[MatchQ[bytes, _ReadByteArray],
         Print["ERROR: ReadByteArray returned unevaluated; exiting hard"];
@@ -263,8 +274,19 @@ RunServerDiagnostic[command:{_String...}] :=
     len = Length[bytes];
 
     Print["Writing diagnostics..."];
-    BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
-    BinaryWrite[stdIn, bytes];
+    res = Quiet[BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+    res = Quiet[BinaryWrite[stdIn, bytes], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+    
     Pause[0.2];
 
     If[ProcessStatus[proc] != "Running",
@@ -391,8 +413,19 @@ RunServerDiagnostic[command:{_String...}] :=
     len = Length[bytes];
 
     Print["Writing shutdown..."];
-    BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
-    BinaryWrite[stdIn, bytes];
+    res = Quiet[BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+    res = Quiet[BinaryWrite[stdIn, bytes], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+
     Pause[0.2];
 
     If[ProcessStatus[proc] != "Running",
@@ -485,8 +518,18 @@ RunServerDiagnostic[command:{_String...}] :=
     len = Length[bytes];
 
     Print["Writing exit..."];
-    BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
-    BinaryWrite[stdIn, bytes];
+    res = Quiet[BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
+    res = Quiet[BinaryWrite[stdIn, bytes], {BinaryWrite::errfile}];
+    If[FailureQ[res],
+      Print["ERROR: BinaryWrite failed; exiting hard"];
+      exitHard[proc];
+      Throw[False]
+    ];
 
     Pause[2.0];
 
@@ -774,11 +817,12 @@ reportStdOut[proc_] :=
     stdOut = ProcessConnection[proc, "StandardOutput"];
 
     While[True,
-
+      Pause[0.1];
+      
       arr = ReadByteArray[stdOut, EndOfBuffer];
 
       Which[
-        arr == {},
+        arr === {},
           Print["INFO: stdout from language server: (empty)"];
         ,
         ByteArrayQ[arr],
@@ -804,11 +848,12 @@ reportStdErr[proc_] :=
     stdErr = ProcessConnection[proc, "StandardError"];
 
     While[True,
+      Pause[0.1];
 
       arr = ReadByteArray[stdErr, EndOfBuffer];
 
       Which[
-        arr == {},
+        arr === {},
           Print["INFO: stderr from language server: (empty)"];
         ,
         ByteArrayQ[arr],
