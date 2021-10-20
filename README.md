@@ -22,7 +22,7 @@ There are official Wolfram LSP clients for [Sublime Text](https://github.com/Wol
 
 LSPServer depends on [CodeParser paclet](https://github.com/WolframResearch/codeparser), [CodeInspector paclet](https://github.com/WolframResearch/codeinspector), and [CodeFormatter paclet](https://github.com/WolframResearch/codeformatter).
 
-<!-- LSPServer and its dependencies are included in Mathematica 13.0 and above. -->
+LSPServer and its dependencies are included in Mathematica 13.0 and above.
 
 Install LSPServer paclet and dependencies from the public paclet server:
 ```
