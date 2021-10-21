@@ -132,3 +132,51 @@ work around bug 410895, all quotes are stripped from StartProcess on Windows
 Experimental support for sockets
 
 Experimental support for multiple clients
+
+
+## 1.4 - 25 Oct, 2021
+
+Add Startup Message handling
+
+There may be internal errors in LSPServer that emit messages during Needs["LSPServer\`"]
+
+These messages are exceptionally hard to handle because any code for handling has not yet been loaded
+
+The messages may cause unexplained hangs in clients
+
+So manually set $Messages to a tmp file and then handle the messages later
+
+
+Do not allow PacletManager to participate in finding \`Generate\` files
+
+
+Add more features to RunServerDiagnostic:
+
+Print given kernel path and kernel path to-be-started, and check they are the same.
+
+Add a 30 second timeout for the while diagnostic.
+
+Keep track of how long initialize takes, and error if greater than 10 seconds
+
+
+Use Internal\`WithLocalSettings to protect against aborts when doing LockQueue / UnlockQueue
+
+
+RunServerDiagnostic: reduce "must be run with same kernel" to warning
+
+
+If there were messages when loading LSPServer\`, then report in the diagnostic
+
+
+use FromDateString with "Language" -> "en" for more robust date parsing
+
+
+### Fixes
+
+Various fixes for RunServerDiagnostic:
+
+BinaryWrite may fail, so check return value and quiet BinaryWrite::errfile
+
+If arr == {} returns unevaluated, then whole Which returns unevaluated
+
+
