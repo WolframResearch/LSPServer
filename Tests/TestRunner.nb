@@ -1,0 +1,2009 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 13.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     94578,       2001]
+NotebookOptionsPosition[     87581,       1910]
+NotebookOutlinePosition[     88055,       1928]
+CellTagsIndexPosition[     88012,       1925]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{"(*", "Quit", "*)"}]], "Input",
+ CellChangeTimes->{{3.770377061204683*^9, 3.7703770619388227`*^9}, 
+   3.8592773266412225`*^9, 3.860491178637617*^9, 3.866028377554782*^9},
+ CellLabel->"In[19]:=",ExpressionUUID->"48df1600-61e2-42d4-ad2c-cf2034601aaf"],
+
+Cell[CellGroupData[{
+
+Cell["LSPServer feature Test", "Title",
+ CellChangeTimes->{{3.7705338122588234`*^9, 3.7705338129509954`*^9}, {
+  3.7711494221956387`*^9, 3.7711494322418027`*^9}, {3.8556540551227293`*^9, 
+  3.8556540632171187`*^9}},ExpressionUUID->"278ce6fe-b41f-4d90-9414-\
+33af01c12892"],
+
+Cell["A notebook to test LSPServer feature communications.", "Text",
+ CellChangeTimes->{{3.8661685386989036`*^9, 
+  3.8661685708414583`*^9}},ExpressionUUID->"e35cc140-e13f-46af-b154-\
+46169f7a3473"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData[
+ RowBox[{"TestReport", "[", 
+  RowBox[{"FileNameJoin", "[", 
+   RowBox[{"{", 
+    RowBox[{
+     RowBox[{"NotebookDirectory", "[", "]"}], ",", "\"\<TestSuite.mt\>\""}], 
+    "}"}], "]"}], "]"}]], "Input",
+ CellLabel->"In[6]:=",ExpressionUUID->"ecadbe7c-398f-4aa4-87b8-58cc10999e1a"],
+
+Cell[CellGroupData[{
+
+Cell[BoxData["\<\"Running Language Server diagnostic...\"\>"], "Print",
+ CellChangeTimes->{3.8716455255014863`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"dfad320e-9164-4067-bed2-9a239eead244"],
+
+Cell[BoxData["\<\"\"\>"], "Print",
+ CellChangeTimes->{3.871645525521485*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"eb978e43-68d2-4295-80a8-b6279b25ec48"],
+
+Cell[BoxData["\<\"IMPORTANT: Make sure that all other kernels are shut down \
+before running this diagnostic.\"\>"], "Print",
+ CellChangeTimes->{3.8716455255314837`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"bfe56773-69e1-4214-aa47-9dadef296555"],
+
+Cell[BoxData["\<\"Transient license limit errors may give false \
+negatives.\"\>"], "Print",
+ CellChangeTimes->{3.871645525541483*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"d28db251-ad5f-4949-887f-45503ba0ebcd"],
+
+Cell[BoxData["\<\"\"\>"], "Print",
+ CellChangeTimes->{3.871645525551488*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"b87e771d-1e12-499c-898d-b9c68bda65db"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel: \"\>", 
+   "\[InvisibleSpace]", "\<\"WolframKernel\"\>"}],
+  SequenceForm["INFORMATION: Host Kernel: ", "WolframKernel"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525551488*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"a23f8ef0-e25e-4148-89eb-9054786b9aa4"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel version: \"\>", "\[InvisibleSpace]", 
+   TagBox[
+    InterpretationBox[
+     StyleBox["\<\"13.1\"\>",
+      ShowStringCharacters->False],
+     13.1,
+     AutoDelete->True],
+    NumberForm[#, {3, 1}]& ]}],
+  SequenceForm["INFORMATION: Host Kernel version: ", 
+   NumberForm[13.1, {3, 1}]],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455255714808`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"7b902132-e794-401f-b867-c1a0066aae6d"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel Directory[]: \"\>", 
+   "\[InvisibleSpace]", \
+"\<\"F:\\\\WRI\\\\Repo\\\\CodeTools\\\\lspserver\\\\Tests\"\>"}],
+  SequenceForm[
+  "INFORMATION: Host Kernel Directory[]: ", 
+   "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.87164552558148*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"19e87365-6071-4daa-8dc3-c77957b93b94"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel $MaxLicenseProcesses: \"\>", 
+   "\[InvisibleSpace]", "8"}],
+  SequenceForm["INFORMATION: Host Kernel $MaxLicenseProcesses: ", 8],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525591479*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"9d121608-4c54-4ff1-8228-72c5540c316c"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel LSPServer version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Host Kernel LSPServer version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525611479*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"1b612c11-be53-49e2-b41d-670c047bab7d"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel CodeParser version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Host Kernel CodeParser version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525621477*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"83244d1c-a741-41e1-99d4-6bf7884a4612"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel CodeInspector version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Host Kernel CodeInspector version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525631477*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"47fc4913-9b58-4826-bc22-0c21a2466f00"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel CodeFormatter version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Host Kernel CodeFormatter version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525631477*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"8312e244-4228-4ce0-90ce-8cb217ef0600"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel LSPServer build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 08 Sep 2022 22:04:20\"\>"}],
+  SequenceForm[
+  "INFORMATION: Host Kernel LSPServer build date: ", 
+   "Thu 08 Sep 2022 22:04:20"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455256414766`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"fc968001-4b99-4a3b-8259-55a034c7a7f7"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel CodeParser build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 01 Sep 2022 20:59:45\"\>"}],
+  SequenceForm[
+  "INFORMATION: Host Kernel CodeParser build date: ", 
+   "Thu 01 Sep 2022 20:59:45"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525651477*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"92e83715-a301-45d9-a07c-33746ebaabc5"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel CodeInspector build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 28 Jul 2022 17:40:56\"\>"}],
+  SequenceForm[
+  "INFORMATION: Host Kernel CodeInspector build date: ", 
+   "Thu 28 Jul 2022 17:40:56"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525661478*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"6a062db6-8306-4cec-8975-6c7da31fe7d6"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Host Kernel CodeFormatter build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 28 Jul 2022 17:39:48\"\>"}],
+  SequenceForm[
+  "INFORMATION: Host Kernel CodeFormatter build date: ", 
+   "Thu 28 Jul 2022 17:39:48"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455256714745`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"f9aaca43-2ea9-4026-9dfb-c394742b43f6"],
+
+Cell[BoxData["\<\"\"\>"], "Print",
+ CellChangeTimes->{3.8716455256714745`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"bd506ea9-3919-4a9b-a663-690b84ede58c"],
+
+Cell[BoxData["\<\"Start Stage 1\"\>"], "Print",
+ CellChangeTimes->{3.8716455256814747`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"15762882-7b48-4a3e-881d-8d62bc54249e"],
+
+Cell[BoxData["\<\"Checking whether bug 410895 is present and work-around is \
+needed...\"\>"], "Print",
+ CellChangeTimes->{3.871645525691473*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"7ccd25cd-bfbd-426d-a996-65cb64aaab33"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Starting Mini Server kernel with command: \"\>", 
+   "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{"\<\"C:\\\\Program Files\\\\Wolfram \
+Research\\\\Mathematica\\\\13.1\\\\WolframKernel.exe\"\>", 
+     ",", "\<\"-noinit\"\>", ",", "\<\"-noprompt\"\>", 
+     ",", "\<\"-nopaclet\"\>", ",", "\<\"-noicon\"\>", 
+     ",", "\<\"-nostartuppaclets\"\>", ",", "\<\"-run\"\>", 
+     ",", "\<\"Test410895[(*\\\"*)];ToExpression[FromCharacterCode[{78, 101, \
+101, 100, 115, 91, 34, 76, 83, 80, 83, 101, 114, 118, 101, 114, 96, 34, 93, \
+59, 76, 83, 80, 83, 101, 114, 118, 101, 114, 96, 83, 101, 114, 118, 101, 114, \
+68, 105, 97, 103, 110, 111, 115, 116, 105, 99, 115, 96, 83, 116, 97, 114, \
+116, 77, 105, 110, 105, 83, 101, 114, 118, 101, 114, 91, 93}]]\"\>"}], "}"}]}],
+  SequenceForm[
+  "Starting Mini Server kernel with command: ", {
+   "C:\\Program Files\\Wolfram \
+Research\\Mathematica\\13.1\\WolframKernel.exe", "-noinit", "-noprompt", 
+    "-nopaclet", "-noicon", "-nostartuppaclets", "-run", 
+    "Test410895[(*\"*)];ToExpression[FromCharacterCode[{78, 101, 101, 100, \
+115, 91, 34, 76, 83, 80, 83, 101, 114, 118, 101, 114, 96, 34, 93, 59, 76, 83, \
+80, 83, 101, 114, 118, 101, 114, 96, 83, 101, 114, 118, 101, 114, 68, 105, \
+97, 103, 110, 111, 115, 116, 105, 99, 115, 96, 83, 116, 97, 114, 116, 77, \
+105, 110, 105, 83, 101, 114, 118, 101, 114, 91, 93}]]"}],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645525701474*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"704f9f83-ef0a-43fc-ae70-c1d33a98434d"],
+
+Cell[BoxData["\<\"Waiting maximum of 30 seconds for any hangs.\"\>"], "Print",
+ CellChangeTimes->{3.8716455257114725`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"7d8bc4ec-d781-4aae-9bd2-2ea631f33a17"],
+
+Cell[BoxData["\<\"Sanity checking...\"\>"], "Print",
+ CellChangeTimes->{3.871645525721471*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"32b61fdc-9fe7-4d51-af00-5efd91b3c5b7"],
+
+Cell[BoxData["\<\"Sanity check was successful.\"\>"], "Print",
+ CellChangeTimes->{3.871645530230386*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"e60982a3-3216-4417-b832-31a3d18985ee"],
+
+Cell[BoxData["\<\"Testing bug 410895...\"\>"], "Print",
+ CellChangeTimes->{3.871645530250292*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"170c95ff-2457-40b1-a724-0fbc51e52837"],
+
+Cell[BoxData["\<\"double-quotes are kept; bug 410895 is NOT present; NO \
+work-around needed\"\>"], "Print",
+ CellChangeTimes->{3.87164553076085*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"af8d29cf-aa30-41b7-bcf3-583c5974b972"],
+
+Cell[BoxData["\<\"Testing bug 410895 was successful.\"\>"], "Print",
+ CellChangeTimes->{3.871645530780766*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"738785f5-2a20-453c-8f7b-1e9087f38ba7"],
+
+Cell[BoxData["\<\"Exiting...\"\>"], "Print",
+ CellChangeTimes->{3.871645530810754*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"efe96760-bf49-4623-9fec-b10a5c33cb16"],
+
+Cell[BoxData["\<\"waiting 2 seconds for exit...\"\>"], "Print",
+ CellChangeTimes->{3.871645530810754*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"5fe710a0-9d23-4731-9c3d-11bacae1aa3c"],
+
+Cell[BoxData["\<\"Exiting was successful.\"\>"], "Print",
+ CellChangeTimes->{3.871645532766778*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"5706a9ee-f2d8-459b-ba8e-bbb4756afac7"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFO: Exit code: \"\>", "\[InvisibleSpace]", "0"}],
+  SequenceForm["INFO: Exit code: ", 0],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455327967443`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"9afd8ef4-ace6-4065-8376-6449af0361df"],
+
+Cell[BoxData["\<\"Done Stage 1\"\>"], "Print",
+ CellChangeTimes->{3.8716455328067427`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"5bf0e9ad-a373-489d-8ddd-3a4bbdb22781"],
+
+Cell[BoxData["\<\"\"\>"], "Print",
+ CellChangeTimes->{3.8716455328267417`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"4720482b-1585-4d14-ac4e-917b8ec7c301"],
+
+Cell[BoxData["\<\"Start Stage 2\"\>"], "Print",
+ CellChangeTimes->{3.8716455328367405`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"5f082565-3d95-40d2-850b-ea7632e9dc73"],
+
+Cell[BoxData["\<\"Now running actual diagnostics...\"\>"], "Print",
+ CellChangeTimes->{3.87164553285674*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"0c0e0059-695d-4ab9-a82c-1a2405c320db"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"$WorkaroundBug410895: \"\>", "\[InvisibleSpace]", "False"}],
+  SequenceForm["$WorkaroundBug410895: ", False],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645532866737*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"d82a6128-264b-474b-9292-4564b6b2655f"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"Starting Language Server kernel with command: \"\>", 
+   "\[InvisibleSpace]", 
+   RowBox[{"{", 
+    RowBox[{"\<\"C:\\\\Program Files\\\\Wolfram \
+Research\\\\Mathematica\\\\13.1\\\\WolframKernel.exe\"\>", 
+     ",", "\<\"-noinit\"\>", ",", "\<\"-noprompt\"\>", 
+     ",", "\<\"-nopaclet\"\>", ",", "\<\"-noicon\"\>", 
+     ",", "\<\"-nostartuppaclets\"\>", ",", "\<\"-run\"\>", 
+     ",", "\<\"Needs[\\\"LSPServer`\\\"];LSPServer`StartServer[]\"\>"}], 
+    "}"}]}],
+  SequenceForm[
+  "Starting Language Server kernel with command: ", {
+   "C:\\Program Files\\Wolfram \
+Research\\Mathematica\\13.1\\WolframKernel.exe", "-noinit", "-noprompt", 
+    "-nopaclet", "-noicon", "-nostartuppaclets", "-run", 
+    "Needs[\"LSPServer`\"];LSPServer`StartServer[]"}],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645532876737*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"3ec6be5e-e6ca-48ae-8d02-8a6d8f018126"],
+
+Cell[BoxData["\<\"Waiting maximum of 30 seconds for any hangs.\"\>"], "Print",
+ CellChangeTimes->{3.8716455328867364`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"bfed6b75-eaee-4f07-94f9-4cf28c0f2983"],
+
+Cell[BoxData["\<\"Writing initialize message...\"\>"], "Print",
+ CellChangeTimes->{3.871645532896737*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"ac1374eb-d09e-4331-b8b3-8d6e3892b69f"],
+
+Cell[BoxData["\<\"initialize message was successful.\"\>"], "Print",
+ CellChangeTimes->{3.8716455374275923`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"b13965d1-47b2-4c11-ad19-f0ca77b3bf20"],
+
+Cell[BoxData["\<\"Writing diagnostics message...\"\>"], "Print",
+ CellChangeTimes->{3.871645537447505*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"445d1a75-a633-4cec-b414-6f95b85c1ed4"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel: \"\>", 
+   "\[InvisibleSpace]", "\<\"C:\\\\Program Files\\\\Wolfram \
+Research\\\\Mathematica\\\\13.1\\\\WolframKernel.exe\"\>"}],
+  SequenceForm[
+  "INFORMATION: Server Kernel: ", 
+   "C:\\Program Files\\Wolfram \
+Research\\Mathematica\\13.1\\WolframKernel.exe"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455379477153`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"3e1d20fa-a880-4964-957d-84b5a66ba6fe"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel $CommandLine //InputForm: \"\>", 
+   "\[InvisibleSpace]", 
+   InterpretationBox[
+    StyleBox[
+     RowBox[{"{", 
+      RowBox[{
+      "\"\<C:\\\\Program Files\\\\Wolfram \
+Research\\\\Mathematica\\\\13.1\\\\WolframKernel.exe\>\"", ",", " ", 
+       "\"\<-noinit\>\"", ",", " ", "\"\<-noprompt\>\"", ",", " ", 
+       "\"\<-nopaclet\>\"", ",", " ", "\"\<-noicon\>\"", ",", " ", 
+       "\"\<-nostartuppaclets\>\"", ",", " ", "\"\<-run\>\"", ",", " ", 
+       "\"\<Needs[\\\"LSPServer`\\\"];LSPServer`StartServer[]\>\""}], "}"}],
+     ShowStringCharacters->True,
+     NumberMarks->True],
+    InputForm[{
+     "C:\\Program Files\\Wolfram \
+Research\\Mathematica\\13.1\\WolframKernel.exe", "-noinit", "-noprompt", 
+      "-nopaclet", "-noicon", "-nostartuppaclets", "-run", 
+      "Needs[\"LSPServer`\"];LSPServer`StartServer[]"}],
+    AutoDelete->True,
+    Editable->True]}],
+  SequenceForm["INFORMATION: Server Kernel $CommandLine //InputForm: ", 
+   InputForm[{
+    "C:\\Program Files\\Wolfram \
+Research\\Mathematica\\13.1\\WolframKernel.exe", "-noinit", "-noprompt", 
+     "-nopaclet", "-noicon", "-nostartuppaclets", "-run", 
+     "Needs[\"LSPServer`\"];LSPServer`StartServer[]"}]],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455379777403`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"d0b0e7eb-5788-4c3c-ab0d-728b5501ab7b"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel Directory[]: \"\>", 
+   "\[InvisibleSpace]", \
+"\<\"F:\\\\WRI\\\\Repo\\\\CodeTools\\\\lspserver\\\\Tests\"\>"}],
+  SequenceForm[
+  "INFORMATION: Server Kernel Directory[]: ", 
+   "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455379877357`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"2923af2b-9325-4c62-9b0e-7150d54d9e6b"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel $VersionNumber: \"\>", 
+   "\[InvisibleSpace]", "\<\"13.1\"\>"}],
+  SequenceForm["INFORMATION: Server Kernel $VersionNumber: ", "13.1"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645538007717*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"62072b53-6ff7-413b-9e92-bbe7f4852547"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel $MaxLicenseProcesses: \"\>", 
+   "\[InvisibleSpace]", "\<\"8\"\>"}],
+  SequenceForm["INFORMATION: Server Kernel $MaxLicenseProcesses: ", "8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380176992`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"2e7e63e4-6aab-4358-87a8-ba9bdb4a6543"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel LSPServer version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Server Kernel LSPServer version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380176992`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"86a7453c-4961-446d-b933-6d0eafd6d58d"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel CodeParser version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Server Kernel CodeParser version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380277123`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"86ba8649-8813-4427-a506-abdc78912573"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel CodeInspector version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Server Kernel CodeInspector version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645538037693*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"452d6171-7ac4-4a65-ba9a-5cf7e3cdee39"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel CodeFormatter version: \"\>", 
+   "\[InvisibleSpace]", "\<\"1.8\"\>"}],
+  SequenceForm["INFORMATION: Server Kernel CodeFormatter version: ", "1.8"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.871645538037693*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"68ebff4b-e5ab-44b2-9600-4128aaa9a110"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel LSPServer build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 08 Sep 2022 22:04:20\"\>"}],
+  SequenceForm[
+  "INFORMATION: Server Kernel LSPServer build date: ", 
+   "Thu 08 Sep 2022 22:04:20"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380476933`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"0c87b667-ffed-4684-b6f8-c5b60892d2a6"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel CodeParser build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 01 Sep 2022 20:59:45\"\>"}],
+  SequenceForm[
+  "INFORMATION: Server Kernel CodeParser build date: ", 
+   "Thu 01 Sep 2022 20:59:45"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380577126`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"bdd73a22-670c-43d3-88d9-258ccbd9f603"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel CodeInspector build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 28 Jul 2022 17:40:56\"\>"}],
+  SequenceForm[
+  "INFORMATION: Server Kernel CodeInspector build date: ", 
+   "Thu 28 Jul 2022 17:40:56"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380677156`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"1aa42e20-3ba5-43b0-9a6f-5682b74d109b"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFORMATION: Server Kernel CodeFormatter build date: \"\>", 
+   "\[InvisibleSpace]", "\<\"Thu 28 Jul 2022 17:39:48\"\>"}],
+  SequenceForm[
+  "INFORMATION: Server Kernel CodeFormatter build date: ", 
+   "Thu 28 Jul 2022 17:39:48"],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455380677156`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"45b76d1b-9593-4950-adef-ef9d85191e43"],
+
+Cell[BoxData["\<\"diagnostics message was successful.\"\>"], "Print",
+ CellChangeTimes->{3.87164553807769*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"295a5ecb-99df-4efa-96db-bcb915dfdbe0"],
+
+Cell[BoxData["\<\"Writing shutdown message...\"\>"], "Print",
+ CellChangeTimes->{3.8716455380876904`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"c37bb3ff-3ad5-4094-82de-03902dd1ef3b"],
+
+Cell[BoxData["\<\"shutdown message was successful.\"\>"], "Print",
+ CellChangeTimes->{3.8716455384677067`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"31c5bbc8-7c9e-4043-800e-cfd31b041842"],
+
+Cell[BoxData["\<\"Writing exit message...\"\>"], "Print",
+ CellChangeTimes->{3.8716455384977026`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"bacc71ce-a4ca-434a-85bb-58bbfe7262d5"],
+
+Cell[BoxData["\<\"waiting 2 seconds for exit...\"\>"], "Print",
+ CellChangeTimes->{3.871645538512306*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"392ebeb4-bab9-475d-88ba-0e752cb8a799"],
+
+Cell[BoxData["\<\"exit message was successful.\"\>"], "Print",
+ CellChangeTimes->{3.871645540474621*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"6c0a1ac1-ed1d-4b25-9e36-a6c5bba66d16"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFO: Time to initialize server: \"\>", "\[InvisibleSpace]", 
+   TemplateBox[{"4.66081428527832`", "\"s\"", "seconds", "\"Seconds\""},
+    "Quantity"]}],
+  SequenceForm["INFO: Time to initialize server: ", 
+   Quantity[4.66081428527832, "Seconds"]],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455405045624`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"7d8376a7-b354-4967-9c55-febc03e93cb2"],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{"\<\"INFO: Exit code: \"\>", "\[InvisibleSpace]", "0"}],
+  SequenceForm["INFO: Exit code: ", 0],
+  Editable->False]], "Print",
+ CellChangeTimes->{3.8716455405145206`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"0a2e9dbc-3370-4c8e-af71-b5e5d6682150"],
+
+Cell[BoxData["\<\"Done Stage 2\"\>"], "Print",
+ CellChangeTimes->{3.8716455405245256`*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"eaecac9d-6b60-4c98-9281-86371d31f8d3"],
+
+Cell[BoxData["\<\"\"\>"], "Print",
+ CellChangeTimes->{3.871645540537298*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"e4e69e09-9fa3-4918-8ae4-a60b8df0f100"],
+
+Cell[BoxData["\<\"No problems found.\"\>"], "Print",
+ CellChangeTimes->{3.871645540545294*^9},
+ CellLabel->
+  "During evaluation of \
+In[6]:=",ExpressionUUID->"3d20073f-26d2-43b9-ae5c-58f50e8e8fdd"]
+}, Open  ]],
+
+Cell[BoxData[
+ InterpretationBox[
+  RowBox[{
+   TagBox["TestReportObject",
+    "SummaryHead"], "[", 
+   DynamicModuleBox[{Typeset`open$$ = False, Typeset`embedState$$ = "Ready"}, 
+    TemplateBox[{
+      PaneSelectorBox[{False -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxOpener"]], 
+              ButtonFunction :> (Typeset`open$$ = True), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[{
+              InsetBox[
+               BoxData[
+                FormBox[
+                 PaneBox[
+                  DynamicBox[
+                   FEPrivate`FrontEndResource[
+                   "MUnitExpressions", "SuccessIcon"]], Alignment -> Center, 
+                  ImageSize -> 
+                  Dynamic[{
+                    Automatic, 
+                    3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                    Magnification])}]], TraditionalForm]]]}, 
+             PlotRange -> {{0, 1}, {0, 1}}, Background -> GrayLevel[0.93], 
+             Axes -> False, AspectRatio -> 1, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}], Frame -> True, FrameTicks -> None, 
+             FrameStyle -> Directive[
+               Thickness[Tiny], 
+               GrayLevel[0.55]]], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Title: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"Test Report: TestSuite.mt\"", "SummaryItem"]}], 
+               "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox["\"Success rate: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                   InterpretationBox[
+                    StyleBox["\"100%\"", ShowStringCharacters -> False], 1., 
+                    AutoDelete -> True], PercentForm], "SummaryItem"]}], 
+               RowBox[{
+                 TagBox["\"Tests run: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["31", "SummaryItem"]}]}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}], True -> GridBox[{{
+            PaneBox[
+             ButtonBox[
+              DynamicBox[
+               FEPrivate`FrontEndResource["FEBitmaps", "SummaryBoxCloser"]], 
+              ButtonFunction :> (Typeset`open$$ = False), Appearance -> None, 
+              BaseStyle -> {}, Evaluator -> Automatic, Method -> 
+              "Preemptive"], Alignment -> {Center, Center}, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}]], 
+            GraphicsBox[{
+              InsetBox[
+               BoxData[
+                FormBox[
+                 PaneBox[
+                  DynamicBox[
+                   FEPrivate`FrontEndResource[
+                   "MUnitExpressions", "SuccessIcon"]], Alignment -> Center, 
+                  ImageSize -> 
+                  Dynamic[{
+                    Automatic, 
+                    3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                    Magnification])}]], TraditionalForm]]]}, 
+             PlotRange -> {{0, 1}, {0, 1}}, Background -> GrayLevel[0.93], 
+             Axes -> False, AspectRatio -> 1, ImageSize -> 
+             Dynamic[{
+               Automatic, 
+                3.5 (CurrentValue["FontCapHeight"]/AbsoluteCurrentValue[
+                 Magnification])}], Frame -> True, FrameTicks -> None, 
+             FrameStyle -> Directive[
+               Thickness[Tiny], 
+               GrayLevel[0.55]]], 
+            GridBox[{{
+               RowBox[{
+                 TagBox["\"Title: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["\"Test Report: TestSuite.mt\"", "SummaryItem"]}], 
+               "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox["\"Success rate: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  TagBox[
+                   InterpretationBox[
+                    StyleBox["\"100%\"", ShowStringCharacters -> False], 1., 
+                    AutoDelete -> True], PercentForm], "SummaryItem"]}], 
+               RowBox[{
+                 TagBox["\"Tests run: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["31", "SummaryItem"]}]}, {
+               RowBox[{
+                 TagBox["\"Succeeded: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["31", "SummaryItem"]}], "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox["\"Failed: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["0", "SummaryItem"]}], "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox[
+                 "\"Failed with wrong results: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["0", "SummaryItem"]}], "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox[
+                 "\"Failed with messages: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["0", "SummaryItem"]}], "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox["\"Failed with errors: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox["0", "SummaryItem"]}], "\[SpanFromLeft]"}, {
+               RowBox[{
+                 TagBox["\"Time elapsed: \"", "SummaryItemAnnotation"], 
+                 "\[InvisibleSpace]", 
+                 TagBox[
+                  
+                  TemplateBox[{
+                   "15.6082402`", "\"s\"", "seconds", "\"Seconds\""}, 
+                   "Quantity", SyntaxForm -> Mod], "SummaryItem"]}], 
+               "\[SpanFromLeft]"}}, 
+             GridBoxAlignment -> {
+              "Columns" -> {{Left}}, "Rows" -> {{Automatic}}}, AutoDelete -> 
+             False, GridBoxItemSize -> {
+              "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+             GridBoxSpacings -> {"Columns" -> {{2}}, "Rows" -> {{Automatic}}},
+              BaseStyle -> {
+              ShowStringCharacters -> False, NumberMarks -> False, 
+               PrintPrecision -> 3, ShowSyntaxStyles -> False}]}}, 
+          GridBoxAlignment -> {"Columns" -> {{Left}}, "Rows" -> {{Top}}}, 
+          AutoDelete -> False, 
+          GridBoxItemSize -> {
+           "Columns" -> {{Automatic}}, "Rows" -> {{Automatic}}}, 
+          BaselinePosition -> {1, 1}]}, 
+       Dynamic[Typeset`open$$], ImageSize -> Automatic]},
+     "SummaryPanel"],
+    DynamicModuleValues:>{}], "]"}],
+  TestReportObject[<|
+   "Title" -> "Test Report: TestSuite.mt", "Aborted" -> False, 
+    "TestResults" -> <|
+     4985621303506579405 -> 
+      TestResultObject[<|
+        "TestKey" -> 4985621303506579405, "TestID" -> 
+         "ServerDiagnostics-20220901-D3O0N3", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\ServerDiagnostics.mt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`RunServerDiagnostic[{$CellContext`wolframKernel, 
+             "-noinit", "-noprompt", "-nopaclet", "-noicon", 
+             "-nostartuppaclets", "-run", 
+             "Needs[\"LSPServer`\"];LSPServer`StartServer[]"}]], 
+         "ExpectedOutput" -> HoldForm[Null], "ActualOutput" -> HoldForm[Null],
+          "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.8716455255014863`*^9, "AbsoluteTimeUsed" -> 
+         14.9731343`8.325827717795278, "CPUTimeUsed" -> 0.09299999999999997, 
+         "MemoryUsed" -> 203104|>], 785461059021840663 -> 
+      TestResultObject[<|
+        "TestKey" -> 785461059021840663, "TestID" -> 
+         "IDE-Test-SetDelayed-Multiple-Definition", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Delayed.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 1, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 3, "character" -> 0|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nf\\[x\\] has multiple definition\\.\n\n\
+**Function Definition Patterns**\n\nf\\[x\\_\\]\n\n\n\nf\\[x\\_String\\]\n\n\n\
+\nf\\[x\\_String\\] /; x\n\n\n\nf\\[x\\_Number\\]\n\n"|>|>|>}], 
+         "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nf\\[x\\] has multiple definition\\.\n\n\
+**Function Definition Patterns**\n\nf\\[x\\_\\]\n\n\n\nf\\[x\\_String\\]\n\n\n\
+\nf\\[x\\_String\\] /; x\n\n\n\nf\\[x\\_Number\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.871645540581388*^9, "AbsoluteTimeUsed" -> 
+         0.0299969`5.627591373136379, "CPUTimeUsed" -> 0.030999999999998806`, 
+         "MemoryUsed" -> 13040|>], 3730568664783702652 -> 
+      TestResultObject[<|
+        "TestKey" -> 3730568664783702652, "TestID" -> 
+         "IDE-Test-UpSetDelayed-Definition-InnerFunction", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Delayed.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 2, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 10, "character" -> 2|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\np\\[q\\[x\\_\\]\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\np\\[q\\[x\\_\\]\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645540611385*^9, "AbsoluteTimeUsed" -> 
+         0.0100005`5.150536712013235, "CPUTimeUsed" -> 0.01600000000000179, 
+         "MemoryUsed" -> 3112|>], 2787570745274593085 -> 
+      TestResultObject[<|
+        "TestKey" -> 2787570745274593085, "TestID" -> 
+         "IDE-Test-UpSetDelayed-Definition-Innerfunction", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Delayed.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 3, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 12, "character" -> 0|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455406213856`*^9, "AbsoluteTimeUsed" -> 
+         0.009999`5.150471566212184, "CPUTimeUsed" -> 0.015999999999998238`, 
+         "MemoryUsed" -> 2528|>], 1965330990576489909 -> 
+      TestResultObject[<|
+        "TestKey" -> 1965330990576489909, "TestID" -> 
+         "IDE-Test-TagSetDelayed-Definition-TaggedFunction", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Delayed.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 4, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 16, "character" -> 0|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nf2\\[g\\[x\\_\\]\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nf2\\[g\\[x\\_\\]\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455406313844`*^9, "AbsoluteTimeUsed" -> 
+         0.0099987`5.150458535879237, "CPUTimeUsed" -> 0., "MemoryUsed" -> 
+         3392|>], 3090750795782039197 -> 
+      TestResultObject[<|
+        "TestKey" -> 3090750795782039197, "TestID" -> 
+         "IDE-Test-TagSetDelayed-Definition-UntaggedFunction", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Delayed.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 5, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 18, "character" -> 1|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645540641383*^9, "AbsoluteTimeUsed" -> 0``7.1505149978319915, 
+         "CPUTimeUsed" -> 0., "MemoryUsed" -> 2568|>], 1729436976812678402 -> 
+      TestResultObject[<|
+        "TestKey" -> 1729436976812678402, "TestID" -> 
+         "IDE-Test-SetDelayed-ConstrainedArgs", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Delayed.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 6, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 25, "character" -> 3|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 6, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\naddTwo\\[a\\_Integer, b\\_\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 6, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\naddTwo\\[a\\_Integer, b\\_\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645540641383*^9, "AbsoluteTimeUsed" -> 
+         0.0199988`5.451518935045297, "CPUTimeUsed" -> 0.015000000000000568`, 
+         "MemoryUsed" -> 3080|>], 3535367541993109784 -> 
+      TestResultObject[<|
+        "TestKey" -> 3535367541993109784, "TestID" -> 
+         "IDE-Test-InFileUsage-Simple", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\InFileUsage.wlt",
+          "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 1, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 5, "character" -> 5|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nmySin is just a sin function\\.\n\n**Function \
+Definition Patterns**\n\nmySin\\[x\\_\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nmySin is just a sin function\\.\n\n**Function \
+Definition Patterns**\n\nmySin\\[x\\_\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645540741378*^9, "AbsoluteTimeUsed" -> 
+         0.0200188`5.451953038557814, "CPUTimeUsed" -> 0.01600000000000179, 
+         "MemoryUsed" -> 18920|>], 4829736526251917456 -> 
+      TestResultObject[<|
+        "TestKey" -> 4829736526251917456, "TestID" -> 
+         "IDE-Test-InFileUsage-Tab", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\InFileUsage.wlt",
+          "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 2, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 9, "character" -> 8|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nmyTan is Tan function\\.\n\n**Function \
+Definition Patterns**\n\nmyTan\\[x\\_\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nmyTan is Tan function\\.\n\n**Function \
+Definition Patterns**\n\nmyTan\\[x\\_\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455407613964`*^9, "AbsoluteTimeUsed" -> 
+         0.0099825`5.149754316698367, "CPUTimeUsed" -> 0., "MemoryUsed" -> 
+         2864|>], 739269467078180118 -> 
+      TestResultObject[<|
+        "TestKey" -> 739269467078180118, "TestID" -> 
+         "IDE-Test-InFileUsage-LinearSyntax", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\InFileUsage.wlt",
+          "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 3, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 7, "character" -> 3|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nCos\\[**z**\\] gives the cosine of *z*\\. \n\n\
+**Function Definition Patterns**\n\nmyCos\\[x\\_\\]\n\n"|>|>|>}], 
+         "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nCos\\[**z**\\] gives the cosine of *z*\\. \n\n\
+**Function Definition Patterns**\n\nmyCos\\[x\\_\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.871645540771379*^9, "AbsoluteTimeUsed" -> 
+         0.019995`5.451436406301532, "CPUTimeUsed" -> 0.030999999999998806`, 
+         "MemoryUsed" -> 2896|>], 1428262261557427300 -> 
+      TestResultObject[<|
+        "TestKey" -> 1428262261557427300, "TestID" -> 
+         "IDE-Test-Usage-with-SetDelay", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\InFileUsage.wlt",
+          "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 4, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 18, "character" -> 1|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nUsage with SetDelay\n\n**Function Definition \
+Patterns**\n\naa\\[x\\_\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nUsage with SetDelay\n\n**Function Definition \
+Patterns**\n\naa\\[x\\_\\]\n\n"|>|>|>}], "ExpectedMessages" -> HoldForm[{}], 
+         "ActualMessages" -> {}, "AbsoluteTime" -> 3.871645540791374*^9, 
+         "AbsoluteTimeUsed" -> 0.0099998`5.150506311855491, "CPUTimeUsed" -> 
+         0., "MemoryUsed" -> 2856|>], 8177636800456580902 -> 
+      TestResultObject[<|
+        "TestKey" -> 8177636800456580902, "TestID" -> "IDE-Test-No-Usage-Tag",
+          "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\InFileUsage.wlt",
+          "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 5, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 23, "character" -> 2|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645540801374*^9, "AbsoluteTimeUsed" -> 
+         0.0099994`5.1504889393813125, "CPUTimeUsed" -> 0.01600000000000179, 
+         "MemoryUsed" -> 2528|>], 8745239872913763651 -> 
+      TestResultObject[<|
+        "TestKey" -> 8745239872913763651, "TestID" -> "IDE-Test-NoUsage", 
+         "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\MissingCases.\
+wlt", "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 1, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 5, "character" -> 11|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nnoFunctionUsage\\[x\\_Integer\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nnoFunctionUsage\\[x\\_Integer\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.871645540901368*^9, "AbsoluteTimeUsed" -> 
+         0.0100004`5.150532369263837, "CPUTimeUsed" -> 0., "MemoryUsed" -> 
+         5200|>], 2985798699161012454 -> 
+      TestResultObject[<|
+        "TestKey" -> 2985798699161012454, "TestID" -> "IDE-Test-OnlyUsage", 
+         "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\MissingCases.\
+wlt", "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 2, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 8, "character" -> 5|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nTest function with only usage\\.\n\n**Function \
+Definition Patterns**\n\nNo function defined\\."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nTest function with only usage\\.\n\n**Function \
+Definition Patterns**\n\nNo function defined\\."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455409113684`*^9, "AbsoluteTimeUsed" -> 
+         0.0099981`5.150432474040419, "CPUTimeUsed" -> 0.015000000000000568`, 
+         "MemoryUsed" -> 2656|>], 978633955849242332 -> 
+      TestResultObject[<|
+        "TestKey" -> 978633955849242332, "TestID" -> 
+         "IDE-Test-NoFunction-Information", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\MissingCases.\
+wlt", "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 3, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 11, "character" -> 8|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455409313674`*^9, "AbsoluteTimeUsed" -> 0``7.1505149978319915, 
+         "CPUTimeUsed" -> 0., "MemoryUsed" -> 2504|>], 138175157455160781 -> 
+      TestResultObject[<|
+        "TestKey" -> 138175157455160781, "TestID" -> 
+         "IDE-Test-SystemSymbol-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 1, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 25, "character" -> 2|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "Plot\\[*f*,\\{*x*,*x*\\_*min*,*x*\\_*max*\\}\\] generates a \
+plot of *f* as a function of *x* from *x*\\_*min* to *x*\\_*max*\\. \n\n\
+Plot\\[\\{*f*\\_1,*f*\\_2,\[Ellipsis]\\},\\{*x*,*x*\\_*min*,*x*\\_*max*\\}\\] \
+plots several functions *f*\\_*i*\\. \n\n\
+Plot\\[\\{\[Ellipsis],*w*\\[*f*\\_*i*\\],\[Ellipsis]\\},\[Ellipsis]\\] plots \
+*f*\\_*i* with features defined by the symbolic wrapper *w*\\.\n\nPlot\\[\
+\[Ellipsis],\\{*x*\\}\[Element]*reg*\\] takes the variable *x* to be in the \
+geometric region *reg*\\.\n\n_[Plot: Web \
+Documentation](https://reference.wolfram.com/language/ref/Plot.html)_"|>|>|>}]\
+, "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "Plot\\[*f*,\\{*x*,*x*\\_*min*,*x*\\_*max*\\}\\] generates a \
+plot of *f* as a function of *x* from *x*\\_*min* to *x*\\_*max*\\. \n\n\
+Plot\\[\\{*f*\\_1,*f*\\_2,\[Ellipsis]\\},\\{*x*,*x*\\_*min*,*x*\\_*max*\\}\\] \
+plots several functions *f*\\_*i*\\. \n\n\
+Plot\\[\\{\[Ellipsis],*w*\\[*f*\\_*i*\\],\[Ellipsis]\\},\[Ellipsis]\\] plots \
+*f*\\_*i* with features defined by the symbolic wrapper *w*\\.\n\nPlot\\[\
+\[Ellipsis],\\{*x*\\}\[Element]*reg*\\] takes the variable *x* to be in the \
+geometric region *reg*\\.\n\n_[Plot: Web \
+Documentation](https://reference.wolfram.com/language/ref/Plot.html)_"|>|>|>}]\
+, "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645541001364*^9, "AbsoluteTimeUsed" -> 
+         0.0999918`6.150479384224294, "CPUTimeUsed" -> 0.10900000000000176`, 
+         "MemoryUsed" -> 13392|>], 2456775316492987247 -> 
+      TestResultObject[<|
+        "TestKey" -> 2456775316492987247, "TestID" -> 
+         "IDE-Test-ContextDepth-1-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 2, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 11, "character" -> 14|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nUsage message of testFunction\\.\n\n**Function \
+Definition Patterns**\n\ntestFunction\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], 
+         "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nUsage message of testFunction\\.\n\n**Function \
+Definition Patterns**\n\ntestFunction\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.871645541101356*^9, "AbsoluteTimeUsed" -> 
+         0.0100044`5.150706045376648, "CPUTimeUsed" -> 0., "MemoryUsed" -> 
+         3640|>], 2990666041653622781 -> 
+      TestResultObject[<|
+        "TestKey" -> 2990666041653622781, "TestID" -> 
+         "IDE-Test-ContextDepth-2-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 3, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 16, "character" -> 18|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nUsage message of testFunction\\.\n\n**Function \
+Definition Patterns**\n\ntestFunction\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], 
+         "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nUsage message of testFunction\\.\n\n**Function \
+Definition Patterns**\n\ntestFunction\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.8716455411113605`*^9, "AbsoluteTimeUsed" -> 
+         0.0199929`5.451390791582438, "CPUTimeUsed" -> 0.030999999999998806`, 
+         "MemoryUsed" -> 2648|>], 1051384360380790506 -> 
+      TestResultObject[<|
+        "TestKey" -> 1051384360380790506, "TestID" -> 
+         "IDE-Test-MultipleUsage-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 4, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 35, "character" -> 15|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nFirst usage message of multiUsageFunction\\.\n\
+\nSecond usage message of multiUsageFunction\\.\n\n**Function Definition \
+Patterns**\n\nmultiUsageFunction\\[x\\_\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nFirst usage message of multiUsageFunction\\.\n\
+\nSecond usage message of multiUsageFunction\\.\n\n**Function Definition \
+Patterns**\n\nmultiUsageFunction\\[x\\_\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455411313534`*^9, "AbsoluteTimeUsed" -> 
+         0.0199993`5.451529792923092, "CPUTimeUsed" -> 0.01600000000000179, 
+         "MemoryUsed" -> 2960|>], 3537357383581926128 -> 
+      TestResultObject[<|
+        "TestKey" -> 3537357383581926128, "TestID" -> 
+         "IDE-Test-Tab-Function-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 5, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 31, "character" -> 5|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nfoo\\[\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nfoo\\[\\]\n\n"|>|>|>}], "ExpectedMessages" -> HoldForm[{}], 
+         "ActualMessages" -> {}, "AbsoluteTime" -> 3.871645541151353*^9, 
+         "AbsoluteTimeUsed" -> 0.0099993`5.1504845961541825, "CPUTimeUsed" -> 
+         0., "MemoryUsed" -> 2760|>], 6365817440518468147 -> 
+      TestResultObject[<|
+        "TestKey" -> 6365817440518468147, "TestID" -> 
+         "IDE-Test-UpSetDelayed-Function-1-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 6, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 23, "character" -> 2|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 6, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nf\\[g\\[x\\_\\]\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 6, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nf\\[g\\[x\\_\\]\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645541161352*^9, "AbsoluteTimeUsed" -> 
+         0.0199993`5.451529792923092, "CPUTimeUsed" -> 0.030999999999998806`, 
+         "MemoryUsed" -> 3528|>], 5352591237528044301 -> 
+      TestResultObject[<|
+        "TestKey" -> 5352591237528044301, "TestID" -> 
+         "IDE-Test-TagSetDelayed-Function-2-In-Package", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Package.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 7, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 27, "character" -> 5|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 7, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 7, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455411813517`*^9, "AbsoluteTimeUsed" -> 0``7.1505149978319915, 
+         "CPUTimeUsed" -> 0., "MemoryUsed" -> 2504|>], 1773096128195560718 -> 
+      TestResultObject[<|
+        "TestKey" -> 1773096128195560718, "TestID" -> 
+         "IDE-Test-SystemSymbol-Linear-Syntax", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\SystemSymbol.\
+wlt", "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 1, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 0, "character" -> 1|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "Sin\\[*z*\\] gives the sine of *z*\\. \n\n_[Sin: Web \
+Documentation](https://reference.wolfram.com/language/ref/Sin.html)_"|>|>|>}],
+          "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "Sin\\[*z*\\] gives the sine of *z*\\. \n\n_[Sin: Web \
+Documentation](https://reference.wolfram.com/language/ref/Sin.html)_"|>|>|>}],
+          "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.8716455412513494`*^9, "AbsoluteTimeUsed" -> 
+         0.0100003`5.150528026471018, "CPUTimeUsed" -> 0.015000000000000568`, 
+         "MemoryUsed" -> 3504|>], 5904833861475199311 -> 
+      TestResultObject[<|
+        "TestKey" -> 5904833861475199311, "TestID" -> 
+         "IDE-Test-SystemSymbol-withTab", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\SystemSymbol.\
+wlt", "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 2, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 2, "character" -> 6|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "Cos\\[*z*\\] gives the cosine of *z*\\. \n\n_[Cos: Web \
+Documentation](https://reference.wolfram.com/language/ref/Cos.html)_"|>|>|>}],
+          "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "Cos\\[*z*\\] gives the cosine of *z*\\. \n\n_[Cos: Web \
+Documentation](https://reference.wolfram.com/language/ref/Cos.html)_"|>|>|>}],
+          "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.8716455412613497`*^9, "AbsoluteTimeUsed" -> 
+         0.0099974`5.150402066584997, "CPUTimeUsed" -> 0., "MemoryUsed" -> 
+         2672|>], 6969016552052932960 -> 
+      TestResultObject[<|
+        "TestKey" -> 6969016552052932960, "TestID" -> 
+         "IDE-Test-SystemSymbol-Multiline-Usage", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\SystemSymbol.\
+wlt", "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 3, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 4, "character" -> 11|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "ExternalEvaluate\\[\"*sys*\",\"*cmd*\"\\] evaluates the \
+command *cmd* in the external evaluator *sys*, returning an expression \
+corresponding to the output\\.\n\n\
+ExternalEvaluate\\[\\{\"*sys*\",*opts*\\},\"*cmd*\"\\] uses the options \
+*opts* for the external evaluator\\.\n\n\
+ExternalEvaluate\\[DatabaseReference\\[*ref*\\],\"*cmd*\"\\] evaluates *cmd* \
+using the database specified by *ref*\\.\n\n\
+ExternalEvaluate\\[*assoc*,\"*cmd*\"\\] evaluates *cmd* using the external \
+evaluator specified by *assoc*\\.\n\n\
+ExternalEvaluate\\[*session*,\"*cmd*\"\\] evaluates *cmd* in the specified \
+running ExternalSessionObject\\.\n\n\
+ExternalEvaluate\\[*sys*\\-&gt;\"*type*\",\[Ellipsis]\\] returns output \
+converted to the specified type\\. \n\nExternalEvaluate\\[*spec*,*obj*\\] \
+evaluates the content of the specified File, URL or CloudObject\\.\n\n\
+ExternalEvaluate\\[*spec*,*assoc*\\] evaluates the command specified by \
+*assoc*\\.\n\nExternalEvaluate\\[*spec*,\\{*cmd*\\_1,*cmd*\\_2,\[Ellipsis]\\}\
+\\] evaluates the list of commands *cmd*\\_*i*\\.\n\n\
+ExternalEvaluate\\[*spec*\\] represents an operator form of ExternalEvaluate \
+that can be applied to a command or object\\.\n\nEXPERIMENTAL\n\n\
+_[ExternalEvaluate: Web \
+Documentation](https://reference.wolfram.com/language/ref/ExternalEvaluate.\
+html)_"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "ExternalEvaluate\\[\"*sys*\",\"*cmd*\"\\] evaluates the \
+command *cmd* in the external evaluator *sys*, returning an expression \
+corresponding to the output\\.\n\n\
+ExternalEvaluate\\[\\{\"*sys*\",*opts*\\},\"*cmd*\"\\] uses the options \
+*opts* for the external evaluator\\.\n\n\
+ExternalEvaluate\\[DatabaseReference\\[*ref*\\],\"*cmd*\"\\] evaluates *cmd* \
+using the database specified by *ref*\\.\n\n\
+ExternalEvaluate\\[*assoc*,\"*cmd*\"\\] evaluates *cmd* using the external \
+evaluator specified by *assoc*\\.\n\n\
+ExternalEvaluate\\[*session*,\"*cmd*\"\\] evaluates *cmd* in the specified \
+running ExternalSessionObject\\.\n\n\
+ExternalEvaluate\\[*sys*\\-&gt;\"*type*\",\[Ellipsis]\\] returns output \
+converted to the specified type\\. \n\nExternalEvaluate\\[*spec*,*obj*\\] \
+evaluates the content of the specified File, URL or CloudObject\\.\n\n\
+ExternalEvaluate\\[*spec*,*assoc*\\] evaluates the command specified by \
+*assoc*\\.\n\nExternalEvaluate\\[*spec*,\\{*cmd*\\_1,*cmd*\\_2,\[Ellipsis]\\}\
+\\] evaluates the list of commands *cmd*\\_*i*\\.\n\n\
+ExternalEvaluate\\[*spec*\\] represents an operator form of ExternalEvaluate \
+that can be applied to a command or object\\.\n\nEXPERIMENTAL\n\n\
+_[ExternalEvaluate: Web \
+Documentation](https://reference.wolfram.com/language/ref/ExternalEvaluate.\
+html)_"|>|>|>}], "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.871645541271347*^9, "AbsoluteTimeUsed" -> 
+         0.1899859`6.429236368366808, "CPUTimeUsed" -> 0.20300000000000296`, 
+         "MemoryUsed" -> 3792|>], 468114122791033893 -> 
+      TestResultObject[<|
+        "TestKey" -> 468114122791033893, "TestID" -> 
+         "IDE-Test-SubValues-Simple", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Values.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 1, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 4, "character" -> 2|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nsubFn\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 1, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nNo usage message\\.\n\n**Function Definition \
+Patterns**\n\nsubFn\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645541531333*^9, "AbsoluteTimeUsed" -> 
+         0.0210696`5.474171288568628, "CPUTimeUsed" -> 0.015999999999998238`, 
+         "MemoryUsed" -> 10624|>], 4796766990462915610 -> 
+      TestResultObject[<|
+        "TestKey" -> 4796766990462915610, "TestID" -> 
+         "IDE-Test-SubValues-Usage", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Values.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 2, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 8, "character" -> 7|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nSubValue function with usage\\.\n\n**Function \
+Definition Patterns**\n\nsubFnUsage\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], 
+         "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 2, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\nSubValue function with usage\\.\n\n**Function \
+Definition Patterns**\n\nsubFnUsage\\[a\\_\\]\\[b\\_\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.8716455415534034`*^9, "AbsoluteTimeUsed" -> 
+         0.0129912`5.264164266634657, "CPUTimeUsed" -> 0., "MemoryUsed" -> 
+         3072|>], 2026669781466577286 -> 
+      TestResultObject[<|
+        "TestKey" -> 2026669781466577286, "TestID" -> 
+         "IDE-Test-UpValues-Usage", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Values.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 3, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 12, "character" -> 7|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\ng is a function with UpValue\\.\n\n**Function \
+Definition Patterns**\n\nf\\[g\\]\n\n\n\nf\\[g\\[x\\_\\]\\]\n\n"|>|>|>}], 
+         "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 3, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\ng is a function with UpValue\\.\n\n**Function \
+Definition Patterns**\n\nf\\[g\\]\n\n\n\nf\\[g\\[x\\_\\]\\]\n\n"|>|>|>}], 
+         "ExpectedMessages" -> HoldForm[{}], "ActualMessages" -> {}, 
+         "AbsoluteTime" -> 3.8716455415673947`*^9, "AbsoluteTimeUsed" -> 
+         0.0110884`5.19538388200623, "CPUTimeUsed" -> 0.01600000000000179, 
+         "MemoryUsed" -> 3384|>], 7998707610811290189 -> 
+      TestResultObject[<|
+        "TestKey" -> 7998707610811290189, "TestID" -> 
+         "IDE-Test-UpValues-Untagged", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Values.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 4, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 13, "character" -> 0|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 4, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.871645541578483*^9, "AbsoluteTimeUsed" -> 
+         0.0100019`5.150597505945526, "CPUTimeUsed" -> 0.015000000000000568`, 
+         "MemoryUsed" -> 2528|>], 4929069803312795062 -> 
+      TestResultObject[<|
+        "TestKey" -> 4929069803312795062, "TestID" -> 
+         "IDE-Test-DownValues-Usage", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Values.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 5, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 17, "character" -> 6|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\ndownValFn is a function with DownValue\\.\n\n\
+**Function Definition Patterns**\n\ndownValFn\\[x\\_ /; x &gt; \\-2\\]\n\n\n\n\
+downValFn\\[x\\_ /; x &lt; 2\\]\n\n"|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 5, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "**Usage**\n\ndownValFn is a function with DownValue\\.\n\n\
+**Function Definition Patterns**\n\ndownValFn\\[x\\_ /; x &gt; \\-2\\]\n\n\n\n\
+downValFn\\[x\\_ /; x &lt; 2\\]\n\n"|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455415884852`*^9, "AbsoluteTimeUsed" -> 
+         0.0199963`5.451464641584038, "CPUTimeUsed" -> 0.015999999999998238`, 
+         "MemoryUsed" -> 3936|>], 7881099320414233278 -> 
+      TestResultObject[<|
+        "TestKey" -> 7881099320414233278, "TestID" -> 
+         "IDE-Test-DownValues-Untagged", "TestFileName" -> 
+         "F:\\WRI\\Repo\\CodeTools\\lspserver\\Tests\\hover\\Values.wlt", 
+         "SameTest" -> SameQ, "SameMessages" -> Testing`MessageMatchQ, 
+         "MemoryConstraint" -> DirectedInfinity[1], "TimeConstraint" -> 
+         DirectedInfinity[1], "Outcome" -> "Success", "Input" -> HoldForm[
+           
+           LSPServer`handleContent[<|
+            "method" -> "textDocument/hoverFencepost", "id" -> 6, 
+             "params" -> <|
+              "textDocument" -> <|"uri" -> $CellContext`uri|>, 
+               "position" -> <|"line" -> 18, "character" -> 27|>|>|>]], 
+         "ExpectedOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 6, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ActualOutput" -> 
+         HoldForm[{<|
+            "jsonrpc" -> "2.0", "id" -> 6, 
+             "result" -> <|
+              "contents" -> <|
+                "kind" -> "markdown", "value" -> 
+                 "No function information."|>|>|>}], "ExpectedMessages" -> 
+         HoldForm[{}], "ActualMessages" -> {}, "AbsoluteTime" -> 
+         3.8716455416084814`*^9, "AbsoluteTimeUsed" -> 0``7.1505149978319915, 
+         "CPUTimeUsed" -> 0., "MemoryUsed" -> 2504|>]|>, 
+    "TestsSucceededKeys" -> {4985621303506579405, 785461059021840663, 
+     3730568664783702652, 2787570745274593085, 1965330990576489909, 
+     3090750795782039197, 1729436976812678402, 3535367541993109784, 
+     4829736526251917456, 739269467078180118, 1428262261557427300, 
+     8177636800456580902, 8745239872913763651, 2985798699161012454, 
+     978633955849242332, 138175157455160781, 2456775316492987247, 
+     2990666041653622781, 1051384360380790506, 3537357383581926128, 
+     6365817440518468147, 5352591237528044301, 1773096128195560718, 
+     5904833861475199311, 6969016552052932960, 468114122791033893, 
+     4796766990462915610, 2026669781466577286, 7998707610811290189, 
+     4929069803312795062, 7881099320414233278}, 
+    "TestsFailedWrongResultsKeys" -> {}, "TestsFailedWithMessagesKeys" -> {}, 
+    "TestsFailedWithErrorsKeys" -> {}|>],
+  Editable->False,
+  SelectWithContents->True,
+  Selectable->False]], "Output",
+ CellChangeTimes->{3.8716455416684785`*^9},
+ CellLabel->"Out[6]=",ExpressionUUID->"e9e85f5c-71eb-4586-9504-89354255c4dc"]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1140., 570.6},
+WindowMargins->{{0, Automatic}, {Automatic, 1.2}},
+TaggingRules-><|"TryRealOnly" -> False|>,
+Magnification:>0.7 Inherited,
+FrontEndVersion->"13.1 for Microsoft Windows (64-bit) (June 16, 2022)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"4f001509-3174-48d0-a684-68a9be2d6738"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[558, 20, 273, 4, 21, "Input",ExpressionUUID->"48df1600-61e2-42d4-ad2c-cf2034601aaf"],
+Cell[CellGroupData[{
+Cell[856, 28, 272, 4, 68, "Title",ExpressionUUID->"278ce6fe-b41f-4d90-9414-33af01c12892"],
+Cell[1131, 34, 198, 3, 24, "Text",ExpressionUUID->"e35cc140-e13f-46af-b154-46169f7a3473"],
+Cell[CellGroupData[{
+Cell[1354, 41, 295, 7, 21, "Input",ExpressionUUID->"ecadbe7c-398f-4aa4-87b8-58cc10999e1a"],
+Cell[CellGroupData[{
+Cell[1674, 52, 219, 4, 17, "Print",ExpressionUUID->"dfad320e-9164-4067-bed2-9a239eead244"],
+Cell[1896, 58, 180, 4, 17, "Print",ExpressionUUID->"eb978e43-68d2-4295-80a8-b6279b25ec48"],
+Cell[2079, 64, 273, 5, 17, "Print",ExpressionUUID->"bfe56773-69e1-4214-aa47-9dadef296555"],
+Cell[2355, 71, 238, 5, 17, "Print",ExpressionUUID->"d28db251-ad5f-4949-887f-45503ba0ebcd"],
+Cell[2596, 78, 180, 4, 17, "Print",ExpressionUUID->"b87e771d-1e12-499c-898d-b9c68bda65db"],
+Cell[2779, 84, 372, 9, 17, "Print",ExpressionUUID->"a23f8ef0-e25e-4148-89eb-9054786b9aa4"],
+Cell[3154, 95, 540, 16, 17, "Print",ExpressionUUID->"7b902132-e794-401f-b867-c1a0066aae6d"],
+Cell[3697, 113, 472, 12, 17, "Print",ExpressionUUID->"19e87365-6071-4daa-8dc3-c77957b93b94"],
+Cell[4172, 127, 380, 9, 17, "Print",ExpressionUUID->"9d121608-4c54-4ff1-8228-72c5540c316c"],
+Cell[4555, 138, 388, 9, 17, "Print",ExpressionUUID->"1b612c11-be53-49e2-b41d-670c047bab7d"],
+Cell[4946, 149, 390, 9, 17, "Print",ExpressionUUID->"83244d1c-a741-41e1-99d4-6bf7884a4612"],
+Cell[5339, 160, 396, 9, 17, "Print",ExpressionUUID->"47fc4913-9b58-4826-bc22-0c21a2466f00"],
+Cell[5738, 171, 396, 9, 17, "Print",ExpressionUUID->"8312e244-4228-4ce0-90ce-8cb217ef0600"],
+Cell[6137, 182, 445, 11, 17, "Print",ExpressionUUID->"fc968001-4b99-4a3b-8259-55a034c7a7f7"],
+Cell[6585, 195, 445, 11, 17, "Print",ExpressionUUID->"92e83715-a301-45d9-a07c-33746ebaabc5"],
+Cell[7033, 208, 451, 11, 17, "Print",ExpressionUUID->"6a062db6-8306-4cec-8975-6c7da31fe7d6"],
+Cell[7487, 221, 453, 11, 17, "Print",ExpressionUUID->"f9aaca43-2ea9-4026-9dfb-c394742b43f6"],
+Cell[7943, 234, 182, 4, 17, "Print",ExpressionUUID->"bd506ea9-3919-4a9b-a663-690b84ede58c"],
+Cell[8128, 240, 195, 4, 17, "Print",ExpressionUUID->"15762882-7b48-4a3e-881d-8d62bc54249e"],
+Cell[8326, 246, 249, 5, 17, "Print",ExpressionUUID->"7ccd25cd-bfbd-426d-a996-65cb64aaab33"],
+Cell[8578, 253, 1591, 29, 41, "Print",ExpressionUUID->"704f9f83-ef0a-43fc-ae70-c1d33a98434d"],
+Cell[10172, 284, 226, 4, 17, "Print",ExpressionUUID->"7d8bc4ec-d781-4aae-9bd2-2ea631f33a17"],
+Cell[10401, 290, 198, 4, 17, "Print",ExpressionUUID->"32b61fdc-9fe7-4d51-af00-5efd91b3c5b7"],
+Cell[10602, 296, 208, 4, 17, "Print",ExpressionUUID->"e60982a3-3216-4417-b832-31a3d18985ee"],
+Cell[10813, 302, 201, 4, 17, "Print",ExpressionUUID->"170c95ff-2457-40b1-a724-0fbc51e52837"],
+Cell[11017, 308, 253, 5, 17, "Print",ExpressionUUID->"af8d29cf-aa30-41b7-bcf3-583c5974b972"],
+Cell[11273, 315, 214, 4, 17, "Print",ExpressionUUID->"738785f5-2a20-453c-8f7b-1e9087f38ba7"],
+Cell[11490, 321, 190, 4, 17, "Print",ExpressionUUID->"efe96760-bf49-4623-9fec-b10a5c33cb16"],
+Cell[11683, 327, 209, 4, 17, "Print",ExpressionUUID->"5fe710a0-9d23-4731-9c3d-11bacae1aa3c"],
+Cell[11895, 333, 203, 4, 17, "Print",ExpressionUUID->"5706a9ee-f2d8-459b-ba8e-bbb4756afac7"],
+Cell[12101, 339, 318, 8, 17, "Print",ExpressionUUID->"9afd8ef4-ace6-4065-8376-6449af0361df"],
+Cell[12422, 349, 194, 4, 17, "Print",ExpressionUUID->"5bf0e9ad-a373-489d-8ddd-3a4bbdb22781"],
+Cell[12619, 355, 182, 4, 17, "Print",ExpressionUUID->"4720482b-1585-4d14-ac4e-917b8ec7c301"],
+Cell[12804, 361, 195, 4, 17, "Print",ExpressionUUID->"5f082565-3d95-40d2-850b-ea7632e9dc73"],
+Cell[13002, 367, 212, 4, 17, "Print",ExpressionUUID->"0c0e0059-695d-4ab9-a82c-1a2405c320db"],
+Cell[13217, 373, 334, 8, 17, "Print",ExpressionUUID->"d82a6128-264b-474b-9292-4564b6b2655f"],
+Cell[13554, 383, 980, 22, 17, "Print",ExpressionUUID->"3ec6be5e-e6ca-48ae-8d02-8a6d8f018126"],
+Cell[14537, 407, 226, 4, 17, "Print",ExpressionUUID->"bfed6b75-eaee-4f07-94f9-4cf28c0f2983"],
+Cell[14766, 413, 209, 4, 17, "Print",ExpressionUUID->"ac1374eb-d09e-4331-b8b3-8d6e3892b69f"],
+Cell[14978, 419, 216, 4, 17, "Print",ExpressionUUID->"b13965d1-47b2-4c11-ad19-f0ca77b3bf20"],
+Cell[15197, 425, 210, 4, 17, "Print",ExpressionUUID->"445d1a75-a633-4cec-b414-6f95b85c1ed4"],
+Cell[15410, 431, 519, 13, 17, "Print",ExpressionUUID->"3e1d20fa-a880-4964-957d-84b5a66ba6fe"],
+Cell[15932, 446, 1439, 33, 28, "Print",ExpressionUUID->"d0b0e7eb-5788-4c3c-ab0d-728b5501ab7b"],
+Cell[17374, 481, 479, 12, 17, "Print",ExpressionUUID->"2923af2b-9325-4c62-9b0e-7150d54d9e6b"],
+Cell[17856, 495, 388, 9, 17, "Print",ExpressionUUID->"62072b53-6ff7-413b-9e92-bbe7f4852547"],
+Cell[18247, 506, 396, 9, 17, "Print",ExpressionUUID->"2e7e63e4-6aab-4358-87a8-ba9bdb4a6543"],
+Cell[18646, 517, 394, 9, 17, "Print",ExpressionUUID->"86a7453c-4961-446d-b933-6d0eafd6d58d"],
+Cell[19043, 528, 396, 9, 17, "Print",ExpressionUUID->"86ba8649-8813-4427-a506-abdc78912573"],
+Cell[19442, 539, 400, 9, 17, "Print",ExpressionUUID->"452d6171-7ac4-4a65-ba9a-5cf7e3cdee39"],
+Cell[19845, 550, 400, 9, 17, "Print",ExpressionUUID->"68ebff4b-e5ab-44b2-9600-4128aaa9a110"],
+Cell[20248, 561, 449, 11, 17, "Print",ExpressionUUID->"0c87b667-ffed-4684-b6f8-c5b60892d2a6"],
+Cell[20700, 574, 451, 11, 17, "Print",ExpressionUUID->"bdd73a22-670c-43d3-88d9-258ccbd9f603"],
+Cell[21154, 587, 457, 11, 17, "Print",ExpressionUUID->"1aa42e20-3ba5-43b0-9a6f-5682b74d109b"],
+Cell[21614, 600, 457, 11, 17, "Print",ExpressionUUID->"45b76d1b-9593-4950-adef-ef9d85191e43"],
+Cell[22074, 613, 214, 4, 17, "Print",ExpressionUUID->"295a5ecb-99df-4efa-96db-bcb915dfdbe0"],
+Cell[22291, 619, 209, 4, 17, "Print",ExpressionUUID->"c37bb3ff-3ad5-4094-82de-03902dd1ef3b"],
+Cell[22503, 625, 214, 4, 17, "Print",ExpressionUUID->"31c5bbc8-7c9e-4043-800e-cfd31b041842"],
+Cell[22720, 631, 205, 4, 17, "Print",ExpressionUUID->"bacc71ce-a4ca-434a-85bb-58bbfe7262d5"],
+Cell[22928, 637, 209, 4, 17, "Print",ExpressionUUID->"392ebeb4-bab9-475d-88ba-0e752cb8a799"],
+Cell[23140, 643, 208, 4, 17, "Print",ExpressionUUID->"6c0a1ac1-ed1d-4b25-9e36-a6c5bba66d16"],
+Cell[23351, 649, 476, 11, 20, "Print",ExpressionUUID->"7d8376a7-b354-4967-9c55-febc03e93cb2"],
+Cell[23830, 662, 318, 8, 17, "Print",ExpressionUUID->"0a2e9dbc-3370-4c8e-af71-b5e5d6682150"],
+Cell[24151, 672, 194, 4, 17, "Print",ExpressionUUID->"eaecac9d-6b60-4c98-9281-86371d31f8d3"],
+Cell[24348, 678, 180, 4, 17, "Print",ExpressionUUID->"e4e69e09-9fa3-4918-8ae4-a60b8df0f100"],
+Cell[24531, 684, 198, 4, 17, "Print",ExpressionUUID->"3d20073f-26d2-43b9-ae5c-58f50e8e8fdd"]
+}, Open  ]],
+Cell[24744, 691, 62809, 1215, 46, "Output",ExpressionUUID->"e9e85f5c-71eb-4586-9504-89354255c4dc"]
+}, Open  ]]
+}, Open  ]]
+}
+]
+*)
+
