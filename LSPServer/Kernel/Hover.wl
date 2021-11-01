@@ -5,17 +5,60 @@ Begin["`Private`"]
 Needs["LSPServer`"]
 Needs["LSPServer`ReplaceLongNamePUA`"]
 Needs["LSPServer`Utils`"]
+Needs["CodeFormatter`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/hover"]] :=
+expandContent[content:KeyValuePattern["method" -> "textDocument/hover"], pos_] :=
+  Catch[
+  Module[{params, id, doc, uri},
+
+    If[$Debug2,
+      log["textDocument/hover: enter expand"]
+    ];
+    
+    id = content["id"];
+    params = content["params"];
+    
+    If[Lookup[$CancelMap, id, False],
+
+      $CancelMap[id] =.;
+
+      If[$Debug2,
+        log["canceled"]
+      ];
+      
+      Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+    ];
+
+    doc = params["textDocument"];
+    uri = doc["uri"];
+
+    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+    
+      If[$Debug2,
+        log["stale"]
+      ];
+
+      Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+    ];
+
+    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+       "textDocument/concreteParse",
+       "textDocument/aggregateParse",
+       "textDocument/abstractParse",
+       "textDocument/hoverFencepost"
+    }
+  ]]
+  
+handleContent[content:KeyValuePattern["method" -> "textDocument/hoverFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLine, positionColumn, pre, cstTabs, syms, toks, nums,
+Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char, pre, ast, cstTabs, syms, toks, nums,
   res},
 
   If[$Debug2,
-    log["textDocument/hover: enter"]
+    log["textDocument/hoverFencepost: enter"]
   ];
 
   id = content["id"];
@@ -35,7 +78,7 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
   doc = params["textDocument"];
   uri = doc["uri"];
 
-  If[isStale[$ContentQueue, uri],
+  If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
     If[$Debug2,
       log["stale"]
@@ -43,26 +86,27 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
-  
+
   position = params["position"];
 
-  positionLine = position["line"];
-  positionColumn = position["character"];
   
+  line = position["line"];
+  char = position["character"];
   (*
-  Convert from 0-based to 1-based
+  convert from 0-based to 1-based
   *)
-  positionLine++;
-  positionColumn++;
+  line+=1;
+  char+=1;
 
-  
+
   If[$Debug2,
     log["hover: before parse"]
   ];
 
   entry = $OpenFilesMap[uri];
-  
+
   text = entry["Text"];
+  ast = entry["AST"];
   cstTabs = Lookup[entry, "CSTTabs", Null];
 
   If[cstTabs === Null,
@@ -80,26 +124,26 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
   If[$Debug2,
     log["hover: after parse"]
   ];
-
+ 
   If[StringContainsQ[text, "\t"],
     (*
     Adjust the hover position to accommodate tab stops
     FIXME: Must use the tab width from the editor
     *)
     textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
-    pre = StringTake[textLines[[positionLine]], positionColumn-1];
-    positionColumn = 1;
-    Scan[(If[# == "\t", positionColumn = (4 * Quotient[positionColumn, 4] + 1) + 4, positionColumn++])&, Characters[pre]];
+    pre = StringTake[textLines[[line]], char-1];
+    char = 1;
+    Scan[(If[# == "\t", char = (4 * Quotient[char, 4] + 1) + 4, char++])&, Characters[pre]];
   ];
 
-  
+
   If[$Debug2,
     log["hover: before finding position"]
   ];
 
   toks = Cases[cstTabs,
-    LeafNode[_, _,
-      KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {positionLine, positionColumn}]]], Infinity];
+  LeafNode[_, _,
+    KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
   If[$Debug2,
     log["hover: after finding position"]
@@ -114,10 +158,10 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, positionLi
   res =
     Which[
       strs != {},
-        handleStrings[id, strs, positionLine]
+        handleStrings[id, strs, line]
       ,
       syms != {},
-        handleSymbols[id, syms]
+        handleSymbols[id, ast, cstTabs, syms]
       ,
       nums != {},
         handleNumbers[id, nums]
@@ -347,38 +391,171 @@ Module[{lines, lineMap, originalLineNumber, line,
 (*
 For symbols, display their usage message
 *)
-handleSymbols[id_, symsIn_] :=
-Catch[
-Module[{lines, line, result, syms, usage, a1},
 
-  syms = symsIn;
 
-  syms = #["String"]& /@ syms;
+handleUserSymbols[astIn_, cstIn_, symsIn_] := 
+Module[{tokenSymbol, functionSource, 
+  functionCallPatternAST1, functionCallPatternAST2, functionCallPatternAST,  
+  functionCallPatternCST, functionCallPattern, functionInformationAssoc, requiredUsage},
 
-  lines = Function[{sym},
+  tokenSymbol = symsIn /. LeafNode[Symbol, ts_, _] :> ts; 
 
-    usage = ToExpression[sym <> "::usage"];
+  tokenSymbol = First[tokenSymbol]; 
 
-    If[StringQ[usage],
+  (* 
+  Get all the usage messages that are defined in the file 
+  *)
+  requiredUsage = Cases[astIn, 
+    CallNode[
+      LeafNode[Symbol, "Set" | "SetDelayed", <||>],
+      {
+        CallNode[
+          LeafNode[Symbol, "MessageName", <||>], 
+          {
+            LeafNode[Symbol, tokenSymbol, _], 
+            LeafNode[String, "\"usage\"", _],
+            ___
+          }, 
+          _
+        ], 
+        LeafNode[String, msg_, _]
+      }, 
+      _
+    ] :> ToExpression[msg], 
+    (* 
+    This levelspec selection works for the following cases:
+           usage messages without terminating ';'
+           usage within package context 
+           usage messages without terminating ';' in a package
+    *)
 
-      a1 = reassembleEmbeddedLinearSyntax[CodeTokenize[usage]] /. {
-        LeafNode[Token`Newline, _, _] -> "\n\n",
-        LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
-        LeafNode[Token`LinearSyntaxBlob, s_, _] :> parseLinearSyntaxBlob[s],
-        LeafNode[String, s_, _] :> parseString[s],
-        LeafNode[_, s_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]],
-        ErrorNode[_, s_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]]
-      };
+    (* 
+    Test case: 
+      A function is defined in a Package inside Private context and
+      the function usage is defined in the Package.
 
-      line = StringJoin[a1];
+      To get the usage right, depth of 6 is sufficient, because the usage pattern is within
+        
+        ContainerNode[{                       (adds 2 levels)
+            PackageNode[{                     (adds 2 levels)
+                  CallNode[{                  (adds 2 levels)
+    *)
+    6
+  ]; 
 
-      If[!StringQ[line],
-        line = "INVALID"
-      ];
-      ,
+  If[$Debug2,
+    log["requiredUsage from handleUserSymbols: "]; 
+    log[requiredUsage];
+  ];
+
+
+  (* 
+  Get functionCallPattern AST for functions with SetDelayed & UpSetDelayed 
+  *)
+  functionCallPatternAST1 = Cases[astIn, CallNode[
+    LeafNode[Symbol, "Set" | "SetDelayed" | "UpSet" | "UpSetDelayed", _],
+    {
+      lhs:CallNode[_, _, _],
+      rhs:_
+    },
+    KeyValuePattern["Definitions" -> {___, LeafNode[Symbol, tokenSymbol, _], ___}]
+
+    (* 
+    Test case: 
+      A function is defined in a Package inside Private context and
+      the function usage is defined in the Package.
+
+      To get the function-call-pattern right, depth of 8 is sufficient, because the function-call-pattern is within
+        
+        ContainerNode[{                       (adds 2 levels)
+            PackageNode[{                     (adds 2 levels)
+                ContextNode[{                 (adds 2 levels)
+                    CallNode[{                (adds 2 levels)
+    *)
+    ] :> lhs, 8
+  ];
+
+  (* 
+  Delete LHS of the usage messages from the functionCallPattern
+  *)
+
+  functionCallPatternAST1 = DeleteCases[functionCallPatternAST1, $messageNamePattern];
+
+  (* 
+    Get functionCallPattern AST for functions with TagSetDelayed 
+  *)
+  functionCallPatternAST2 = Cases[astIn, CallNode[
+    LeafNode[Symbol, "TagSet" | "TagSetDelayed", _],
+    {
+      LeafNode[Symbol, tokenSymbol, _], 
+      lhs:CallNode[_, _, _], 
+      rhs:_
+    },
+    KeyValuePattern["Definitions" -> {___, LeafNode[Symbol, tokenSymbol, _], ___}]
+
+    ] :> lhs, 8
+  ];
+
+  functionCallPatternAST = Join[functionCallPatternAST1, functionCallPatternAST2];
+
+  functionSource = #[[3, Key[Source]]]& /@ functionCallPatternAST;
+
+  (* 
+  Test case: 
+    A function is defined in a Package inside Private context and
+    the function usage is defined in the Package.
+
+    To get the function-call-pattern right, depth of 6 is sufficient, because the function-call-pattern is within
       
-      line = "No usage message"
+      ContainerNode[{                       (adds 2 levels)
+              InfixNode[{                   (adds 2 levels)
+                    BinaryNode[{            (adds 2 levels)
+  *)
+  functionCallPatternCST = FirstCase[cstIn, _[_, _, KeyValuePattern[Source -> #]], $Failed, 6]& /@ functionSource;
+
+  If[Length[functionCallPatternCST] == 0 && Length[requiredUsage] == 0,
+    functionInformationAssoc =     <|
+      "SymbolType" -> "UserDefined",
+      "Usage" -> None,
+      "DocumentationLink" -> None,
+      "FunctionCallPattern" -> None,
+      "FunctionInformation" -> False
+    |>
+    ,
+    If[Length[functionCallPatternCST] == 0,
+      functionCallPattern = "No function defined."
+      ,
+      functionCallPattern = CodeFormatCST /@ functionCallPatternCST;
+      functionCallPattern = DeleteDuplicates[functionCallPattern];
+      functionCallPattern = StringRiffle[functionCallPattern, "\n"];
     ];
+
+    If[Length[requiredUsage] == 0,
+      requiredUsage = "No usage message."
+      ,
+      requiredUsage = StringRiffle[requiredUsage, "\n"]
+    ];
+    
+    functionInformationAssoc = <|
+      "SymbolType" -> "UserDefined",
+      "Usage" -> requiredUsage,
+      "DocumentationLink" -> None,
+      "FunctionCallPattern" -> functionCallPattern,
+      "FunctionInformation" -> True
+    |>
+  ];
+
+  functionInformationAssoc
+]
+
+handleSystemSymbols[symIn_] := 
+Module[{usage, symbolType, documentationLink, functionInformation},
+  usage = ToExpression[symIn <> "::usage"];
+
+  If[StringQ[usage],
+    symbolType = "System";
+    functionInformation = True;
+    usage = StringJoin[linearToMDSyntax[usage]];
 
     (*
     
@@ -389,28 +566,70 @@ Module[{lines, line, result, syms, usage, a1},
     ];
     *)
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, StringReplace[sym, StartOfString ~~ "System`" -> ""]],
-      line = line <> "\n\nUNDOCUMENTED"
+    If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, StringReplace[symIn, StartOfString ~~ "System`" -> ""]],
+      usage = usage <> "\n\nUNDOCUMENTED"
     ];
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, StringReplace[sym, StartOfString ~~ "System`" -> ""]],
-      line = line <> "\n\nEXPERIMENTAL"
+    If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, StringReplace[symIn, StartOfString ~~ "System`" -> ""]],
+      usage = usage <> "\n\nEXPERIMENTAL"
     ];
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, StringReplace[sym, StartOfString ~~ "System`" -> ""]],
-      line = line <> "\n\nOBSOLETE"
+    If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, StringReplace[symIn, StartOfString ~~ "System`" -> ""]],
+      usage = usage <> "\n\nOBSOLETE"
     ];
 
-    line
+    documentationLink = "[" <> symIn <> ": "<> "Web Documentation]" <> 
+          "(" <> "https://reference.wolfram.com/language/ref/" <> symIn <> ".html" <> ")";
+    ,
+    symbolType = "INVALID";
+    usage = "INVALID";
+    documentationLink = None;
+    functionInformation = False;
+
+  ];
+
+  <|
+    "SymbolType" -> symbolType,
+    "Usage" -> usage,
+    "DocumentationLink" -> documentationLink,
+    "FunctionCallPattern" -> None,
+    "FunctionInformation" -> functionInformation
+  |>
+
+]
+
+handleSymbols[id_, astIn_, cstIn_, symsIn_] :=
+Catch[
+Module[{lines, result, syms, functionInformationAssoc},
+
+  syms = symsIn;
+
+  syms = #["String"]& /@ syms;
+
+  lines = Function[{sym},
+
+    (* 
+    Find system symbol information
+    *)
+    functionInformationAssoc = handleSystemSymbols[sym];
+    (* 
+    If system symbol information is not available, try to find the user defined function information 
+    *)
+    If[functionInformationAssoc["SymbolType"] == "INVALID",
+      functionInformationAssoc = handleUserSymbols[astIn, cstIn, symsIn];
+    ];
+
+    functionInformationAssoc
 
   ] /@ syms;
+
 
   Which[
     Length[lines] == 0,
       result = Null
     ,
     Length[lines] == 1,
-      result = <| "contents" -> <| "kind" -> "markdown", "value" -> lines[[1]] |> |>
+      result = <| "contents" -> <| "kind" -> "markdown", "value" -> formatUsageCallPatterns[lines[[1]]] |> |>;
     ,
     True,
       result = <| "contents" -> "BAD!!!" |>
@@ -459,6 +678,40 @@ Module[{lines, result, nums, dec},
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
 ]]
+
+
+linearToMDSyntax[str_] := 
+Module[{},
+  reassembleEmbeddedLinearSyntax[CodeTokenize[str]] /. {
+    LeafNode[Token`Newline, _, _] -> "\n\n",
+    LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
+    LeafNode[Token`LinearSyntaxBlob, s_, _] :> parseLinearSyntaxBlob[s],
+    LeafNode[String, s_, _] :> parseString[s],
+    LeafNode[_, s_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]],
+    ErrorNode[_, s_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s]]]]
+  }
+]
+
+formatUsageCallPatterns[assoc_] := 
+Module[{res},
+  If[Not[TrueQ[assoc["FunctionInformation"]]],
+    res = "No function information."
+    ,
+    If[assoc["SymbolType"] == "System",
+      res = StringJoin[{assoc["Usage"], "\n\n_", assoc["DocumentationLink"] <> "_"}]
+      ,
+      res = StringRiffle[{
+        "**Usage**", 
+        StringJoin[linearToMDSyntax[assoc["Usage"]]], 
+        "**Function Call Patterns**", 
+        StringJoin[linearToMDSyntax[assoc["FunctionCallPattern"]]]
+        }, 
+        "\n\n"]
+    ];
+  ];
+
+  res
+]
 
 
 endsWithOddBackslashesQ[str_String] := 
@@ -887,6 +1140,15 @@ Catch[
     ]
   ]
 ]
+
+$messageNamePattern = CallNode[LeafNode[Symbol, "MessageName", _], 
+  {
+    LeafNode[Symbol, _, _], 
+    LeafNode[String, _, _],
+    ___
+  }, 
+  _
+];
 
 
 End[]
