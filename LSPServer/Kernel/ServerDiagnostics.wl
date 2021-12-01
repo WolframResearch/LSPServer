@@ -1,4 +1,4 @@
-(* ::Package::"Tags"-><|"NoVariables" -> <|"Module" -> <|Enabled -> False|>|>|>:: *)
+(* ::Package::"Tags"-><|"NoVariables" -> <|"Module" -> <|Enabled -> False|>|>, "SuspiciousSessionSymbol" -> <|Enabled -> False|>|>:: *)
 
 BeginPackage["LSPServer`ServerDiagnostics`"]
 
@@ -167,7 +167,7 @@ RunServerDiagnostic[command:{_String...}] :=
     str = "";
 
     Print["Writing initialize..."];
-    res = Quiet[BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"], {BinaryWrite::errfile}]
+    res = Quiet[BinaryWrite[stdIn, "Content-Length: " <> ToString[len] <> "\r\n\r\n"], {BinaryWrite::errfile}];
     If[FailureQ[res],
       Print["ERROR: BinaryWrite failed; exiting hard"];
       exitHard[proc];
