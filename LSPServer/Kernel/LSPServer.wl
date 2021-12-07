@@ -464,6 +464,9 @@ Module[{logFile, logFileStream,
   log["$ParentProcessID: ", $ParentProcessID];
   log["\n\n"];
 
+  log["Directory[]: ", Directory[]];
+  log["\n\n"];
+
 
   log["Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)"];
   log["\n\n"];

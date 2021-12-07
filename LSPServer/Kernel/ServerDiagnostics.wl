@@ -16,13 +16,18 @@ $MinimumRecommendedCodeToolsVersion = 1.2
 
 $MinimumRecommendedKernelVersion = 12.1
 
+Options[RunServerDiagnostic] = {
+  ProcessDirectory -> Inherited
+}
 
-RunServerDiagnostic[command:{_String...}] :=
+RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
   Catch[
-  Module[{proc, stdIn, stdOut, assoc, bytes, str, cases, case, len, content, lenStr, runPosition, run, toTest,
+  Module[{cwd, proc, stdIn, stdOut, assoc, bytes, str, cases, case, len, content, lenStr, runPosition, run, toTest,
     lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
     lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate,
     contentStr, res, kernelVersion, startServerString, startServer, startServerArgs, serverStartTime, serverInitializeTime},
+
+    cwd = OptionValue[ProcessDirectory];
 
     Print["Running Language Server diagnostic..."];
 
@@ -40,6 +45,9 @@ RunServerDiagnostic[command:{_String...}] :=
     If[!StringStartsQ[ToLowerCase[FileBaseName[command[[1]]]], "wolframkernel"],
       Print["WARNING: Command for Wolfram Language Server does not start with 'WolframKernel': ", command[[1]]];
     ];
+    Print[];
+
+    Print["Current directory (Directory[]): ", Directory[]];
     Print[];
 
     If[!MemberQ[command, "-noinit"],
@@ -129,7 +137,7 @@ RunServerDiagnostic[command:{_String...}] :=
     serverStartTime = Now;
 
     Print["Starting Language Server kernel with command: ", command];
-    proc = StartProcess[command];
+    proc = StartProcess[command, ProcessDirectory -> cwd];
 
     (*
     Only kill process here
