@@ -63,6 +63,8 @@ $BracketMatcherUseDesignColors
 
 $ConfidenceLevel
 
+$HierarchicalDocumentSymbolSupport
+
 (*
 $SemanticTokens is True if the client supports semantic tokens and the user has enabled them
 
@@ -178,6 +180,8 @@ $BracketMatcherUseDesignColors = True
 
 
 $SemanticTokens = False
+
+$HierarchicalDocumentSymbolSupport = False
 
 
 (*
@@ -774,7 +778,8 @@ returns: a list of associations (possibly empty), each association represents JS
 handleContent[content:KeyValuePattern["method" -> "initialize"]] :=
 Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSupport, codeActionKind, valueSet,
   codeActionProviderValue, initializationOptions, implicitTokens,
-  bracketMatcher, debugBracketMatcher, clientName, semanticTokensProviderValue, semanticTokens, contents},
+  bracketMatcher, debugBracketMatcher, clientName, semanticTokensProviderValue, semanticTokens, contents,
+  documentSymbol, hierarchicalDocumentSymbolSupport},
 
   If[$Debug2,
     log["initialize: enter"];
@@ -1001,6 +1006,12 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     ];
     ,
     semanticTokensProviderValue = Null
+  ];
+
+  If[KeyExistsQ[textDocument, "documentSymbol"],
+    documentSymbol = textDocument["documentSymbol"];
+    hierarchicalDocumentSymbolSupport = documentSymbol["hierarchicalDocumentSymbolSupport"];
+    $HierarchicalDocumentSymbolSupport = hierarchicalDocumentSymbolSupport
   ];
 
   $kernelInitializeTime = Now;

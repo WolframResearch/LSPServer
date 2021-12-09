@@ -81,7 +81,8 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbolFencepost"]] :=
 Catch[
-Module[{id, params, doc, uri, ast, entry, symbolInfo, defs},
+Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
+  flatBag, comments, sorted, toInsert, completed, nodeList},
 
   If[$Debug2,
     log["textDocument/documentSymbolFencepost: enter"]
@@ -115,43 +116,589 @@ Module[{id, params, doc, uri, ast, entry, symbolInfo, defs},
     
   entry = $OpenFilesMap[uri];
 
+  cst = entry["CST"];
+
+  If[FailureQ[cst],
+    Throw[cst]
+  ];
+
   ast = entry["AST"];
 
   If[FailureQ[ast],
     Throw[ast]
   ];
 
-  defs = Cases[ast, _[_, _, KeyValuePattern["Definitions" -> defs_]] :> defs, Infinity];
-  
-  defs = Flatten[defs];
+  (*
+  populate flatBag
+  *)
+  comments = Cases[cst[[2]], LeafNode[Token`Comment, _, _]];
+
+  If[$Debug2,
+    log["comments: ", comments]
+  ];
+
+  Block[{$FlatBag},
+    $FlatBag = Internal`Bag[];
+    walkCommentPair /@ Partition[comments, 2, 1];
+    walkAST /@ ast[[2]];
+    flatBag = $FlatBag;
+  ];
+
+  If[$Debug2,
+    log["flatBag: ", flatBag]
+  ];
 
   (*
-  Source may have been abstracted away
-
-  We are only interested in definitions that have Source
+  sort
   *)
-  defs = Cases[defs, LeafNode[Symbol, _, KeyValuePattern[Source -> _]]];
+  sorted = SortBy[Internal`BagPart[flatBag, All], #[[3, Key[Source]]] &];
 
-  symbolInfo =
-    Function[{sym}, <|
-      "name" -> sym["String"],
-      "kind" -> $SymbolKind["Function"],
-      "range" -> <|
-        "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
-        "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
-      |>,
-      "selectionRange" -> <|
-        "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
-        "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
-      |>
-      |>&[sym[[3, Key[Source]]] - 1]
-    ] /@ defs;
+  If[$Debug2,
+    log["sorted: ", sorted]
+  ];
 
-  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> symbolInfo |>}
+  toInsert = createToInsert[sorted];
+
+  completed = Fold[Insert[#1, #2[[1]], #2[[2]]] &, sorted, ReverseSortBy[Normal[Internal`BagPart[toInsert, All]], #[[2;;3]]&]];
+
+  If[$Debug2,
+    log["completed: ", completed]
+  ];
+
+  nodeList = createNodeList[completed];
+
+  If[$Debug2,
+    log["nodeList: ", nodeList]
+  ];
+
+  documentSymbols = Flatten[walkOutline /@ nodeList];
+
+  If[$Debug2,
+    log["documentSymbols: ", documentSymbols]
+  ];
+
+  If[$HierarchicalDocumentSymbolSupport,
+    {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> documentSymbols |>}
+    ,
+
+    symbolInfo = Flatten[flattenDocumentSymbolToSymbolInfo /@ documentSymbols];
+
+    {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> symbolInfo |>}
+  ]
 ]]
 
 
+abstractContextString[str_String /; StringStartsQ[str, "\""]] :=
+	Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 
+
+flattenDocumentSymbolToSymbolInfo[documentSymbol:KeyValuePattern["children" -> children_]] :=
+  Flatten[{KeyDrop[documentSymbol, "children"], flattenDocumentSymbolToSymbolInfo /@ children}]
+
+flattenDocumentSymbolToSymbolInfo[documentSymbol_] :=
+  documentSymbol
+
+
+
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Package:: *)", data_], _}] :=
+  Internal`StuffBag[$FlatBag, packageComment[Null, "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Title:: *)", _], LeafNode[Token`Comment, com_, data_]}] := 
+  Internal`StuffBag[$FlatBag, titleComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Section:: *)", _], LeafNode[Token`Comment, com_, data_]}] :=
+  Internal`StuffBag[$FlatBag, sectionComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Section::Closed:: *)", _], LeafNode[Token`Comment, com_, data_]}] :=
+  Internal`StuffBag[$FlatBag, sectionComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Subsection:: *)", _], LeafNode[Token`Comment, com_, data_]}] :=
+  Internal`StuffBag[$FlatBag, subsectionComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Subsection::Closed:: *)", _], LeafNode[Token`Comment, com_, data_]}] :=
+  Internal`StuffBag[$FlatBag, subsectionComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Subsubsection:: *)", _], LeafNode[Token`Comment, com_, data_]}] :=
+  Internal`StuffBag[$FlatBag, subsubsectionComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+walkCommentPair[{LeafNode[Token`Comment, "(* ::Subsubsection::Closed:: *)", _], LeafNode[Token`Comment, com_, data_]}] :=
+  Internal`StuffBag[$FlatBag, subsubsectionComment[StringTrim[StringTake[com, {3, -3}]], "", KeyTake[data, {Source}]]]
+
+
+walkAST[PackageNode[ctxts_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  Internal`StuffBag[$FlatBag, beginPackageNode[abstractContextString[ctxts[[1, 2]]], "", <|Source -> {src[[1]], src[[1]]}|>]];
+  walkAST /@ children;
+  Internal`StuffBag[$FlatBag, endPackageNode[Null, "", <|Source -> {src[[2]], src[[2]]}|>]];
+]
+
+walkAST[ContextNode[ctxts_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  Internal`StuffBag[$FlatBag, beginNode[abstractContextString[ctxts[[1, 2]]], "", <|Source -> {src[[1]], src[[1]]}|>]];
+  walkAST /@ children;
+  Internal`StuffBag[$FlatBag, endNode[Null, "", <|Source -> {src[[2]], src[[2]]}|>]];
+]
+
+walkAST[NewContextPathNode[ctxts_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  Internal`StuffBag[$FlatBag, beginNewContextPathNode[abstractContextString[#[[2]]]& /@ ctxts, "", <|Source -> {src[[1]], src[[1]]}|>]];
+  walkAST /@ children;
+  Internal`StuffBag[$FlatBag, endNewContextPathNode[Null, "", <|Source -> {src[[2]], src[[2]]}|>]];
+]
+
+walkAST[CallNode[LeafNode[Symbol, "SetDelayed", _], _, KeyValuePattern["Definitions" -> defs_]]] :=
+  Internal`StuffBag[$FlatBag, functionDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+
+walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "SetDelayed", _], _, KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
+ Internal`StuffBag[$FlatBag, functionDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+
+walkAST[CallNode[LeafNode[Symbol, "Set", _], _, KeyValuePattern["Definitions" -> defs_]]] :=
+ Internal`StuffBag[$FlatBag, constantDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+
+walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Set", _], _, KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
+ Internal`StuffBag[$FlatBag, constantDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+
+
+
+createToInsert[sorted_] :=
+Module[{operatorStack, toInsert, x, peek},
+  operatorStack = System`CreateDataStructure["Stack"];
+  operatorStack["Push", None];
+  toInsert = Internal`Bag[];
+  Do[
+    x = sorted[[i]];
+    Switch[x,
+      packageComment[_, _, _],
+      operatorStack["Push", x]
+      ,
+      sectionComment[_, _, _],
+      peek = operatorStack["Peek"];
+      If[MatchQ[peek, subsubsectionComment[_, _, _]],
+        operatorStack["Pop"];
+        Internal`StuffBag[toInsert, {endSubsubsectionComment[], i, 1}]
+      ];
+      peek = operatorStack["Peek"];
+      If[MatchQ[peek, subsectionComment[_, _, _]],
+        operatorStack["Pop"];
+        Internal`StuffBag[toInsert, {endSubsectionComment[], i, 2}]
+      ];
+      peek = operatorStack["Peek"];
+      If[MatchQ[peek, sectionComment[_, _, _]],
+        operatorStack["Pop"];
+        Internal`StuffBag[toInsert, {endSectionComment[], i, 3}]
+      ];
+      operatorStack["Push", x]
+      ,
+      subsectionComment[_, _, _],
+      peek = operatorStack["Peek"];
+      If[MatchQ[peek, subsubsectionComment[_, _, _]],
+        operatorStack["Pop"];
+        Internal`StuffBag[toInsert, {endSubsubsectionComment[], i, 1}]
+      ];
+      peek = operatorStack["Peek"];
+      If[MatchQ[peek, subsectionComment[_, _, _]],
+        operatorStack["Pop"];
+        Internal`StuffBag[toInsert, {endSubsectionComment[], i, 2}]
+      ];
+      operatorStack["Push", x]
+      ,
+      subsubsectionComment[_, _, _],
+      peek = operatorStack["Peek"];
+      If[MatchQ[peek, subsubsectionComment[_, _, _]],
+        operatorStack["Pop"];
+        Internal`StuffBag[toInsert, {endSubsubsectionComment[], i, 1}]
+      ];
+      operatorStack["Push", x]
+      ,
+      _,
+      Null
+    ]
+    ,
+    {i, 1, Length[sorted]}
+  ];
+  peek = operatorStack["Peek"];
+  If[MatchQ[peek, subsubsectionComment[_, _, _]],
+    operatorStack["Pop"];
+    Internal`StuffBag[
+    toInsert, {endSubsubsectionComment[], Length[sorted] + 1, 1}]
+  ];
+  peek = operatorStack["Peek"];
+  If[MatchQ[peek, subsectionComment[_, _, _]],
+    operatorStack["Pop"];
+    Internal`StuffBag[
+    toInsert, {endSubsectionComment[], Length[sorted] + 1, 2}]
+  ];
+  peek = operatorStack["Peek"];
+  If[MatchQ[peek, sectionComment[_, _, _]],
+    operatorStack["Pop"];
+    Internal`StuffBag[
+    toInsert, {endSectionComment[], Length[sorted] + 1, 3}]
+  ];
+  peek = operatorStack["Peek"];
+  If[MatchQ[peek, packageComment[_, _, _]],
+    operatorStack["Pop"];
+    Internal`StuffBag[
+    toInsert, {endPackageComment[], Length[sorted] + 1, 4}]
+  ];
+
+  toInsert
+]
+
+
+
+
+
+createNodeList[completed_] :=
+Module[{nodeListStack, operatorStack, x, currentOperator, currentList, peek, nodeList},
+  nodeListStack = System`CreateDataStructure["Stack"];
+  operatorStack = System`CreateDataStructure["Stack"];
+  nodeListStack["Push", System`CreateDataStructure["Stack"]];
+  operatorStack["Push", None];
+  Do[
+    x = completed[[i]];
+    Switch[x,
+      packageComment[_, _, _],
+      operatorStack["Push", packageCommentNode[x[[1]], {}, x[[3]]]];
+      nodeListStack["Push", System`CreateDataStructure["Stack"]];
+      ,
+      sectionComment[_, _, _],
+      operatorStack["Push", sectionCommentNode[x[[1]], {}, x[[3]]]];
+      nodeListStack["Push", System`CreateDataStructure["Stack"]];
+      ,
+      subsectionComment[_, _, _],
+      operatorStack["Push", subsectionCommentNode[x[[1]], {}, x[[3]]]];
+      nodeListStack["Push", System`CreateDataStructure["Stack"]];
+      ,
+      subsubsectionComment[_, _, _],
+      operatorStack["Push", 
+      subsubsectionCommentNode[x[[1]], {}, x[[3]]]];
+      nodeListStack["Push", System`CreateDataStructure["Stack"]];
+      ,
+      endPackageComment[] | endSectionComment[] | endSubsectionComment[] | endSubsubsectionComment[],
+      currentOperator = operatorStack["Pop"];
+      currentList = nodeListStack["Pop"];
+      currentOperator[[2]] = Normal[currentList];
+      peek = nodeListStack["Peek"];
+      peek["Push", currentOperator];
+      ,
+      _,
+      peek = nodeListStack["Peek"];
+      peek["Push", x];
+    ]
+    ,
+    {i, 1, Length[completed]}
+  ];
+
+  peek = nodeListStack["Peek"];
+  nodeList = Normal[peek];
+  nodeList
+]
+
+
+
+
+
+
+walkOutline[packageCommentNode[_, {}, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "Package",
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[packageCommentNode[_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "Package",
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
+        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+    "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>,
+    "children" -> Flatten[walkOutline /@ children]
+    |>}
+]
+
+walkOutline[sectionCommentNode[name_, {}, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[sectionCommentNode[name_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
+        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+    "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>,
+    "children" -> Flatten[walkOutline /@ children]
+    |>}
+]
+
+walkOutline[subsectionCommentNode[name_, {}, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[subsectionCommentNode[name_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
+        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+    "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>,
+    "children" -> Flatten[walkOutline /@ children]
+    |>}
+]
+
+walkOutline[subsubsectionCommentNode[name_, {}, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[subsubsectionCommentNode[name_, children_, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
+        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+    "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>,
+    "children" -> Flatten[walkOutline /@ children]
+    |>}
+]
+
+walkOutline[functionDefinitionNode[name_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["Function"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[constantDefinitionNode[name_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["Constant"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[titleComment[name_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["File"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[beginNode[name_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "Begin[" <> name <> "]",
+    "kind" -> $SymbolKind["Namespace"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[endNode[Null, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "End[]",
+    "kind" -> $SymbolKind["Namespace"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[beginPackageNode[name_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "BeginPackage[" <> name <> "]",
+    "kind" -> $SymbolKind["Package"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[endPackageNode[Null, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "EndPackage[]",
+    "kind" -> $SymbolKind["Package"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[beginNewContextPathNode[ctxts_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "NewContextPath[" <> ToString[ctxts] <> "]",
+    "kind" -> $SymbolKind["Namespace"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
+
+walkOutline[endNewContextPathNode[Null, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> "RestoreContextPath[]",
+    "kind" -> $SymbolKind["Namespace"],
+    "range" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
+     "selectionRange" -> <|
+      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
+       "end" -> <|"line" -> src[[2, 1]], 
+        "character" -> src[[2, 2]]|>|>
+    |>}
+]
 
 End[]
 
