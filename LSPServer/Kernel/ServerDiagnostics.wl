@@ -150,6 +150,7 @@ RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
     Print[];
     
     If[FailureQ[proc],
+      Print["ERROR: StartProcess failed"];
       Throw[proc]
     ];
 
