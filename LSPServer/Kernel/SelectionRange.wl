@@ -43,8 +43,8 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/selectionRange"]
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/selectionRangeFencepost"
+      "textDocument/concreteParse",
+      "textDocument/selectionRangeFencepost"
     }
   ]]
 

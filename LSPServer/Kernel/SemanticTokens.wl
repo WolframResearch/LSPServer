@@ -64,11 +64,11 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/f
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/aggregateParse",
-       "textDocument/abstractParse",
-       "textDocument/runScopingData",
-       "textDocument/semanticTokens/fullFencepost"
+      "textDocument/concreteParse",
+      "textDocument/aggregateParse",
+      "textDocument/abstractParse",
+      "textDocument/runScopingData",
+      "textDocument/semanticTokens/fullFencepost"
     }
   ]]
 

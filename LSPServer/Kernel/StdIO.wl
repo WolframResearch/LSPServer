@@ -27,7 +27,7 @@ Module[{startupError},
     (*
     For example, on Windows, running WolframKernel.exe from command prompt will give library error 1
     *)
-    Throw[Failure["LSPServerNativeLibraryStartupError", <|"StartupError" -> startupError|>]]
+    Throw[Failure["LSPServerNativeLibraryStartupError", <| "StartupError" -> startupError |>]]
   ];
   Null
 ]]

@@ -33,15 +33,15 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"]
     ];
 
     <| "method" -> #, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/suppressedRegions",
-       "textDocument/runConcreteDiagnostics",
-       "textDocument/aggregateParse",
-       "textDocument/runAggregateDiagnostics",
-       "textDocument/abstractParse",
-       "textDocument/runAbstractDiagnostics",
-       "textDocument/runScopingData", (* implemented in SemanticTokens.wl *)
-       "textDocument/runScopingDiagnostics"
+      "textDocument/concreteParse",
+      "textDocument/suppressedRegions",
+      "textDocument/runConcreteDiagnostics",
+      "textDocument/aggregateParse",
+      "textDocument/runAggregateDiagnostics",
+      "textDocument/abstractParse",
+      "textDocument/runAbstractDiagnostics",
+      "textDocument/runScopingData", (* implemented in SemanticTokens.wl *)
+      "textDocument/runScopingDiagnostics"
     }
   ]]
 

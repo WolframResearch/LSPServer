@@ -43,9 +43,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismat
     ];
 
     <| "method" -> #, "params" -> params |>& /@ {
-       "textDocument/concreteTabsParse",
-       "textDocument/aggregateTabsParse",
-       "textDocument/runBracketMismatchesFencepost"
+      "textDocument/concreteTabsParse",
+      "textDocument/aggregateTabsParse",
+      "textDocument/runBracketMismatchesFencepost"
     }
   ]]
 
@@ -377,16 +377,16 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMi
 
     If[TrueQ[$DebugBracketMatcher],
 
-      lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines
+      lines = <| #, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]] |>& /@ lines
       ,
 
       lines = Values[line1Map] ~Join~ Values[line2Map] ~Join~ Values[line3Map] ~Join~ Values[line4Map];
 
-      lines = <|#, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]]|>& /@ lines;
+      lines = <| #, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]] |>& /@ lines;
 
-      lines = Merge[<|#["line"] -> #|>& /@ lines, Function[{vals}, {StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ vals, "<br>"], "</div>"], vals[[1]]["characterCount"]}]];
+      lines = Merge[<| #["line"] -> # |>& /@ lines, Function[{vals}, {StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ vals, "<br>"], "</div>"], vals[[1]]["characterCount"]}]];
       
-      lines = KeyValueMap[<|"line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]]|>&, lines]
+      lines = KeyValueMap[<| "line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]] |>&, lines]
     ];
 
     If[$Debug2,
@@ -447,11 +447,11 @@ suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column
       (*
       action
       *)
-      <|"command" -> "insert",
-        "insertionText" -> insertionText,
-        "line" -> line + chunkOffset,
-        "column" -> column,
-        "href" -> ToString[$hrefIdCounter]
+      <| "command" -> "insert",
+         "insertionText" -> insertionText,
+         "line" -> line + chunkOffset,
+         "column" -> column,
+         "href" -> ToString[$hrefIdCounter]
       |>
     }
   ]

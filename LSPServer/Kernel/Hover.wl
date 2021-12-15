@@ -340,7 +340,7 @@ Module[{lines, lineMap, originalLineNumber, line,
       result = <| "contents" -> "BAD!!!" |>
   ];
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
 ]]
 
 
@@ -416,7 +416,7 @@ Module[{lines, line, result, syms, usage, a1},
       result = <| "contents" -> "BAD!!!" |>
   ];
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
 ]]
 
 
@@ -457,7 +457,7 @@ Module[{lines, result, nums, dec},
       result = <| "contents" -> "BAD!!!" |>
   ];
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> result |>}
 ]]
 
 

@@ -43,8 +43,8 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/references"], po
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/referencesFencepost"
+      "textDocument/concreteParse",
+      "textDocument/referencesFencepost"
     }
   ]]
 
@@ -121,7 +121,7 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
     Function[{src}, <|
       "uri" -> uri,
       "range" -> <|
-        "start" -> <|"line" -> #[[1, 1]],"character" -> #[[1, 2]] |>,
+        "start" -> <| "line" -> #[[1, 1]],"character" -> #[[1, 2]] |>,
         "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
       |>
     |>&[Map[Max[#, 0]&, src-1, {2}]]] /@ srcs;

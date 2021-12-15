@@ -72,10 +72,10 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/aggregateParse",
-       "textDocument/abstractParse",
-       "textDocument/documentSymbolFencepost"
+      "textDocument/concreteParse",
+      "textDocument/aggregateParse",
+      "textDocument/abstractParse",
+      "textDocument/documentSymbolFencepost"
     }
   ]]
 
@@ -147,7 +147,7 @@ Module[{id, params, doc, uri, ast, entry, symbolInfo, defs},
       |>&[sym[[3, Key[Source]]] - 1]
     ] /@ defs;
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> symbolInfo |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> symbolInfo |>}
 ]]
 
 

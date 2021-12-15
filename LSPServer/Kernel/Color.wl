@@ -56,10 +56,10 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentColor"],
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/aggregateParse",
-       "textDocument/abstractParse",
-       "textDocument/documentColorFencepost"
+      "textDocument/concreteParse",
+      "textDocument/aggregateParse",
+      "textDocument/abstractParse",
+      "textDocument/documentColorFencepost"
     }
   ]]
 

@@ -87,7 +87,7 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
                               "end" ->   <| "line" -> endLineCol[[1]], "character" -> endLineCol[[2]] |> |>,
                 "newText" -> formatted|>;
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
 
 
@@ -176,7 +176,7 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
   textEdit = <| "range" -> range,
                 "newText" -> formatted|>;
 
-  {<|"jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
+  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
 
 End[]

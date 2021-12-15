@@ -47,7 +47,7 @@ merge[line1_Association, line2_Association] :=
     If[Length[line1["characters"]] =!= Length[line2["characters"]],
       Throw[{line1, line2}, "Unhandled"]
     ];
-    <|"line" -> line1["line"], "characters" -> ((# /. {
+    <| "line" -> line1["line"], "characters" -> ((# /. {
         {a_, "&nbsp;"} :> a,
         {"&nbsp;", b_} :> b,
         (*

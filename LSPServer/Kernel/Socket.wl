@@ -17,7 +17,7 @@ Needs["CodeParser`Utils`"]
 (* ================   Socket functions   ==================== *)
 (* ========================================================== *)
 
-lspMsgAssoc = <|"lspMsg" -> "", "msgInQueue" -> ""|>
+lspMsgAssoc = <| "lspMsg" -> "", "msgInQueue" -> "" |>
 
 (* =================   Initialize   ======================= *)
 

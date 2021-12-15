@@ -45,14 +45,14 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/codeAction"], po
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/suppressedRegions",
-       "textDocument/runConcreteDiagnostics",
-       "textDocument/aggregateParse",
-       "textDocument/runAggregateDiagnostics",
-       "textDocument/abstractParse",
-       "textDocument/runAbstractDiagnostics",
-       "textDocument/codeActionFencepost"
+      "textDocument/concreteParse",
+      "textDocument/suppressedRegions",
+      "textDocument/runConcreteDiagnostics",
+      "textDocument/aggregateParse",
+      "textDocument/runAggregateDiagnostics",
+      "textDocument/abstractParse",
+      "textDocument/runAbstractDiagnostics",
+      "textDocument/codeActionFencepost"
     }
   ]]
 
@@ -112,7 +112,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   Might get something like FileTooLarge
   *)
   If[FailureQ[cstLints],
-    Throw[{<|"jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>}]
   ];
   
   aggLints = entry["AggLints"];

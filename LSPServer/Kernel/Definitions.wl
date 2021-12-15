@@ -43,10 +43,10 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/definition"], po
     ];
 
     <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/aggregateParse",
-       "textDocument/abstractParse",
-       "textDocument/definitionFencepost"
+      "textDocument/concreteParse",
+      "textDocument/aggregateParse",
+      "textDocument/abstractParse",
+      "textDocument/definitionFencepost"
     }
   ]]
 

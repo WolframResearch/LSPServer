@@ -31,9 +31,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
     ];
 
     <| "method" -> #, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/aggregateParse",
-       "textDocument/runImplicitTokensFencepost"
+      "textDocument/concreteParse",
+      "textDocument/aggregateParse",
+      "textDocument/runImplicitTokensFencepost"
     }
   ]]
 
@@ -223,7 +223,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitT
       Function[{ignored1, line, content1(*, ignore rest of args*)},
         MapIndexed[
           Function[{sym, columnList},
-            <|"character" -> markupSymbolToChar[sym], "line" -> line, "column" -> columnList[[1]]|>]
+            <| "character" -> markupSymbolToChar[sym], "line" -> line, "column" -> columnList[[1]] |>]
           ,
           content1[[2, 2;;]]
         ]

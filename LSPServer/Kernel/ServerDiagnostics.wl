@@ -160,7 +160,7 @@ RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
     (*
     initialize
     *)
-    assoc = <|"method" -> "initialize", "id" -> 1, "params" -> <|
+    assoc = <| "method" -> "initialize", "id" -> 1, "params" -> <|
         "initializationOptions" -> <||>,
         "capabilities" -> <|
           "textDocument" -> <|
@@ -277,7 +277,7 @@ RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
     (*
     diagnostics
     *)
-    assoc = <|"method" -> "diagnostics", "id" -> 2|>;
+    assoc = <| "method" -> "diagnostics", "id" -> 2 |>;
     bytes = ExportByteArray[assoc, "JSON"];
     len = Length[bytes];
 
@@ -416,7 +416,7 @@ RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
     (*
     shutdown
     *)
-    assoc = <|"method" -> "shutdown", "id" -> 3|>;
+    assoc = <| "method" -> "shutdown", "id" -> 3 |>;
     bytes = ExportByteArray[assoc, "JSON"];
     len = Length[bytes];
 
@@ -521,7 +521,7 @@ RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
     (*
     exit
     *)
-    assoc = <|"method" -> "exit"|>;
+    assoc = <| "method" -> "exit" |>;
     bytes = ExportByteArray[assoc, "JSON"];
     len = Length[bytes];
 
