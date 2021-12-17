@@ -1,5 +1,25 @@
 BeginPackage["LSPServer`DocumentSymbol`"]
 
+packageCommentNode
+sectionCommentNode
+subsectionCommentNode
+subsubsectionCommentNode
+beginPackageNode
+beginNode
+beginNewContextPathNode
+constantDefinitionNode
+functionDefinitionNode
+propertyDefinitionNode
+endNode
+endPackageNode
+endNewContextPathNode
+
+packageComment
+titleComment
+sectionComment
+endSectionComment
+endPackageComment
+
 Begin["`Private`"]
 
 Needs["LSPServer`"]
@@ -75,17 +95,18 @@ Module[{params, id, doc, uri},
     "textDocument/concreteParse",
     "textDocument/aggregateParse",
     "textDocument/abstractParse",
+    "textDocument/documentNodeList",
     "textDocument/documentSymbolFencepost"
   }
 ]]
 
-handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbolFencepost"]] :=
+handleContent[content:KeyValuePattern["method" -> "textDocument/documentNodeList"]] :=
 Catch[
-Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
-  flatBag, comments, sorted, toInsert, completed, nodeList},
+Module[{id, params, doc, uri, cst, ast, entry, flatBag, comments,
+  sorted, toInsert, completed, nodeList, lastLine},
 
   If[$Debug2,
-    log["textDocument/documentSymbolFencepost: enter"]
+    log["textDocument/documentNodeList: enter"]
   ];
 
   id = content["id"];
@@ -132,6 +153,8 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
   populate flatBag
   *)
   comments = Cases[cst[[2]], LeafNode[Token`Comment, _, _]];
+  
+  lastLine = cst[[3, Key[Source], 2, 1]];
 
   Block[{$FlatBag},
     $FlatBag = Internal`Bag[];
@@ -143,14 +166,66 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
   (*
   sort
   *)
-  sorted = SortBy[Internal`BagPart[flatBag, All], #[[3, Key[Source]]] &];
+  sorted = SortBy[Internal`BagPart[flatBag, All], #[[3, Key[Source]]]&];
 
-  toInsert = createToInsert[sorted];
+  toInsert = createToInsert[sorted, lastLine];
 
-  completed = Fold[Insert[#1, #2[[1]], #2[[2]]] &, sorted, ReverseSortBy[Normal[Internal`BagPart[toInsert, All]], #[[2;;3]]&]];
+  completed = Fold[Insert[#1, #2[[1]], #2[[2]]]&, sorted, ReverseSortBy[Internal`BagPart[toInsert, All], #[[2;;3]]&]];
 
   nodeList = createNodeList[completed];
 
+  entry["NodeList"] = nodeList;
+
+  $OpenFilesMap[uri] = entry;
+
+  {}
+]]
+
+handleContent[content:KeyValuePattern["method" -> "textDocument/documentSymbolFencepost"]] :=
+Catch[
+Module[{id, params, doc, uri, entry, symbolInfo, documentSymbols,
+  nodeList},
+
+  If[$Debug2,
+    log["textDocument/documentSymbolFencepost: enter"]
+  ];
+
+  id = content["id"];
+
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
+
+    If[$Debug2,
+      log["canceled"]
+    ];
+    
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
+    
+    If[$Debug2,
+      log["stale"]
+    ];
+
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+    
+  entry = $OpenFilesMap[uri];
+
+  nodeList = entry["NodeList"];
+
+  nodeList = Lookup[entry, "NodeList", Null];
+
+  If[nodeList === Null,
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
+  
   documentSymbols = Flatten[walkOutline /@ nodeList];
 
   If[$Debug2,
@@ -304,7 +379,7 @@ Module[{},
 
 
 
-createToInsert[sorted_] :=
+createToInsert[sorted_, lastLine_] :=
 Module[{operatorStack, toInsert, x, peek},
   operatorStack = System`CreateDataStructure["Stack"];
   operatorStack["Push", None];
@@ -319,17 +394,17 @@ Module[{operatorStack, toInsert, x, peek},
       peek = operatorStack["Peek"];
       If[MatchQ[peek, subsubsectionComment[_, _, _]],
         operatorStack["Pop"];
-        Internal`StuffBag[toInsert, {endSubsubsectionComment[], i, 1}]
+        Internal`StuffBag[toInsert, {endSubsubsectionComment[<| Source -> {{x[[3, Key[Source], 2, 1]] - 2, 1}, {x[[3, Key[Source], 2, 1]] - 2, 1}} |>], i, 1}]
       ];
       peek = operatorStack["Peek"];
       If[MatchQ[peek, subsectionComment[_, _, _]],
         operatorStack["Pop"];
-        Internal`StuffBag[toInsert, {endSubsectionComment[], i, 2}]
+        Internal`StuffBag[toInsert, {endSubsectionComment[<| Source -> {{x[[3, Key[Source], 2, 1]] - 2, 1}, {x[[3, Key[Source], 2, 1]] - 2, 1}} |>], i, 2}]
       ];
       peek = operatorStack["Peek"];
       If[MatchQ[peek, sectionComment[_, _, _]],
         operatorStack["Pop"];
-        Internal`StuffBag[toInsert, {endSectionComment[], i, 3}]
+        Internal`StuffBag[toInsert, {endSectionComment[<| Source -> {{x[[3, Key[Source], 2, 1]] - 2, 1}, {x[[3, Key[Source], 2, 1]] - 2, 1}} |>], i, 3}]
       ];
       operatorStack["Push", x]
       ,
@@ -337,12 +412,12 @@ Module[{operatorStack, toInsert, x, peek},
       peek = operatorStack["Peek"];
       If[MatchQ[peek, subsubsectionComment[_, _, _]],
         operatorStack["Pop"];
-        Internal`StuffBag[toInsert, {endSubsubsectionComment[], i, 1}]
+        Internal`StuffBag[toInsert, {endSubsubsectionComment[<| Source -> {{x[[3, Key[Source], 2, 1]] - 2, 1}, {x[[3, Key[Source], 2, 1]] - 2, 1}} |>], i, 1}]
       ];
       peek = operatorStack["Peek"];
       If[MatchQ[peek, subsectionComment[_, _, _]],
         operatorStack["Pop"];
-        Internal`StuffBag[toInsert, {endSubsectionComment[], i, 2}]
+        Internal`StuffBag[toInsert, {endSubsectionComment[<| Source -> {{x[[3, Key[Source], 2, 1]] - 2, 1}, {x[[3, Key[Source], 2, 1]] - 2, 1}} |>], i, 2}]
       ];
       operatorStack["Push", x]
       ,
@@ -350,7 +425,7 @@ Module[{operatorStack, toInsert, x, peek},
       peek = operatorStack["Peek"];
       If[MatchQ[peek, subsubsectionComment[_, _, _]],
         operatorStack["Pop"];
-        Internal`StuffBag[toInsert, {endSubsubsectionComment[], i, 1}]
+        Internal`StuffBag[toInsert, {endSubsubsectionComment[<| Source -> {{x[[3, Key[Source], 2, 1]] - 2, 1}, {x[[3, Key[Source], 2, 1]] - 2, 1}} |>], i, 1}]
       ];
       operatorStack["Push", x]
       ,
@@ -363,26 +438,22 @@ Module[{operatorStack, toInsert, x, peek},
   peek = operatorStack["Peek"];
   If[MatchQ[peek, subsubsectionComment[_, _, _]],
     operatorStack["Pop"];
-    Internal`StuffBag[
-    toInsert, {endSubsubsectionComment[], Length[sorted] + 1, 1}]
+    Internal`StuffBag[toInsert, {endSubsubsectionComment[<| Source -> {{lastLine, 1}, {lastLine, 1}} |>], Length[sorted] + 1, 1}]
   ];
   peek = operatorStack["Peek"];
   If[MatchQ[peek, subsectionComment[_, _, _]],
     operatorStack["Pop"];
-    Internal`StuffBag[
-    toInsert, {endSubsectionComment[], Length[sorted] + 1, 2}]
+    Internal`StuffBag[toInsert, {endSubsectionComment[<| Source -> {{lastLine, 1}, {lastLine, 1}} |>], Length[sorted] + 1, 2}]
   ];
   peek = operatorStack["Peek"];
   If[MatchQ[peek, sectionComment[_, _, _]],
     operatorStack["Pop"];
-    Internal`StuffBag[
-    toInsert, {endSectionComment[], Length[sorted] + 1, 3}]
+    Internal`StuffBag[toInsert, {endSectionComment[<| Source -> {{lastLine, 1}, {lastLine, 1}} |>], Length[sorted] + 1, 3}]
   ];
   peek = operatorStack["Peek"];
   If[MatchQ[peek, packageComment[_, _, _]],
     operatorStack["Pop"];
-    Internal`StuffBag[
-    toInsert, {endPackageComment[], Length[sorted] + 1, 4}]
+    Internal`StuffBag[toInsert, {endPackageComment[<| Source -> {{lastLine, 1}, {lastLine, 1}} |>], Length[sorted] + 1, 4}]
   ];
 
   toInsert
@@ -414,14 +485,14 @@ Module[{nodeListStack, operatorStack, x, currentOperator, currentList, peek, nod
       nodeListStack["Push", System`CreateDataStructure["Stack"]];
       ,
       subsubsectionComment[_, _, _],
-      operatorStack["Push", 
-      subsubsectionCommentNode[x[[1]], {}, x[[3]]]];
+      operatorStack["Push", subsubsectionCommentNode[x[[1]], {}, x[[3]]]];
       nodeListStack["Push", System`CreateDataStructure["Stack"]];
       ,
-      endPackageComment[] | endSectionComment[] | endSubsectionComment[] | endSubsubsectionComment[],
+      endPackageComment[_] | endSectionComment[_] | endSubsectionComment[_] | endSubsubsectionComment[_],
       currentOperator = operatorStack["Pop"];
       currentList = nodeListStack["Pop"];
       currentOperator[[2]] = Normal[currentList];
+      currentOperator[[3, Key[Source], 2]] = x[[1, Key[Source], 2]];
       peek = nodeListStack["Peek"];
       peek["Push", currentOperator];
       ,

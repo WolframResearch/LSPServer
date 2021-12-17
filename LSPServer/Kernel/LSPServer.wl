@@ -123,6 +123,7 @@ Needs["LSPServer`Color`"]
 Needs["LSPServer`Definitions`"]
 Needs["LSPServer`Diagnostics`"]
 Needs["LSPServer`DocumentSymbol`"]
+Needs["LSPServer`FoldingRange`"]
 Needs["LSPServer`Formatting`"]
 Needs["LSPServer`Hover`"]
 Needs["LSPServer`ImplicitTokens`"]
@@ -1057,7 +1058,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
         "executeCommandProvider" -> $ExecuteCommandProvider,
         "documentSymbolProvider" -> True,
         "selectionRangeProvider" -> True,
-        "semanticTokensProvider" -> semanticTokensProviderValue
+        "semanticTokensProvider" -> semanticTokensProviderValue,
+        "foldingRangeProvider" -> True
       |>
     |>
   |>};
