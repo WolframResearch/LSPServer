@@ -268,7 +268,7 @@ Module[{},
   If[!KeyExistsQ[data, Source],
     Throw[Null]
   ];
-  walkFunctionDef /@ defs;
+  Internal`StuffBag[$FlatBag, functionDefinitionNode[defs[[1]][[2]], "", KeyTake[data, {Source}]]]
 ]]
 
 walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "SetDelayed", _], _, data:KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
@@ -277,7 +277,7 @@ Module[{},
   If[!KeyExistsQ[data, Source],
     Throw[Null]
   ];
-  walkFunctionDef /@ defs;
+  Internal`StuffBag[$FlatBag, functionDefinitionNode[defs[[1]][[2]], "", KeyTake[data, {Source}]]]
 ]]
 
 walkAST[CallNode[LeafNode[Symbol, "Set", _], _, data:KeyValuePattern["Definitions" -> defs_]]] :=
@@ -286,7 +286,7 @@ Module[{},
   If[!KeyExistsQ[data, Source],
     Throw[Null]
   ];
-  walkConstantDef /@ defs;
+  Internal`StuffBag[$FlatBag, constantDefinitionNode[defs[[1]][[2]], "", KeyTake[data, {Source}]]]
 ]]
 
 walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Set", _], _, data:KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
@@ -295,25 +295,7 @@ Module[{},
   If[!KeyExistsQ[data, Source],
     Throw[Null]
   ];
-  walkConstantDef /@ defs;
-]]
-
-walkFunctionDef[LeafNode[Symbol, str_, data_]] :=
-Catch[
-Module[{},
-  If[!KeyExistsQ[data, Source],
-    Throw[Null]
-  ];
-  Internal`StuffBag[$FlatBag, functionDefinitionNode[str, "", KeyTake[data, {Source}]]]
-]]
-
-walkConstantDef[LeafNode[Symbol, str_, data_]] :=
-Catch[
-Module[{},
-  If[!KeyExistsQ[data, Source],
-    Throw[Null]
-  ];
-  Internal`StuffBag[$FlatBag, constantDefinitionNode[str, "", KeyTake[data, {Source}]]]
+  Internal`StuffBag[$FlatBag, constantDefinitionNode[defs[[1]][[2]], "", KeyTake[data, {Source}]]]
 ]]
 
 
@@ -476,21 +458,25 @@ Module[{src},
 ]
 
 walkOutline[packageCommentNode[_, children_, data_]] :=
-Module[{src},
+Module[{walkedChildren, src},
+
+  walkedChildren = Flatten[walkOutline /@ children];
+
   src = data[Source];
   src--;
+
   {<|
     "name" -> "Package",
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
       "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>,
-    "children" -> Flatten[walkOutline /@ children]
+    "children" -> walkedChildren
   |>}
 ]
 
@@ -513,21 +499,25 @@ Module[{src},
 ]
 
 walkOutline[sectionCommentNode[name_, children_, data_]] :=
-Module[{src},
+Module[{walkedChildren, src},
+
+  walkedChildren = Flatten[walkOutline /@ children];
+
   src = data[Source];
   src--;
+  
   {<|
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
       "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>,
-    "children" -> Flatten[walkOutline /@ children]
+    "children" -> walkedChildren
   |>}
 ]
 
@@ -550,21 +540,25 @@ Module[{src},
 ]
 
 walkOutline[subsectionCommentNode[name_, children_, data_]] :=
-Module[{src},
+Module[{walkedChildren, src},
+
+  walkedChildren = Flatten[walkOutline /@ children];
+
   src = data[Source];
   src--;
+  
   {<|
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
       "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>,
-    "children" -> Flatten[walkOutline /@ children]
+    "children" -> walkedChildren
   |>}
 ]
 
@@ -587,21 +581,25 @@ Module[{src},
 ]
 
 walkOutline[subsubsectionCommentNode[name_, children_, data_]] :=
-Module[{src},
+Module[{walkedChildren, src},
+
+  walkedChildren = Flatten[walkOutline /@ children];
+
   src = data[Source];
   src--;
+
   {<|
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
       "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>,
-    "children" -> Flatten[walkOutline /@ children]
+    "children" -> walkedChildren
   |>}
 ]
 
