@@ -2,6 +2,8 @@
 
 LSPServer is a package that implements the [Language Server Protocol](https://microsoft.github.io/language-server-protocol/) for Wolfram Language and allows a Wolfram Language kernel to run as an LSP server.
 
+[Developing Wolfram Language Code in Other Editors and IDEs with LSP from WTC 2021: Watch Video (youtube)](https://www.youtube.com/watch?v=nXVEOUMZbzQ)
+
 LSPServer implements several LSP features:
 * Code diagnostics
 * Suggestions for fixes

@@ -17,7 +17,7 @@ Various bug fixes.
 
 ## 0.13 - 16 Sep, 2019
 
-Use "AdditionalSources" for Lints
+Use `"AdditionalSources"` for Lints
 
 
 ## 0.14 - 28 Oct, 2019
@@ -35,7 +35,7 @@ Only convert bytes to string if debug logging
 
 ### Fixes
 
-Handle $/ messages gracefully
+Handle `$/` messages gracefully
 
 Fix handling of non-ASCII characters
 
@@ -48,7 +48,7 @@ Quit kernel if any messages on startup
 
 Add color provider
 
-Require using File[] wrapper
+Require using `File[]` wrapper
 
 
 ## 1.0 - 2 Apr, 2020
@@ -88,11 +88,11 @@ Add implicit tokens for ExpectedOperands
 
 ## 1.2 - 25 Mar, 2021
 
-Allow textDocument/definition to lookup symbols with or without contexts
+Allow `textDocument/definition` to lookup symbols with or without contexts
 
 e.g., allow foo\`bar to look up definition for bar and vice versa
 
-Allow textDocument/hover to work with symbols and display their usage messages.
+Allow `textDocument/hover` to work with symbols and display their usage messages.
 
 The usage messages are parsed directly from the linear syntax.
 
@@ -104,21 +104,21 @@ Add a background thread for reading from stdin. This thread will write to a queu
 
 The server will look at the queue and determine if any of the messages can be discarded.
 
-For example, a long sequence of textDocument/didChange requests do not need to be processed. Only the final one needs to be processed.
+For example, a long sequence of `textDocument/didChange` requests do not need to be processed. Only the final one needs to be processed.
 
-Similarly, other requests that may be in the queue before a textDocument/didChange may also be discarded.
+Similarly, other requests that may be in the queue before a `textDocument/didChange` may also be discarded.
 
 Do a little work on only reparsing if needed.
 
-Handle textDocument/documentSymbol
+Handle `textDocument/documentSymbol`
 
-Handle more color literals and also handle textDocument/colorPresentation
+Handle more color literals and also handle `textDocument/colorPresentation`
 
 LSP clients will have a 10 second timeout for starting the kernel. After that, a dialog is presented explaining that there is a problem and diagnostic code is presented to run in a notebook.
 
 Introduce delays for running various methods.
 
-Implementation of textDocument/selectionRange
+Implementation of `textDocument/selectionRange`
 
 Initial implementation of semantic tokens
 
@@ -138,7 +138,7 @@ Experimental support for multiple clients
 
 Add Startup Message handling
 
-There may be internal errors in LSPServer that emit messages during Needs["LSPServer\`"]
+There may be internal errors in LSPServer that emit messages during ``Needs["LSPServer`"] ``
 
 These messages are exceptionally hard to handle because any code for handling has not yet been loaded
 
@@ -168,15 +168,15 @@ RunServerDiagnostic: reduce "must be run with same kernel" to warning
 If there were messages when loading LSPServer\`, then report in the diagnostic
 
 
-use FromDateString with "Language" -> "en" for more robust date parsing
+use FromDateString with `"Language" -> "en"` for more robust date parsing
 
 
 ### Fixes
 
 Various fixes for RunServerDiagnostic:
 
-BinaryWrite may fail, so check return value and quiet BinaryWrite::errfile
+BinaryWrite may fail, so check return value and quiet `BinaryWrite::errfile`
 
-If arr == {} returns unevaluated, then whole Which returns unevaluated
+If `arr == {}` returns unevaluated, then whole Which returns unevaluated
 
 
