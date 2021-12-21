@@ -227,40 +227,94 @@ walkCommentPair[{LeafNode[Token`Comment, "(* ::Subsubsection::Closed:: *)", _], 
 
 
 walkAST[PackageNode[ctxts_, children_, data_]] :=
+Catch[
 Module[{src},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
   src = data[Source];
   Internal`StuffBag[$FlatBag, beginPackageNode[abstractContextString[ctxts[[1, 2]]], "", <|Source -> {src[[1]], src[[1]]}|>]];
   walkAST /@ children;
-  Internal`StuffBag[$FlatBag, endPackageNode[Null, "", <|Source -> {src[[2]], src[[2]]}|>]];
-]
+  Internal`StuffBag[$FlatBag, endPackageNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
+]]
 
 walkAST[ContextNode[ctxts_, children_, data_]] :=
+Catch[
 Module[{src},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
   src = data[Source];
   Internal`StuffBag[$FlatBag, beginNode[abstractContextString[ctxts[[1, 2]]], "", <|Source -> {src[[1]], src[[1]]}|>]];
   walkAST /@ children;
-  Internal`StuffBag[$FlatBag, endNode[Null, "", <|Source -> {src[[2]], src[[2]]}|>]];
-]
+  Internal`StuffBag[$FlatBag, endNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
+]]
 
 walkAST[NewContextPathNode[ctxts_, children_, data_]] :=
+Catch[
 Module[{src},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
   src = data[Source];
   Internal`StuffBag[$FlatBag, beginNewContextPathNode[abstractContextString[#[[2]]]& /@ ctxts, "", <|Source -> {src[[1]], src[[1]]}|>]];
   walkAST /@ children;
-  Internal`StuffBag[$FlatBag, endNewContextPathNode[Null, "", <|Source -> {src[[2]], src[[2]]}|>]];
-]
+  Internal`StuffBag[$FlatBag, endNewContextPathNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
+]]
 
-walkAST[CallNode[LeafNode[Symbol, "SetDelayed", _], _, KeyValuePattern["Definitions" -> defs_]]] :=
-  Internal`StuffBag[$FlatBag, functionDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+walkAST[CallNode[LeafNode[Symbol, "SetDelayed", _], _, data:KeyValuePattern["Definitions" -> defs_]]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  walkFunctionDef /@ defs;
+]]
 
-walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "SetDelayed", _], _, KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
- Internal`StuffBag[$FlatBag, functionDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "SetDelayed", _], _, data:KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  walkFunctionDef /@ defs;
+]]
 
-walkAST[CallNode[LeafNode[Symbol, "Set", _], _, KeyValuePattern["Definitions" -> defs_]]] :=
- Internal`StuffBag[$FlatBag, constantDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+walkAST[CallNode[LeafNode[Symbol, "Set", _], _, data:KeyValuePattern["Definitions" -> defs_]]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  walkConstantDef /@ defs;
+]]
 
-walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Set", _], _, KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
- Internal`StuffBag[$FlatBag, constantDefinitionNode[#[[2]], "", KeyTake[#[[3]], Source]]] & /@ defs
+walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Set", _], _, data:KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  walkConstantDef /@ defs;
+]]
+
+walkFunctionDef[LeafNode[Symbol, str_, data_]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  Internal`StuffBag[$FlatBag, functionDefinitionNode[str, "", KeyTake[data, {Source}]]]
+]]
+
+walkConstantDef[LeafNode[Symbol, str_, data_]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  Internal`StuffBag[$FlatBag, constantDefinitionNode[str, "", KeyTake[data, {Source}]]]
+]]
 
 
 
