@@ -42,7 +42,7 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"]
   Module[{params, id, doc, uri},
 
     If[$Debug2,
-      log["textDocument/documentColor: enter expand"]
+      log["textDocument/documentSymbol: enter expand"]
     ];
 
     id = content["id"];
@@ -233,7 +233,7 @@ Module[{src},
     Throw[Null]
   ];
   src = data[Source];
-  Internal`StuffBag[$FlatBag, beginPackageNode[abstractContextString[ctxts[[1, 2]]], "", <|Source -> {src[[1]], src[[1]]}|>]];
+  Internal`StuffBag[$FlatBag, beginPackageNode[abstractContextString[ctxts[[1, 2]]], "", <| Source -> {src[[1]], src[[1]]} |>]];
   walkAST /@ children;
   Internal`StuffBag[$FlatBag, endPackageNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
 ]]
@@ -245,7 +245,7 @@ Module[{src},
     Throw[Null]
   ];
   src = data[Source];
-  Internal`StuffBag[$FlatBag, beginNode[abstractContextString[ctxts[[1, 2]]], "", <|Source -> {src[[1]], src[[1]]}|>]];
+  Internal`StuffBag[$FlatBag, beginNode[abstractContextString[ctxts[[1, 2]]], "", <| Source -> {src[[1]], src[[1]]} |>]];
   walkAST /@ children;
   Internal`StuffBag[$FlatBag, endNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
 ]]
@@ -257,7 +257,7 @@ Module[{src},
     Throw[Null]
   ];
   src = data[Source];
-  Internal`StuffBag[$FlatBag, beginNewContextPathNode[abstractContextString[#[[2]]]& /@ ctxts, "", <|Source -> {src[[1]], src[[1]]}|>]];
+  Internal`StuffBag[$FlatBag, beginNewContextPathNode[abstractContextString[#[[2]]]& /@ ctxts, "", <| Source -> {src[[1]], src[[1]]} |>]];
   walkAST /@ children;
   Internal`StuffBag[$FlatBag, endNewContextPathNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
 ]]
@@ -465,13 +465,14 @@ Module[{src},
     "name" -> "Package",
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[packageCommentNode[_, children_, data_]] :=
@@ -482,15 +483,15 @@ Module[{src},
     "name" -> "Package",
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
-        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+    |>, 
     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>,
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
     "children" -> Flatten[walkOutline /@ children]
-    |>}
+  |>}
 ]
 
 walkOutline[sectionCommentNode[name_, {}, data_]] :=
@@ -501,13 +502,14 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[sectionCommentNode[name_, children_, data_]] :=
@@ -518,15 +520,15 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
-        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+    |>, 
     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>,
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
     "children" -> Flatten[walkOutline /@ children]
-    |>}
+  |>}
 ]
 
 walkOutline[subsectionCommentNode[name_, {}, data_]] :=
@@ -537,13 +539,14 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[subsectionCommentNode[name_, children_, data_]] :=
@@ -554,15 +557,15 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
-        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+    |>, 
     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>,
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
     "children" -> Flatten[walkOutline /@ children]
-    |>}
+  |>}
 ]
 
 walkOutline[subsubsectionCommentNode[name_, {}, data_]] :=
@@ -573,13 +576,14 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[subsubsectionCommentNode[name_, children_, data_]] :=
@@ -590,15 +594,15 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> children[[-1, 3, Key[Source], 2, 1]], 
-        "character" -> children[[-1, 3, Key[Source], 2, 2]]|>|>, 
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> children[[-1, 3, Key[Source], 2, 1]], "character" -> children[[-1, 3, Key[Source], 2, 2]] |>
+    |>, 
     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>,
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
     "children" -> Flatten[walkOutline /@ children]
-    |>}
+  |>}
 ]
 
 walkOutline[functionDefinitionNode[name_, _, data_]] :=
@@ -609,13 +613,14 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["Function"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[constantDefinitionNode[name_, _, data_]] :=
@@ -626,13 +631,14 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["Constant"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[titleComment[name_, _, data_]] :=
@@ -643,13 +649,14 @@ Module[{src},
     "name" -> name,
     "kind" -> $SymbolKind["File"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[beginNode[name_, _, data_]] :=
@@ -660,13 +667,14 @@ Module[{src},
     "name" -> "Begin[" <> name <> "]",
     "kind" -> $SymbolKind["Namespace"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[endNode[Null, _, data_]] :=
@@ -677,13 +685,14 @@ Module[{src},
     "name" -> "End[]",
     "kind" -> $SymbolKind["Namespace"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[beginPackageNode[name_, _, data_]] :=
@@ -694,13 +703,14 @@ Module[{src},
     "name" -> "BeginPackage[" <> name <> "]",
     "kind" -> $SymbolKind["Package"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[endPackageNode[Null, _, data_]] :=
@@ -711,13 +721,14 @@ Module[{src},
     "name" -> "EndPackage[]",
     "kind" -> $SymbolKind["Package"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[beginNewContextPathNode[ctxts_, _, data_]] :=
@@ -728,13 +739,14 @@ Module[{src},
     "name" -> "NewContextPath[" <> ToString[ctxts] <> "]",
     "kind" -> $SymbolKind["Namespace"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 walkOutline[endNewContextPathNode[Null, _, data_]] :=
@@ -745,13 +757,14 @@ Module[{src},
     "name" -> "RestoreContextPath[]",
     "kind" -> $SymbolKind["Namespace"],
     "range" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], "character" -> src[[2, 2]]|>|>,
-     "selectionRange" -> <|
-      "start" -> <|"line" -> src[[1, 1]], "character" -> src[[1, 2]]|>,
-       "end" -> <|"line" -> src[[2, 1]], 
-        "character" -> src[[2, 2]]|>|>
-    |>}
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
 ]
 
 End[]
