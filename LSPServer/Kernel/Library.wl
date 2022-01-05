@@ -1,5 +1,7 @@
 BeginPackage["LSPServer`Library`"]
 
+GetStartupError
+
 StartBackgroundReaderThread
 
 LockQueue
@@ -21,6 +23,8 @@ GetStdInFError
 GetStdOutFEOF
 
 GetStdOutFError
+
+ReadLineFromStdIn
 
 WriteLineToStdOut
 
@@ -50,6 +54,12 @@ $LSPServerLibraryError = <|
   "FFLUSH_FAILED" -> 6
 |>
 
+
+GetStartupError[] :=
+Module[{res},
+  res = libraryFunctionWrapper[getStartupError];
+  res
+]
 
 StartBackgroundReaderThread[] :=
 Module[{res},
@@ -115,6 +125,12 @@ Module[{res},
 GetStdOutFError[] :=
 Module[{res},
   res = libraryFunctionWrapper[getStdOutFError];
+  res
+]
+
+ReadLineFromStdIn[] :=
+Module[{res},
+  res = libraryFunctionWrapper[readLineFromStdInFunc];
   res
 ]
 
@@ -202,6 +218,8 @@ Module[{res, loaded, linkObject},
 
 loadAllFuncs[] := (
 
+getStartupError := getStartupError = loadFunc["GetStartupError_LibraryLink", {}, Integer];
+
 startBackgroundReaderThreadFunc := startBackgroundReaderThreadFunc = loadFunc["StartBackgroundReaderThread_LibraryLink", {}, Integer];
 
 lockQueueFunc := lockQueueFunc = loadFunc["LockQueue_LibraryLink", {}, "Void"];
@@ -223,6 +241,8 @@ getStdInFError := getStdInFError = loadFunc["GetStdInFError_LibraryLink", {}, In
 getStdOutFEOF := getStdOutFEOF = loadFunc["GetStdOutFEOF_LibraryLink", {}, Integer];
 
 getStdOutFError := getStdOutFError = loadFunc["GetStdOutFError_LibraryLink", {}, Integer];
+
+readLineFromStdInFunc := readLineFromStdInFunc = loadFunc["ReadLineFromStdIn_LibraryLink", {}, "UTF8String"];
 
 writeLineToStdOutFunc := writeLineToStdOutFunc = loadFunc["WriteLineToStdOut_LibraryLink", {"UTF8String"}, Integer];
 

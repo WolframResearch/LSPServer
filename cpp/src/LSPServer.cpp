@@ -132,6 +132,14 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 }
 
 
+DLLEXPORT int GetStartupError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+
+    MArgument_setInteger(Res, startupError);
+
+    return LIBRARY_NO_ERROR;
+}
+
+
 DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
     if (startupError != 0) {
@@ -367,6 +375,35 @@ int readBytesFromStdIn(unsigned char *data, size_t numBytes) {
     }
 
     return 0;
+}
+
+
+DLLEXPORT int ReadLineFromStdIn_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    static std::string str;
+    
+    {
+        int res;
+
+        str.clear();
+        
+        res = readLineFromStdIn(str);
+
+        if (res) {
+            
+            MArgument_setInteger(Res, res);
+
+            return LIBRARY_NO_ERROR;
+        }
+    }
+
+    {
+        auto res = str.c_str();
+
+        MArgument_setUTF8String(Res, const_cast<char *>(res));
+    }
+
+    return LIBRARY_NO_ERROR;
 }
 
 
