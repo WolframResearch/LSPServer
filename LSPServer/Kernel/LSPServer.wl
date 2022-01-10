@@ -120,6 +120,7 @@ If[!FailureQ[$startupMessagesFile],
 Needs["LSPServer`BracketMismatches`"]
 Needs["LSPServer`CodeAction`"]
 Needs["LSPServer`Color`"]
+Needs["LSPServer`Completion`"]
 Needs["LSPServer`Definitions`"]
 Needs["LSPServer`Diagnostics`"]
 Needs["LSPServer`DocumentSymbol`"]
@@ -281,7 +282,6 @@ entry is an assoc of various key/values such as "Text" -> text and "CST" -> cst
 *)
 $OpenFilesMap = <||>
 
-
 (*
 An assoc of id -> True|False
 *)
@@ -322,7 +322,69 @@ Module[{contents},
     log["$ContentQueue (up to 20): ", #["method"]& /@ Take[$ContentQueue, UpTo[20]]]
   ];
 
+  c = Cases[$ContentQueue, KeyValuePattern["method" -> "textDocument/completion"]];
+
+  If[Length[c] > 0, 
+    $ContentQueue = rearrangeQueue[$ContentQueue];
+  ];
   
+];
+
+
+rearrangeQueue[queue_] := 
+Module[{didChangeMessage, completionMessage, params, lastComPos, positionDCFP, selectedDCFPmsgs, deletePositions, q, id},
+
+	(* Get all the completion and didChangeFencepost messages *)
+  didChangeMessage = Cases[queue, KeyValuePattern["method" -> "textDocument/didChangeFencepost"]];
+  completionMessage = Cases[queue, KeyValuePattern["method" -> "textDocument/completion"]];
+  positionCompletion = First @ First @ Position[queue, #]& /@ completionMessage;
+  
+  (* Get all the didChangeFencepost messages before the last completion message in the queue *)
+  lastComPos = First @ First @ Position[queue, Last[completionMessage]];
+  positionDCFP = Select[(First @ First @ Position[queue,#]& /@ didChangeMessage), #< lastComPos&];
+  selectedDCFPmsgs = queue[[#]]& /@ positionDCFP;
+  
+  (* using  DeleteElements, requires Mathematica 13.1+ *)
+  (* 
+    q = DeleteElements[queue, completionMessage];
+    q = DeleteElements[q, selectedDCFPmsgs];
+  *)
+
+  (* using Delete for 12.0+ compatibility *)
+  deletePositions = {#} & /@ Sort[Join[positionCompletion, positionDCFP]];
+  q = Delete[queue, deletePositions];
+
+  id = Last[completionMessage]["id"];
+  params = Last[completionMessage]["params"];
+
+  (* 
+    We are not going to evaluate AST and CST inside completion handler to save time.
+    So the changes introduced by the dcfp messages will be reflected in the AST and the CST
+    by evaluating AST and CST just after the completion handle. 
+  *)
+
+  PrependTo[q,  (<| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/aggregateParse",
+    "textDocument/abstractParse"
+  })];
+
+  (* 
+      Just handle the last completion message in the queue and ignore the earlier
+      ones as only that last one can give the token with most updated text.
+  *)
+
+  PrependTo[q, Last[completionMessage]];
+
+  (* 
+      Rearranged message queue after completion message prioritization contains 
+        1. All the didChangeFencepost messages
+        2. Most recent completion message
+        3. concreteParse, aggregateParse and abstractParse messages
+        4. Rest of the queue
+  *)
+  PrependTo[q, selectedDCFPmsgs] // Flatten
+
 ]
 
 
@@ -570,6 +632,9 @@ expandContents[contentsIn_] :=
 Module[{contents, lastContents},
 
   contents = contentsIn;
+
+  (* TODO: Delete this line when PR review is over. *)
+  log["New message (before expansion):> ", InputForm[#["method"]& /@ contents], "\n"];
 
   If[$Debug2,
     log["before expandContent"]
@@ -1066,6 +1131,10 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
           "openClose" -> True,
           "save" -> <| "includeText" -> False |>,
           "change" -> $TextDocumentSyncKind["Full"]
+        |>,
+        "completionProvider" -> <|
+          "resolveProvider" -> False, 
+          "triggerCharacters" -> {}
         |>,
         "codeActionProvider" -> codeActionProviderValue,
         "colorProvider" -> $ColorProvider,
@@ -1622,7 +1691,7 @@ Module[{params, doc, uri, entry, cstTabs, aggTabs},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/abstractParse"]] :=
 Catch[
-Module[{params, doc, uri, entry, agg, ast},
+Module[{params, doc, uri, entry, agg, ast, userSymbols},
 
   If[$Debug2,
     log["textDocument/abstractParse: enter"]
@@ -1661,17 +1730,35 @@ Module[{params, doc, uri, entry, agg, ast},
 
   ast = CodeParser`Abstract`Abstract[agg];
 
+  userSymbols = findAllUserSymbols[ast];
+
   If[$Debug2,
     log["after Abstract"]
   ];
 
   entry["AST"] = ast;
+  entry["PreviousAST"] = ast;
+
+  entry["UserSymbols"] = userSymbols;
+  entry["PreviousUserSymbols"] = userSymbols;
 
   $OpenFilesMap[uri] = entry;
 
   {}
 ]]
 
+
+findAllUserSymbols[ast_] := DeleteDuplicates[
+  Cases[ast, 
+    {
+      CallNode[
+        LeafNode[Symbol, "SetDelayed" | "Set", <||>],
+        {CallNode[LeafNode[Symbol, sym_, _], _, _], rhs : _} |
+        {LeafNode[Symbol, sym_, _], rhs : _}, 
+      _], 
+    _} :> sym,
+  8] (* Same depth used in finding function call pattern in Hover feature *)
+]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didClose"], pos_] :=
@@ -1794,7 +1881,9 @@ Module[{params, doc, uri, text, lastChange, entry, changes},
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
-  
+
+  entry = Lookup[$OpenFilesMap, uri, Null];
+
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
     If[$Debug2,
@@ -1813,10 +1902,24 @@ Module[{params, doc, uri, text, lastChange, entry, changes},
 
   text = lastChange["text"];
 
+  (* 
+      We do not want to keep entry["AST"] here. As the text is changed, AST needs to be re-evaluated.
+
+      But for fast response to the Completion messages, we can use the backdated AST. 
+      
+      If there are multiple didChangeFencepost messages in the queue, 
+          "PreviousAST" -> entry["AST"]
+      would break because from the second message onwards, entry["AST"] would be Missing.
+      
+      So it's better to assign newly evaluated AST to entry["PreviousAST"] and use it as long as new AST is is not re-evaluated.
+  *)
+
   entry = <|
     "Text" -> text,
     "LastChange" -> Now,
-    "ScheduledJobs" -> $didChangeScheduledJobs
+    "ScheduledJobs" -> $didChangeScheduledJobs,
+    "PreviousAST" -> entry["PreviousAST"],
+    "PreviousUserSymbols" -> entry["PreviousUserSymbols"]
   |>;
 
   $OpenFilesMap[uri] = entry;

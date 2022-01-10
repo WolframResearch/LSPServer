@@ -90,6 +90,7 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/BracketMismatches.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/CodeAction.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Color.wl
+	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Completion.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Definitions.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Diagnostics.wl
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/DocumentSymbol.wl

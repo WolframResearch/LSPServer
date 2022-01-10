@@ -6,5 +6,7 @@ TestSuite[{
     "hover/MissingCases.wlt",
     "hover/Package.wlt",
     "hover/SystemSymbol.wlt",
-    "hover/Values.wlt"
+    "hover/Values.wlt",
+    "completion/Package.wlt",
+    "completion/Symbol.wlt"
 }]

@@ -136,7 +136,13 @@ Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
   
   cst = entry["CST"];
 
-  suppressedRegions = entry["SuppressedRegions"];
+
+  suppressedRegions = Lookup[entry, "SuppressedRegions", Null];
+
+  If[suppressedRegions == Null,
+    suppressedRegions = SuppressedRegions[cst];
+    entry["SuppressedRegions"] = suppressedRegions;
+  ];
 
   If[$Debug2,
     log["before CodeInspectCST"]
@@ -229,7 +235,7 @@ Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagnostics"]] :=
 Catch[
-Module[{params, doc, uri, entry, ast, astLints, suppressedRegions},
+Module[{params, doc, uri, entry, ast, cst, astLints, suppressedRegions},
 
   If[$Debug2,
     log["textDocument/runAbstractDiagnostics: enter"]
@@ -266,7 +272,14 @@ Module[{params, doc, uri, entry, ast, astLints, suppressedRegions},
     Throw[{}]
   ];
 
-  suppressedRegions = entry["SuppressedRegions"];
+  suppressedRegions = Lookup[entry, "SuppressedRegions", Null];
+
+  If[suppressedRegions == Null,
+    cst = entry["CST"];
+    suppressedRegions = SuppressedRegions[cst];
+    entry["SuppressedRegions"] = suppressedRegions;
+  ];
+  
 
   If[$Debug2,
     log["before CodeInspectAST"]
@@ -296,7 +309,7 @@ Module[{params, doc, uri, entry, ast, astLints, suppressedRegions},
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagnostics"]] :=
 Catch[
-Module[{params, doc, uri, entry, scopingLints, scopingData, filtered, suppressedRegions, isActive},
+Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppressedRegions, isActive},
 
   If[$Debug2,
     log["textDocument/runScopingDiagnostics: enter"]
@@ -345,7 +358,14 @@ Module[{params, doc, uri, entry, scopingLints, scopingData, filtered, suppressed
   (*
   Filter out suppressed
   *)
-  suppressedRegions = entry["SuppressedRegions"];
+
+  suppressedRegions = Lookup[entry, "SuppressedRegions", Null];
+
+  If[suppressedRegions == Null,
+    cst = entry["CST"];
+    suppressedRegions = SuppressedRegions[cst];
+    entry["SuppressedRegions"] = suppressedRegions;
+  ];
 
   isActive = makeIsActiveFunc[suppressedRegions];
 

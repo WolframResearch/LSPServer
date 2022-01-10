@@ -1,5 +1,7 @@
 BeginPackage["LSPServer`Hover`"]
 
+linearToMDSyntax
+
 Begin["`Private`"]
 
 Needs["LSPServer`"]
