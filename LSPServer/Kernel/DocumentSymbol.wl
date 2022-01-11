@@ -262,6 +262,24 @@ Module[{src},
   Internal`StuffBag[$FlatBag, endNewContextPathNode[Null, "", <| Source -> {src[[2]], src[[2]]} |>]];
 ]]
 
+walkAST[CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {_, ___}, _], _}, data:KeyValuePattern["Definitions" -> defs_]]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  Internal`StuffBag[$FlatBag, propertyDefinitionNode[defs[[1]][[2]], "", KeyTake[data, {Source}]]]
+]]
+
+walkAST[CallNode[LeafNode[Symbol, "CompoundExpression", _], {CallNode[LeafNode[Symbol, "Set" | "SetDelayed", _], {CallNode[LeafNode[Symbol, "Attributes" | "Format" | "Options", _], {_, ___}, _], _}, data:KeyValuePattern["Definitions" -> defs_]], _}, _]] :=
+Catch[
+Module[{},
+  If[!KeyExistsQ[data, Source],
+    Throw[Null]
+  ];
+  Internal`StuffBag[$FlatBag, propertyDefinitionNode[defs[[1]][[2]], "", KeyTake[data, {Source}]]]
+]]
+
 walkAST[CallNode[LeafNode[Symbol, "SetDelayed", _], _, data:KeyValuePattern["Definitions" -> defs_]]] :=
 Catch[
 Module[{},
@@ -628,6 +646,24 @@ Module[{src},
   {<|
     "name" -> name,
     "kind" -> $SymbolKind["Constant"],
+    "range" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>,
+    "selectionRange" -> <|
+      "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
+    |>
+  |>}
+]
+
+walkOutline[propertyDefinitionNode[name_, _, data_]] :=
+Module[{src},
+  src = data[Source];
+  src--;
+  {<|
+    "name" -> name,
+    "kind" -> $SymbolKind["Property"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
       "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
