@@ -31,663 +31,663 @@ RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
     codeParserBuildDate, codeInspectorBuildDate,
     codeFormatterBuildDate, serverKernel, baseName, res},
 
-    cwd = OptionValue[ProcessDirectory];
+  cwd = OptionValue[ProcessDirectory];
 
-    Print["Running Language Server diagnostic..."];
-    Print[];
-    Print["IMPORTANT: Make sure that all other kernels are shut down before running this diagnostic."];
-    Print["Transient license limit errors may give false negatives."];
-    Print[];
+  Print["Running Language Server diagnostic..."];
+  Print[];
+  Print["IMPORTANT: Make sure that all other kernels are shut down before running this diagnostic."];
+  Print["Transient license limit errors may give false negatives."];
+  Print[];
 
-    lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
-    codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
-    codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
-    codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
+  lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
+  codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
+  codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
+  codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
 
-    lspServerBuildDate = PacletObject["LSPServer"]["BuildDate"];
-    codeParserBuildDate = PacletObject["CodeParser"]["BuildDate"];
-    codeInspectorBuildDate = PacletObject["CodeInspector"]["BuildDate"];
-    codeFormatterBuildDate = PacletObject["CodeFormatter"]["BuildDate"];
+  lspServerBuildDate = PacletObject["LSPServer"]["BuildDate"];
+  codeParserBuildDate = PacletObject["CodeParser"]["BuildDate"];
+  codeInspectorBuildDate = PacletObject["CodeInspector"]["BuildDate"];
+  codeFormatterBuildDate = PacletObject["CodeFormatter"]["BuildDate"];
 
-    (*
-    Do not actually use hostKernel for anything
+  (*
+  Do not actually use hostKernel for anything
 
-    It could just be "WolframKernel" and not useful
-    *)
-    Print["INFORMATION: Host Kernel: ", $CommandLine[[1]]];
-    Print["INFORMATION: Host Kernel version: ", $VersionNumber];
-    Print["INFORMATION: Host Kernel Directory[]: ", Directory[]];
-    Print["INFORMATION: Host Kernel $MaxLicenseProcesses: ", $MaxLicenseProcesses];
-    Print["INFORMATION: Host Kernel LSPServer version: ", lspServerVersion];
-    Print["INFORMATION: Host Kernel CodeParser version: ", codeParserVersion];
-    Print["INFORMATION: Host Kernel CodeInspector version: ", codeInspectorVersion];
-    Print["INFORMATION: Host Kernel CodeFormatter version: ", codeFormatterVersion];
-    Print["INFORMATION: Host Kernel LSPServer build date: ", lspServerBuildDate];
-    Print["INFORMATION: Host Kernel CodeParser build date: ", codeParserBuildDate];
-    Print["INFORMATION: Host Kernel CodeInspector build date: ", codeInspectorBuildDate];
-    Print["INFORMATION: Host Kernel CodeFormatter build date: ", codeFormatterBuildDate];
+  It could just be "WolframKernel" and not useful
+  *)
+  Print["INFORMATION: Host Kernel: ", $CommandLine[[1]]];
+  Print["INFORMATION: Host Kernel version: ", $VersionNumber];
+  Print["INFORMATION: Host Kernel Directory[]: ", Directory[]];
+  Print["INFORMATION: Host Kernel $MaxLicenseProcesses: ", $MaxLicenseProcesses];
+  Print["INFORMATION: Host Kernel LSPServer version: ", lspServerVersion];
+  Print["INFORMATION: Host Kernel CodeParser version: ", codeParserVersion];
+  Print["INFORMATION: Host Kernel CodeInspector version: ", codeInspectorVersion];
+  Print["INFORMATION: Host Kernel CodeFormatter version: ", codeFormatterVersion];
+  Print["INFORMATION: Host Kernel LSPServer build date: ", lspServerBuildDate];
+  Print["INFORMATION: Host Kernel CodeParser build date: ", codeParserBuildDate];
+  Print["INFORMATION: Host Kernel CodeInspector build date: ", codeInspectorBuildDate];
+  Print["INFORMATION: Host Kernel CodeFormatter build date: ", codeFormatterBuildDate];
 
-    If[$startupMessagesText =!= "",
-      Print["There were messages when loading LSPServer` package: ", $startupMessagesText];
-      Throw[$Failed]
+  If[$startupMessagesText =!= "",
+    Print["There were messages when loading LSPServer` package: ", $startupMessagesText];
+    Throw[$Failed]
+  ];
+
+  serverKernel = command[[1]];
+
+  baseName = FileBaseName[serverKernel];
+
+  If[!StringStartsQ[ToLowerCase[baseName], "wolframkernel"],
+    Print["ERROR: Command for Wolfram Language Server does not start with 'WolframKernel': ", serverKernel];
+    Throw[$Failed]
+  ];
+
+  Block[{$WorkaroundBug410895},
+
+    $WorkaroundBug410895 = False;
+    
+    res = doStage1[command, cwd];
+
+    If[FailureQ[res],
+      Throw[res]
     ];
 
-    serverKernel = command[[1]];
+    res = doStage2[command, cwd];
 
-    baseName = FileBaseName[serverKernel];
-
-    If[!StringStartsQ[ToLowerCase[baseName], "wolframkernel"],
-      Print["ERROR: Command for Wolfram Language Server does not start with 'WolframKernel': ", serverKernel];
-      Throw[$Failed]
+    If[FailureQ[res],
+      Throw[res]
     ];
+  ];
 
-    Block[{$WorkaroundBug410895},
-
-      $WorkaroundBug410895 = False;
-      
-      res = doStage1[command, cwd];
-
-      If[FailureQ[res],
-        Throw[res]
-      ];
-
-      res = doStage2[command, cwd];
-
-      If[FailureQ[res],
-        Throw[res]
-      ];
-    ];
-
-    Print[];
-    Print["No problems found."];
-  ]]
+  Print[];
+  Print["No problems found."];
+]]
 
 
 doStage1[command_, cwd_] :=
-  Catch[
-  Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
-    case, code},
+Catch[
+Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
+  case, code},
 
-    Print[];
-    Print["Start Stage 1"];
-    Print["Checking whether bug 410895 is present and work-around is needed..."];
+  Print[];
+  Print["Start Stage 1"];
+  Print["Checking whether bug 410895 is present and work-around is needed..."];
 
-    serverKernel = command[[1]];
+  serverKernel = command[[1]];
 
-    (*
-    Test bug 410895
-    Check whether StartProcess strips double-quote characters U+0022
+  (*
+  Test bug 410895
+  Check whether StartProcess strips double-quote characters U+0022
 
-    Need to make sure to definitely NOT have any double-quote characters in this command (except for the test itself)
+  Need to make sure to definitely NOT have any double-quote characters in this command (except for the test itself)
 
-    So effectively build a command that looks like: -run Test410895[(*"*)];ToExpression[FromCharacterCode[{1, 2, 3, ...}]]
-    where there are no double-quote characters (except for the test itself)
-    *)
-    miniRun = "Test410895[(*\"*)];ToExpression[FromCharacterCode["<>ToString[ToCharacterCode["Needs[\"LSPServer`\"];LSPServer`ServerDiagnostics`StartMiniServer[]"]]<>"]]";
+  So effectively build a command that looks like: -run Test410895[(*"*)];ToExpression[FromCharacterCode[{1, 2, 3, ...}]]
+  where there are no double-quote characters (except for the test itself)
+  *)
+  miniRun = "Test410895[(*\"*)];ToExpression[FromCharacterCode["<>ToString[ToCharacterCode["Needs[\"LSPServer`\"];LSPServer`ServerDiagnostics`StartMiniServer[]"]]<>"]]";
 
-    miniCommand = {serverKernel, "-noinit", "-noprompt", "-nopaclet", "-noicon", "-nostartuppaclets", "-run", miniRun};
+  miniCommand = {serverKernel, "-noinit", "-noprompt", "-nopaclet", "-noicon", "-nostartuppaclets", "-run", miniRun};
 
-    Print["Starting Mini Server kernel with command: ", miniCommand];
-    proc = Quiet[StartProcess[miniCommand, ProcessDirectory -> cwd], {StartProcess::pnfd}];
+  Print["Starting Mini Server kernel with command: ", miniCommand];
+  proc = Quiet[StartProcess[miniCommand, ProcessDirectory -> cwd], {StartProcess::pnfd}];
 
-    If[FailureQ[proc],
-      Print["ERROR: StartProcess failed"];
-      Throw[proc]
-    ];
-    
-    $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
+  If[FailureQ[proc],
+    Print["ERROR: StartProcess failed"];
+    Throw[proc]
+  ];
+  
+  $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
 
-    Print["Waiting maximum of 30 seconds for any hangs."];
+  Print["Waiting maximum of 30 seconds for any hangs."];
 
-    str = "";
+  str = "";
 
-    (*
-    N[Pi]
-    *)
-    Print["Sanity checking..."];
-    res = binaryWrite[proc, "N[Pi]\r\n"];
+  (*
+  N[Pi]
+  *)
+  Print["Sanity checking..."];
+  res = binaryWrite[proc, "N[Pi]\r\n"];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    Pause[0.2];
+  Pause[0.2];
 
-    If[ProcessStatus[proc] != "Running",
-      exitHard[proc, "ERROR: Mini Server kernel is not running after writing N[Pi]; exiting hard"];
-      Throw[$Failed]
-    ];
+  If[ProcessStatus[proc] != "Running",
+    exitHard[proc, "ERROR: Mini Server kernel is not running after writing N[Pi]; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    str = readByteArray[proc, str];
+  str = readByteArray[proc, str];
 
-    If[FailureQ[str],
-      Throw[str]
-    ];
-   
-    If[str != "3.14159\r\n",
+  If[FailureQ[str],
+    Throw[str]
+  ];
+ 
+  If[str != "3.14159\r\n",
 
-      Print["Read from Mini Server kernel:"];
-      Print[str];
-      diagnoseStdOut[str];
+    Print["Read from Mini Server kernel:"];
+    Print[str];
+    diagnoseStdOut[str];
 
-      exitHard[proc, "ERROR: Unrecognized response; exiting hard"];
-      Throw[$Failed]
-    ];
+    exitHard[proc, "ERROR: Unrecognized response; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    Print["Sanity check was successful."];
+  Print["Sanity check was successful."];
 
-    str = "";
+  str = "";
 
-    (*
-    $CommandLine
-    *)
-    Print["Testing bug 410895..."];
-    res = binaryWrite[proc, "$CommandLine\r\n"];
+  (*
+  $CommandLine
+  *)
+  Print["Testing bug 410895..."];
+  res = binaryWrite[proc, "$CommandLine\r\n"];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    Pause[0.2];
+  Pause[0.2];
 
-    If[ProcessStatus[proc] != "Running",
-      exitHard[proc, "ERROR: Mini Server kernel is not running after writing $CommandLine; exiting hard"];
-      Throw[$Failed]
-    ];
+  If[ProcessStatus[proc] != "Running",
+    exitHard[proc, "ERROR: Mini Server kernel is not running after writing $CommandLine; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    str = readByteArray[proc, str];
+  str = readByteArray[proc, str];
 
-    If[FailureQ[str],
-      Throw[str]
-    ];
+  If[FailureQ[str],
+    Throw[str]
+  ];
 
-    If[(cases = StringCases[str, "Test410895[(*" ~~ ("\"" | "") ~~ "*)]"]) == {},
+  If[(cases = StringCases[str, "Test410895[(*" ~~ ("\"" | "") ~~ "*)]"]) == {},
 
-      Print["Read from Mini Server kernel:"];
-      Print[str];
+    Print["Read from Mini Server kernel:"];
+    Print[str];
 
-      exitHard[proc, "ERROR: Unrecognized response; exiting hard"];
-      Throw[$Failed]
-    ];
+    exitHard[proc, "ERROR: Unrecognized response; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    case = cases[[1]];
+  case = cases[[1]];
       
-    Which[
-      StringMatchQ[case, "Test410895[(*\"*)]"],
-        Print["double-quotes are kept; bug 410895 is NOT present; NO work-around needed"];
-      ,
-      StringMatchQ[case, "Test410895[(**)]"],
-        Print["double-quotes are stripped; bug 410895 IS present; work-around IS needed"];
+  Which[
+    StringMatchQ[case, "Test410895[(*\"*)]"],
+      Print["double-quotes are kept; bug 410895 is NOT present; NO work-around needed"];
+    ,
+    StringMatchQ[case, "Test410895[(**)]"],
+      Print["double-quotes are stripped; bug 410895 IS present; work-around IS needed"];
 
-        $WorkaroundBug410895 = True;
-    ];
+      $WorkaroundBug410895 = True;
+  ];
 
-    Print["Testing bug 410895 was successful."];
+  Print["Testing bug 410895 was successful."];
 
-    (*
-    Exit[]
-    *)
-    Print["Exiting..."];
-    res = binaryWrite[proc, "Exit[0]\r\n"];
+  (*
+  Exit[]
+  *)
+  Print["Exiting..."];
+  res = binaryWrite[proc, "Exit[0]\r\n"];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    Pause[2.0];
+  Pause[2.0];
 
-    If[ProcessStatus[proc] != "Finished",
-      exitHard[proc, "ERROR: Mini Server kernel is not finished; exiting hard"];
-      Throw[$Failed]
-    ];
+  If[ProcessStatus[proc] != "Finished",
+    exitHard[proc, "ERROR: Mini Server kernel is not finished; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    Print["Exiting was successful."];
+  Print["Exiting was successful."];
 
-    TaskRemove[$timeoutTask];
-    
-    code = ProcessInformation[proc, "ExitCode"];
+  TaskRemove[$timeoutTask];
+  
+  code = ProcessInformation[proc, "ExitCode"];
 
-    diagnoseExitCode[code];
+  diagnoseExitCode[code];
 
-    Print["Done Stage 1"];
-  ]]
+  Print["Done Stage 1"];
+]]
 
 
 doStage2[commandIn_, cwd_] :=
-  Catch[
-  Module[{command, runPosition, run, startServerString, startServer,
-    startServerArgs, toTest, serverStartTime, proc, assoc, bytes, len,
-    str, cases, case, lenStr, contentStr, content,
-    serverInitializeTime, res, serverKernel, kernelVersion,
-    commandLine, directory, maxLicenseProcesses, lspServerVersion,
-    codeParserVersion, codeInspectorVersion, codeFormatterVersion,
-    lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
-    codeFormatterBuildDate, code},
+Catch[
+Module[{command, runPosition, run, startServerString, startServer,
+  startServerArgs, toTest, serverStartTime, proc, assoc, bytes, len,
+  str, cases, case, lenStr, contentStr, content,
+  serverInitializeTime, res, serverKernel, kernelVersion,
+  commandLine, directory, maxLicenseProcesses, lspServerVersion,
+  codeParserVersion, codeInspectorVersion, codeFormatterVersion,
+  lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
+  codeFormatterBuildDate, code},
 
-    command = commandIn;
+  command = commandIn;
 
-    Print[];
-    Print["Start Stage 2"];
-    Print["Now running actual diagnostics..."];
-    Print["$WorkaroundBug410895: ", $WorkaroundBug410895];
+  Print[];
+  Print["Start Stage 2"];
+  Print["Now running actual diagnostics..."];
+  Print["$WorkaroundBug410895: ", $WorkaroundBug410895];
 
-    If[!MemberQ[command, "-noinit"],
-      Print["WARNING: -noinit is not in command"];
-    ];
-    If[!MemberQ[command, "-noprompt"],
-      Print["ERROR: -noprompt is not in command"];
-      Throw[$Failed]
-    ];
-    If[!MemberQ[command, "-nopaclet"],
-      Print["WARNING: -nopaclet is not in command"];
-    ];
-    If[!MemberQ[command, "-noicon"],
-      Print["ERROR: -noicon is not in command"];
-      Throw[$Failed]
-    ];
-    If[!MemberQ[command, "-nostartuppaclets"],
-      Print["WARNING: -nostartuppaclets is not in command"];
-    ];
-    If[!MemberQ[command, "-run"],
-      Print["ERROR: -run is not in command"];
-      Throw[$Failed]
-    ];
+  If[!MemberQ[command, "-noinit"],
+    Print["WARNING: -noinit is not in command"];
+  ];
+  If[!MemberQ[command, "-noprompt"],
+    Print["ERROR: -noprompt is not in command"];
+    Throw[$Failed]
+  ];
+  If[!MemberQ[command, "-nopaclet"],
+    Print["WARNING: -nopaclet is not in command"];
+  ];
+  If[!MemberQ[command, "-noicon"],
+    Print["ERROR: -noicon is not in command"];
+    Throw[$Failed]
+  ];
+  If[!MemberQ[command, "-nostartuppaclets"],
+    Print["WARNING: -nostartuppaclets is not in command"];
+  ];
+  If[!MemberQ[command, "-run"],
+    Print["ERROR: -run is not in command"];
+    Throw[$Failed]
+  ];
 
 
-    runPosition = FirstPosition[command, "-run"];
+  runPosition = FirstPosition[command, "-run"];
 
-    If[!MissingQ[runPosition],
-      run = command[[runPosition[[1]] + 1]];
+  If[!MissingQ[runPosition],
+    run = command[[runPosition[[1]] + 1]];
 
-      If[StringQ[run],
-        If[!SyntaxQ[run],
-          Print["ERROR: code is not SyntaxQ: ", run];
-          Throw[$Failed]
-        ];
-        ,
-        Print["ERROR: code is not a string: ", run];
+    If[StringQ[run],
+      If[!SyntaxQ[run],
+        Print["ERROR: code is not SyntaxQ: ", run];
         Throw[$Failed]
       ];
-
-      startServerString = StringCases[run, ss:("StartServer[" ~~ ___ ~~ "]" ~~ EndOfString) :> ss];
-      If[Length[startServerString] == 1,
-        startServerString = startServerString[[1]];
-        
-        Block[{StartServer},
-          startServer = ToExpression[startServerString];
-          startServerArgs = startServer /. StartServer[logDir_String : "", opts:OptionsPattern[]] :> {logDir, {opts}};
-          
-          If[(Global`CommunicationMethod /. startServerArgs[[2]]) == "Socket",
-            Print["ERROR: CommunicationMethod \"Socket\" not implemented for RunServerDiagnostic", run];
-            Throw[$Failed]
-          ]
-        ]
-
-      ];
-
-      If[TrueQ[$WorkaroundBug410895],
-        (*
-        work around bug 410895, all quotes are stripped from StartProcess on Windows
-
-        this was fixed in 13.0
-        
-        convert e.g., Print["Foo`"] into ToExpression[FromCharacterCode[{80, 114, 105, 110, 116, 91, 34, 70, 111, 111, 96, 34, 93}]]
-
-        evaluates the same expr, except that the only characters passed on command-line are letters, digits, space, comma, [] and {}
-        *)
-        run = "ToExpression[FromCharacterCode[" <> ToString[ToCharacterCode[run]] <> "]]";
-
-        command[[runPosition[[1]] + 1]] = run;
-      ];
       ,
-      (*
-      already WARNED about missing -run
-      *)
+      Print["ERROR: code is not a string: ", run];
       Throw[$Failed]
     ];
 
+    startServerString = StringCases[run, ss:("StartServer[" ~~ ___ ~~ "]" ~~ EndOfString) :> ss];
+    If[Length[startServerString] == 1,
+      startServerString = startServerString[[1]];
+      
+      Block[{StartServer},
+        startServer = ToExpression[startServerString];
+        startServerArgs = startServer /. StartServer[logDir_String : "", opts:OptionsPattern[]] :> {logDir, {opts}};
+        
+        If[(Global`CommunicationMethod /. startServerArgs[[2]]) == "Socket",
+          Print["ERROR: CommunicationMethod \"Socket\" not implemented for RunServerDiagnostic", run];
+          Throw[$Failed]
+        ]
+      ]
 
-    toTest = command;
-    toTest = Delete[toTest, runPosition[[1]] + 1];
-    toTest = Delete[toTest, 1];
-    toTest = DeleteCases[toTest, "-noinit" | "-noprompt" | "-nopaclet" | "-nostartuppaclets" | "-noicon" | "-run"];
-
-    If[toTest != {},
-      Print["WARNING: There are unrecognized arguments to Language Server kernel: ", toTest];
     ];
 
+    If[TrueQ[$WorkaroundBug410895],
+      (*
+      work around bug 410895, all quotes are stripped from StartProcess on Windows
 
-    serverStartTime = Now;
+      this was fixed in 13.0
+      
+      convert e.g., Print["Foo`"] into ToExpression[FromCharacterCode[{80, 114, 105, 110, 116, 91, 34, 70, 111, 111, 96, 34, 93}]]
 
-    Print["Starting Language Server kernel with command: ", command];
-    proc = Quiet[StartProcess[command, ProcessDirectory -> cwd], {StartProcess::pnfd}];
+      evaluates the same expr, except that the only characters passed on command-line are letters, digits, space, comma, [] and {}
+      *)
+      run = "ToExpression[FromCharacterCode[" <> ToString[ToCharacterCode[run]] <> "]]";
 
-    If[FailureQ[proc],
-      Print["ERROR: StartProcess failed"];
-      Throw[proc]
+      command[[runPosition[[1]] + 1]] = run;
     ];
-
+    ,
     (*
-    Only kill process here
-    Do not Print anything, Print output in a task will go to Messages Window
+    already WARNED about missing -run
     *)
-    $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
+    Throw[$Failed]
+  ];
 
-    Print["Waiting maximum of 30 seconds for any hangs."];
+
+  toTest = command;
+  toTest = Delete[toTest, runPosition[[1]] + 1];
+  toTest = Delete[toTest, 1];
+  toTest = DeleteCases[toTest, "-noinit" | "-noprompt" | "-nopaclet" | "-nostartuppaclets" | "-noicon" | "-run"];
+
+  If[toTest != {},
+    Print["WARNING: There are unrecognized arguments to Language Server kernel: ", toTest];
+  ];
 
 
-    (*
-    initialize
-    *)
-    assoc = <| "method" -> "initialize", "id" -> 1, "params" -> <|
-        "initializationOptions" -> <||>,
-        "capabilities" -> <|
-          "textDocument" -> <|
-            "codeAction" -> <||>
-          |>
+  serverStartTime = Now;
+
+  Print["Starting Language Server kernel with command: ", command];
+  proc = Quiet[StartProcess[command, ProcessDirectory -> cwd], {StartProcess::pnfd}];
+
+  If[FailureQ[proc],
+    Print["ERROR: StartProcess failed"];
+    Throw[proc]
+  ];
+
+  (*
+  Only kill process here
+  Do not Print anything, Print output in a task will go to Messages Window
+  *)
+  $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
+
+  Print["Waiting maximum of 30 seconds for any hangs."];
+
+
+  (*
+  initialize
+  *)
+  assoc = <| "method" -> "initialize", "id" -> 1, "params" -> <|
+      "initializationOptions" -> <||>,
+      "capabilities" -> <|
+        "textDocument" -> <|
+          "codeAction" -> <||>
         |>
       |>
-    |>;
-    bytes = ExportByteArray[assoc, "JSON"];
-    len = Length[bytes];
+    |>
+  |>;
+  bytes = ExportByteArray[assoc, "JSON"];
+  len = Length[bytes];
 
-    str = "";
+  str = "";
 
-    Print["Writing initialize message..."];
-    res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
-   
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  Print["Writing initialize message..."];
+  res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
+ 
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    res = binaryWrite[proc, bytes];
+  res = binaryWrite[proc, bytes];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    Pause[0.2];
+  Pause[0.2];
 
-    If[ProcessStatus[proc] != "Running",
-      exitHard[proc, "ERROR: Language Server kernel is not running after writing initialize; exiting hard"];
-      Throw[$Failed]
-    ];
+  If[ProcessStatus[proc] != "Running",
+    exitHard[proc, "ERROR: Language Server kernel is not running after writing initialize; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    str = readByteArray[proc, str];
+  str = readByteArray[proc, str];
 
-    If[FailureQ[str],
-      Throw[str]
-    ];
+  If[FailureQ[str],
+    Throw[str]
+  ];
 
-    If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
+  If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
 
-      Print["Read from Language Server kernel:"];
-      Print[str];
-      diagnoseStdOut[str];
+    Print["Read from Language Server kernel:"];
+    Print[str];
+    diagnoseStdOut[str];
 
-      exitHard[proc, "ERROR: Unrecognized header; exiting hard"];
-      Throw[$Failed]
-    ];
+    exitHard[proc, "ERROR: Unrecognized header; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    case = cases[[1]];
-    {lenStr, contentStr} = case;
-    len = ToExpression[lenStr];
+  case = cases[[1]];
+  {lenStr, contentStr} = case;
+  len = ToExpression[lenStr];
 
-    If[!IntegerQ[len],
-      Print["Read from Language Server kernel:"];
-      Print[str];
+  If[!IntegerQ[len],
+    Print["Read from Language Server kernel:"];
+    Print[str];
 
-      exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
-      Throw[$Failed]
-    ];
+    exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    If[!(len <= StringLength[contentStr]),
+  If[!(len <= StringLength[contentStr]),
 
-      Print["Read from Language Server kernel:"];
-      Print[str];
+    Print["Read from Language Server kernel:"];
+    Print[str];
 
-      exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
-      Throw[$Failed]
-    ];
+    exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    str = StringDrop[contentStr, len];
+  str = StringDrop[contentStr, len];
 
-    serverInitializeTime = Now;
+  serverInitializeTime = Now;
 
-    Print["initialize message was successful."];
+  Print["initialize message was successful."];
 
 
-    (*
-    diagnostics
-    *)
-    assoc = <| "method" -> "diagnostics", "id" -> 2 |>;
-    bytes = ExportByteArray[assoc, "JSON"];
-    len = Length[bytes];
+  (*
+  diagnostics
+  *)
+  assoc = <| "method" -> "diagnostics", "id" -> 2 |>;
+  bytes = ExportByteArray[assoc, "JSON"];
+  len = Length[bytes];
 
-    Print["Writing diagnostics message..."];
-    res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
+  Print["Writing diagnostics message..."];
+  res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    res = binaryWrite[proc, bytes];
+  res = binaryWrite[proc, bytes];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
-    
-    Pause[0.2];
+  If[FailureQ[res],
+    Throw[res]
+  ];
+  
+  Pause[0.2];
 
-    If[ProcessStatus[proc] != "Running",
-      exitHard[proc, "ERROR: Language Server kernel is not running after writing diagnostics; exiting hard"];
-      Throw[$Failed]
-    ];
+  If[ProcessStatus[proc] != "Running",
+    exitHard[proc, "ERROR: Language Server kernel is not running after writing diagnostics; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    str = readByteArray[proc, str];
+  str = readByteArray[proc, str];
 
-    If[FailureQ[str],
-      Throw[str]
-    ];
-
-    If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
-
-      Print["Read from Language Server kernel:"];
-      Print[str];
-
-      exitHard[proc, "ERROR: Unrecognized header; exiting hard"];
-      Throw[$Failed]
-    ];
-
-    case = cases[[1]];
-    {lenStr, contentStr} = case;
-    len = ToExpression[lenStr];
-
-    If[!IntegerQ[len],
-
-      Print["Read from Language Server kernel:"];
-      Print[str];
-
-      exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
-      Throw[$Failed]
-    ];
-
-    If[!(len <= StringLength[contentStr]),
-
-      Print["Read from Language Server kernel:"];
-      Print[str];
-
-      exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
-      Throw[$Failed]
-    ];
-
-    str = StringDrop[contentStr, len];
-    contentStr = StringTake[contentStr, len];
+  If[FailureQ[str],
+    Throw[str]
+  ];
+
+  If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
+
+    Print["Read from Language Server kernel:"];
+    Print[str];
+
+    exitHard[proc, "ERROR: Unrecognized header; exiting hard"];
+    Throw[$Failed]
+  ];
+
+  case = cases[[1]];
+  {lenStr, contentStr} = case;
+  len = ToExpression[lenStr];
+
+  If[!IntegerQ[len],
+
+    Print["Read from Language Server kernel:"];
+    Print[str];
+
+    exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
+    Throw[$Failed]
+  ];
+
+  If[!(len <= StringLength[contentStr]),
+
+    Print["Read from Language Server kernel:"];
+    Print[str];
+
+    exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
+    Throw[$Failed]
+  ];
+
+  str = StringDrop[contentStr, len];
+  contentStr = StringTake[contentStr, len];
+
+  content = ImportString[contentStr, "RawJSON"];
 
-    content = ImportString[contentStr, "RawJSON"];
+  res = content["result"];
 
-    res = content["result"];
+  serverKernel = command[[1]];
+  kernelVersion = res["kernelVersion"];
+  commandLine = res["commandLine"];
+  directory = res["directory"];
+  maxLicenseProcesses = res["maxLicenseProcesses"];
+  lspServerVersion = res["lspServerVersion"];
+  codeParserVersion = res["codeParserVersion"];
+  codeInspectorVersion = res["codeInspectorVersion"];
+  codeFormatterVersion = res["codeFormatterVersion"];
 
-    serverKernel = command[[1]];
-    kernelVersion = res["kernelVersion"];
-    commandLine = res["commandLine"];
-    directory = res["directory"];
-    maxLicenseProcesses = res["maxLicenseProcesses"];
-    lspServerVersion = res["lspServerVersion"];
-    codeParserVersion = res["codeParserVersion"];
-    codeInspectorVersion = res["codeInspectorVersion"];
-    codeFormatterVersion = res["codeFormatterVersion"];
+  lspServerBuildDate = res["lspServerBuildDate"];
+  codeParserBuildDate = res["codeParserBuildDate"];
+  codeInspectorBuildDate = res["codeInspectorBuildDate"];
+  codeFormatterBuildDate = res["codeFormatterBuildDate"];
 
-    lspServerBuildDate = res["lspServerBuildDate"];
-    codeParserBuildDate = res["codeParserBuildDate"];
-    codeInspectorBuildDate = res["codeInspectorBuildDate"];
-    codeFormatterBuildDate = res["codeFormatterBuildDate"];
+  Print["INFORMATION: Server Kernel: ", serverKernel];
+  If[!StringStartsQ[ToLowerCase[FileBaseName[serverKernel]], "wolframkernel"],
+    Print["WARNING: Server Kernel does not start with 'WolframKernel': ", serverKernel];
+  ];
+  Print["INFORMATION: Server Kernel $CommandLine //InputForm: ", commandLine //InputForm];
+  Print["INFORMATION: Server Kernel Directory[]: ", directory];
+  Print["INFORMATION: Server Kernel $VersionNumber: ", kernelVersion];
+  Print["INFORMATION: Server Kernel $MaxLicenseProcesses: ", maxLicenseProcesses];
+  Print["INFORMATION: Server Kernel LSPServer version: ", lspServerVersion];
+  Print["INFORMATION: Server Kernel CodeParser version: ", codeParserVersion];
+  Print["INFORMATION: Server Kernel CodeInspector version: ", codeInspectorVersion];
+  Print["INFORMATION: Server Kernel CodeFormatter version: ", codeFormatterVersion];
+  Print["INFORMATION: Server Kernel LSPServer build date: ", lspServerBuildDate];
+  Print["INFORMATION: Server Kernel CodeParser build date: ", codeParserBuildDate];
+  Print["INFORMATION: Server Kernel CodeInspector build date: ", codeInspectorBuildDate];
+  Print["INFORMATION: Server Kernel CodeFormatter build date: ", codeFormatterBuildDate];
 
-    Print["INFORMATION: Server Kernel: ", serverKernel];
-    If[!StringStartsQ[ToLowerCase[FileBaseName[serverKernel]], "wolframkernel"],
-      Print["WARNING: Server Kernel does not start with 'WolframKernel': ", serverKernel];
-    ];
-    Print["INFORMATION: Server Kernel $CommandLine //InputForm: ", commandLine //InputForm];
-    Print["INFORMATION: Server Kernel Directory[]: ", directory];
-    Print["INFORMATION: Server Kernel $VersionNumber: ", kernelVersion];
-    Print["INFORMATION: Server Kernel $MaxLicenseProcesses: ", maxLicenseProcesses];
-    Print["INFORMATION: Server Kernel LSPServer version: ", lspServerVersion];
-    Print["INFORMATION: Server Kernel CodeParser version: ", codeParserVersion];
-    Print["INFORMATION: Server Kernel CodeInspector version: ", codeInspectorVersion];
-    Print["INFORMATION: Server Kernel CodeFormatter version: ", codeFormatterVersion];
-    Print["INFORMATION: Server Kernel LSPServer build date: ", lspServerBuildDate];
-    Print["INFORMATION: Server Kernel CodeParser build date: ", codeParserBuildDate];
-    Print["INFORMATION: Server Kernel CodeInspector build date: ", codeInspectorBuildDate];
-    Print["INFORMATION: Server Kernel CodeFormatter build date: ", codeFormatterBuildDate];
+  checkWarnings[
+    {kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion},
+    {lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate}
+    ,
+    (Print["WARNING: ", #];)&
+  ];
 
-    checkWarnings[
-      {kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion},
-      {lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate}
-      ,
-      (Print["WARNING: ", #];)&
-    ];
+  Print["diagnostics message was successful."];
 
-    Print["diagnostics message was successful."];
 
+  (*
+  shutdown
+  *)
+  assoc = <| "method" -> "shutdown", "id" -> 3 |>;
+  bytes = ExportByteArray[assoc, "JSON"];
+  len = Length[bytes];
 
-    (*
-    shutdown
-    *)
-    assoc = <| "method" -> "shutdown", "id" -> 3 |>;
-    bytes = ExportByteArray[assoc, "JSON"];
-    len = Length[bytes];
+  Print["Writing shutdown message..."];
+  res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
 
-    Print["Writing shutdown message..."];
-    res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  res = binaryWrite[proc, bytes];
 
-    res = binaryWrite[proc, bytes];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  Pause[0.2];
 
-    Pause[0.2];
+  If[ProcessStatus[proc] != "Running",
+    exitHard[proc, "ERROR: Language Server kernel is not running after writing shutdown; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    If[ProcessStatus[proc] != "Running",
-      exitHard[proc, "ERROR: Language Server kernel is not running after writing shutdown; exiting hard"];
-      Throw[$Failed]
-    ];
+  str = readByteArray[proc, str];
 
-    str = readByteArray[proc, str];
+  If[FailureQ[str],
+    Throw[str]
+  ];
+ 
+  If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
 
-    If[FailureQ[str],
-      Throw[str]
-    ];
-   
-    If[(cases = StringCases[str, RegularExpression["(?s)^Content-Length: (\\d+)\r\n\r\n(.*)$"] :> {"$1", "$2"}]) == {},
+    Print["Read from Language Server kernel:"];
+    Print[str];
 
-      Print["Read from Language Server kernel:"];
-      Print[str];
+    exitHard[proc, "ERROR: Unrecognized header; exiting hard"];
+    Throw[$Failed]
+  ];
 
-      exitHard[proc, "ERROR: Unrecognized header; exiting hard"];
-      Throw[$Failed]
-    ];
+  case = cases[[1]];
+  {lenStr, contentStr} = case;
+  len = ToExpression[lenStr];
 
-    case = cases[[1]];
-    {lenStr, contentStr} = case;
-    len = ToExpression[lenStr];
+  If[!IntegerQ[len],
 
-    If[!IntegerQ[len],
+    Print["Read from Language Server kernel:"];
+    Print[str];
 
-      Print["Read from Language Server kernel:"];
-      Print[str];
+    exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
+    Throw[$Failed]
+  ];
 
-      exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
-      Throw[$Failed]
-    ];
+  If[!(len <= StringLength[contentStr]),
 
-    If[!(len <= StringLength[contentStr]),
+    Print["Read from Language Server kernel:"];
+    Print[str];
 
-      Print["Read from Language Server kernel:"];
-      Print[str];
+    exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
+    Throw[$Failed]
+  ];
+  
+  str = StringDrop[contentStr, len];
+  contentStr = StringTake[contentStr, len];
 
-      exitHard[proc, "ERROR: Bad Content-Length; exiting hard"];
-      Throw[$Failed]
-    ];
-    
-    str = StringDrop[contentStr, len];
-    contentStr = StringTake[contentStr, len];
+  Print["shutdown message was successful."];
 
-    Print["shutdown message was successful."];
 
+  (*
+  exit
+  *)
+  assoc = <| "method" -> "exit" |>;
+  bytes = ExportByteArray[assoc, "JSON"];
+  len = Length[bytes];
 
-    (*
-    exit
-    *)
-    assoc = <| "method" -> "exit" |>;
-    bytes = ExportByteArray[assoc, "JSON"];
-    len = Length[bytes];
+  Print["Writing exit message..."];
+  res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
 
-    Print["Writing exit message..."];
-    res = binaryWrite[proc, "Content-Length: " <> ToString[len] <> "\r\n\r\n"];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  res = binaryWrite[proc, bytes];
 
-    res = binaryWrite[proc, bytes];
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
-    If[FailureQ[res],
-      Throw[res]
-    ];
+  Pause[2.0];
 
-    Pause[2.0];
+  If[ProcessStatus[proc] != "Finished",
+    exitHard[proc, "ERROR: Language Server kernel is not finished; exiting hard"];
+    Throw[$Failed]
+  ];
 
-    If[ProcessStatus[proc] != "Finished",
-      exitHard[proc, "ERROR: Language Server kernel is not finished; exiting hard"];
-      Throw[$Failed]
-    ];
+  Print["exit message was successful."];
 
-    Print["exit message was successful."];
+  TaskRemove[$timeoutTask];
 
-    TaskRemove[$timeoutTask];
+  Print["INFO: Time to initialize server: ", (serverInitializeTime - serverStartTime)];
 
-    Print["INFO: Time to initialize server: ", (serverInitializeTime - serverStartTime)];
+  If[(serverInitializeTime - serverStartTime) > Quantity[15, "Seconds"],
+    Print["ERROR: Time to initialize server was greater than 15 seconds"];
+    Throw[$Failed]
+  ];
 
-    If[(serverInitializeTime - serverStartTime) > Quantity[15, "Seconds"],
-      Print["ERROR: Time to initialize server was greater than 15 seconds"];
-      Throw[$Failed]
-    ];
+  code = ProcessInformation[proc, "ExitCode"];
 
-    code = ProcessInformation[proc, "ExitCode"];
+  diagnoseExitCode[code];
 
-    diagnoseExitCode[code];
-
-    Print["Done Stage 2"];
-  ]]
+  Print["Done Stage 2"];
+]]
 
 ServerDiagnosticWarningMessages[] :=
 Module[{kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
-    lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate},
+  lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate},
 
   kernelVersion = $VersionNumber;
 
@@ -855,59 +855,59 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
 
 
 handleContent[content:KeyValuePattern["method" -> "diagnostics"]] :=
-  Catch[
-  Module[{id, kernelVersion, commandLine, directory, maxLicenseProcesses, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion, diags,
-    lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate},
+Catch[
+Module[{id, kernelVersion, commandLine, directory, maxLicenseProcesses, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion, diags,
+  lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate},
 
-    If[$Debug2,
-      log["diagnostics: enter"]
-    ];
+  If[$Debug2,
+    log["diagnostics: enter"]
+  ];
 
-    id = content["id"];
+  id = content["id"];
 
-    kernelVersion = $VersionNumber;
+  kernelVersion = $VersionNumber;
 
-    commandLine = $CommandLine;
+  commandLine = $CommandLine;
 
-    directory = Directory[];
+  directory = Directory[];
 
-    maxLicenseProcesses = $MaxLicenseProcesses;
+  maxLicenseProcesses = $MaxLicenseProcesses;
 
-    lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
+  lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
 
-    codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
+  codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
 
-    codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
+  codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
 
-    codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
+  codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
 
-    lspServerBuildDate = PacletObject["LSPServer"]["BuildDate"];
+  lspServerBuildDate = PacletObject["LSPServer"]["BuildDate"];
 
-    codeParserBuildDate = PacletObject["CodeParser"]["BuildDate"];
+  codeParserBuildDate = PacletObject["CodeParser"]["BuildDate"];
 
-    codeInspectorBuildDate = PacletObject["CodeInspector"]["BuildDate"];
+  codeInspectorBuildDate = PacletObject["CodeInspector"]["BuildDate"];
 
-    codeFormatterBuildDate = PacletObject["CodeFormatter"]["BuildDate"];
+  codeFormatterBuildDate = PacletObject["CodeFormatter"]["BuildDate"];
 
-    diags = <|
-      "kernelVersion" -> kernelVersion,
-      "commandLine" -> commandLine,
-      "directory" -> directory,
-      "maxLicenseProcesses" -> maxLicenseProcesses,
-      "lspServerVersion" -> lspServerVersion,
-      "codeParserVersion" -> codeParserVersion,
-      "codeInspectorVersion" -> codeInspectorVersion,
-      "codeFormatterVersion" -> codeFormatterVersion,
-      "lspServerBuildDate" -> lspServerBuildDate,
-      "codeParserBuildDate" -> codeParserBuildDate,
-      "codeInspectorBuildDate" -> codeInspectorBuildDate,
-      "codeFormatterBuildDate" -> codeFormatterBuildDate
-    |>;
+  diags = <|
+    "kernelVersion" -> kernelVersion,
+    "commandLine" -> commandLine,
+    "directory" -> directory,
+    "maxLicenseProcesses" -> maxLicenseProcesses,
+    "lspServerVersion" -> lspServerVersion,
+    "codeParserVersion" -> codeParserVersion,
+    "codeInspectorVersion" -> codeInspectorVersion,
+    "codeFormatterVersion" -> codeFormatterVersion,
+    "lspServerBuildDate" -> lspServerBuildDate,
+    "codeParserBuildDate" -> codeParserBuildDate,
+    "codeInspectorBuildDate" -> codeInspectorBuildDate,
+    "codeFormatterBuildDate" -> codeFormatterBuildDate
+  |>;
 
-    {<| "jsonrpc" -> "2.0",
-        "id" -> id,
-        "result" -> diags |>}
-  ]]
+  {<| "jsonrpc" -> "2.0",
+      "id" -> id,
+      "result" -> diags |>}
+]]
 
 
 exitHard[proc_, msg_] :=
@@ -957,79 +957,79 @@ Module[{code},
 This reports license errors
 *)
 reportStdOut[proc_] :=
-  Module[{stdOut, arr, str},
-    stdOut = ProcessConnection[proc, "StandardOutput"];
+Module[{stdOut, arr, str},
+  stdOut = ProcessConnection[proc, "StandardOutput"];
 
-    While[True,
-      Pause[0.1];
-      
-      arr = Quiet[ReadByteArray[stdOut, EndOfBuffer], {ReadByteArray::openx}];
+  While[True,
+    Pause[0.1];
+    
+    arr = Quiet[ReadByteArray[stdOut, EndOfBuffer], {ReadByteArray::openx}];
 
-      Which[
-        arr === {},
-          Print["INFO: stdout: (empty)"];
-        ,
-        ByteArrayQ[arr],
-          str = ByteArrayToString[arr];
-          Print["INFO: stdout: ", str];
-        ,
-        arr === EndOfFile,
-          Break[]
-        ,
-        MatchQ[arr, _ReadByteArray],
-          Print["ERROR: stdout: << ReadByteArray returned unevaluated >>"];
-          Break[]
-        ,
-        True,
-          Print["ERROR: stdout: ", arr];
-          Break[]
-      ]
+    Which[
+      arr === {},
+        Print["INFO: stdout: (empty)"];
+      ,
+      ByteArrayQ[arr],
+        str = ByteArrayToString[arr];
+        Print["INFO: stdout: ", str];
+      ,
+      arr === EndOfFile,
+        Break[]
+      ,
+      MatchQ[arr, _ReadByteArray],
+        Print["ERROR: stdout: << ReadByteArray returned unevaluated >>"];
+        Break[]
+      ,
+      True,
+        Print["ERROR: stdout: ", arr];
+        Break[]
     ]
   ]
+]
 
 reportStdErr[proc_] :=
-  Module[{stdErr, arr, str},
-    stdErr = ProcessConnection[proc, "StandardError"];
+Module[{stdErr, arr, str},
+  stdErr = ProcessConnection[proc, "StandardError"];
 
-    While[True,
-      Pause[0.1];
+  While[True,
+    Pause[0.1];
 
-      arr = Quiet[ReadByteArray[stdErr, EndOfBuffer], {ReadByteArray::openx}];
+    arr = Quiet[ReadByteArray[stdErr, EndOfBuffer], {ReadByteArray::openx}];
 
-      Which[
-        arr === {},
-          Print["INFO: stderr: (empty)"];
-        ,
-        ByteArrayQ[arr],
-          str = ByteArrayToString[arr];
-          Print["INFO: stderr: ", str];
-        ,
-        arr === EndOfFile,
-          Break[]
-        ,
-        MatchQ[arr, _ReadByteArray],
-          Print["ERROR: stderr: << ReadByteArray returned unevaluated >>"];
-          Break[]
-        ,
-        True,
-          Print["ERROR: stderr: ", arr];
-          Break[]
-      ]
+    Which[
+      arr === {},
+        Print["INFO: stderr: (empty)"];
+      ,
+      ByteArrayQ[arr],
+        str = ByteArrayToString[arr];
+        Print["INFO: stderr: ", str];
+      ,
+      arr === EndOfFile,
+        Break[]
+      ,
+      MatchQ[arr, _ReadByteArray],
+        Print["ERROR: stderr: << ReadByteArray returned unevaluated >>"];
+        Break[]
+      ,
+      True,
+        Print["ERROR: stderr: ", arr];
+        Break[]
     ]
   ]
+]
 
 
 diagnoseStdOut[str_String] :=
-  Module[{},
+Module[{},
 
-    Which[
-      StringMatchQ[str, RegularExpression["Mathematica .* Kernel for .*(\r?\n)Copyright 1988-.* Wolfram Research, Inc.(\r?\n)"]],
-        Print["The startup banner was written to stdout. This breaks the Language Server Protocol."]
-      ,
-      StringMatchQ[str, RegularExpression["Content - \\(Length:\\d+\\)(\r?)\n"]],
-        Print["The header was evaluated as code. LSPServer`StartServer[] is not intercepting stdin."]
-    ]
+  Which[
+    StringMatchQ[str, RegularExpression["Mathematica .* Kernel for .*(\r?\n)Copyright 1988-.* Wolfram Research, Inc.(\r?\n)"]],
+      Print["The startup banner was written to stdout. This breaks the Language Server Protocol."]
+    ,
+    StringMatchQ[str, RegularExpression["Content - \\(Length:\\d+\\)(\r?)\n"]],
+      Print["The header was evaluated as code. LSPServer`StartServer[] is not intercepting stdin."]
   ]
+]
 
 
 diagnoseExitCode[code_] :=
