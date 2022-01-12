@@ -314,6 +314,12 @@ DLLEXPORT int LockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgu
         fprintf(stderr, "native: LockQueue: qMutex lock: after\n");
     }
 
+    //
+    // this is immediately after potentially long-running code,
+    // but do not need to check libData->AbortQ() here
+    // because just returning immediately
+    //
+
     return LIBRARY_NO_ERROR;
 }
 

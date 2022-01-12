@@ -43,7 +43,7 @@ TryQueue["StdIO"] :=
     bytessIn, contentsIn},
 
     (*
-    NOTE: when bug 419428 is fixed, then check bugfix and use WithCleanup
+    NOTE: when bug 419428 is fixed and targeting 12.2 as minimum source version, then check bugfix and use WithCleanup
     *)
     (*
     BEGIN LOCK REGION
