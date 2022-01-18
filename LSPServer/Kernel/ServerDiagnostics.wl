@@ -1119,7 +1119,7 @@ Module[{stdIn, res},
 
   stdIn = ProcessConnection[proc, "StandardInput"];
 
-  res = Quiet[BinaryWrite[stdIn, input], {BinaryWrite::errfile}];
+  res = Quiet[BinaryWrite[stdIn, input], {BinaryWrite::openx, BinaryWrite::errfile}];
   
   If[FailureQ[res],
     exitHard[proc, "ERROR: BinaryWrite failed; exiting hard"];
