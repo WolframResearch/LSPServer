@@ -53,11 +53,16 @@ constexpr int FWRITE_FAILED = 5;
 constexpr int FFLUSH_FAILED = 6;
 
 
+constexpr int DEBUG_VERBOSE = 3;
+
+
 EXTERN_C DLLEXPORT mint WolframLibrary_getVersion();
 
 EXTERN_C DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData);
 
 EXTERN_C DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData);
+
+EXTERN_C DLLEXPORT int SetDebug_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
 EXTERN_C DLLEXPORT int GetStartupError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 

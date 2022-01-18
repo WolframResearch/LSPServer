@@ -33,6 +33,8 @@ $Debug
 
 $Debug2
 
+$Debug3
+
 $DebugBracketMatcher
 
 

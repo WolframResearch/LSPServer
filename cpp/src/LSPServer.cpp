@@ -37,6 +37,8 @@ struct Message {
 };
 
 
+int debugLevel;
+
 int startupError;
 
 std::thread readerThread;
@@ -56,6 +58,8 @@ DLLEXPORT mint WolframLibrary_getVersion() {
 
 DLLEXPORT int WolframLibrary_initialize(WolframLibraryData libData) {
     
+    debugLevel = 0;
+
     startupError = 0;
 
 #ifdef _WIN32
@@ -132,6 +136,14 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 }
 
 
+DLLEXPORT int SetDebug_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+
+    debugLevel = MArgument_getInteger(Args[0]);
+
+    return LIBRARY_NO_ERROR;
+}
+
+
 DLLEXPORT int GetStartupError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
 
     MArgument_setInteger(Res, startupError);
@@ -173,6 +185,10 @@ void threadBody() {
     
     while (true) {
         
+        if (debugLevel == DEBUG_VERBOSE) {
+            printf("threadBody: loop\n");
+        }
+
         //
         // Read headers
         //
@@ -220,11 +236,27 @@ void threadBody() {
         
         msg = Message(headers, std::move(body), numBytes);
         
+        if (debugLevel == DEBUG_VERBOSE) {
+            fprintf(stderr, "native: threadBody: qMutex lock: before\n");
+        }
+
         qMutex.lock();
         
+        if (debugLevel == DEBUG_VERBOSE) {
+            fprintf(stderr, "native: threadBody: qMutex lock: after\n");
+        }
+
         q.push(std::move(msg));
         
+        if (debugLevel == DEBUG_VERBOSE) {
+            fprintf(stderr, "native: threadBody: qMutex unlock: before\n");
+        }
+
         qMutex.unlock();
+
+        if (debugLevel == DEBUG_VERBOSE) {
+            fprintf(stderr, "native: threadBody: qMutex unlock: after\n");
+        }
     }
     
 readThreadErr:
@@ -240,16 +272,32 @@ readThreadErr:
 
 DLLEXPORT int LockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: LockQueue: qMutex lock: before\n");
+    }
+
     qMutex.lock();
     
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: LockQueue: qMutex lock: after\n");
+    }
+
     return LIBRARY_NO_ERROR;
 }
 
 
 DLLEXPORT int UnlockQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: UnlockQueue: qMutex lock: before\n");
+    }
+
     qMutex.unlock();
     
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: UnlockQueue: qMutex lock: after\n");
+    }
+
     return LIBRARY_NO_ERROR;
 }
 

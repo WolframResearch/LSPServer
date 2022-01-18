@@ -1,5 +1,7 @@
 BeginPackage["LSPServer`Library`"]
 
+SetDebug
+
 GetStartupError
 
 StartBackgroundReaderThread
@@ -55,6 +57,12 @@ $LSPServerLibraryError = <|
 |>
 
 
+SetDebug[level_] :=
+Module[{res},
+  res = libraryFunctionWrapper[setDebug, level];
+  res
+]
+
 GetStartupError[] :=
 Module[{res},
   res = libraryFunctionWrapper[getStartupError];
@@ -69,13 +77,25 @@ Module[{res},
 
 LockQueue[] :=
 Module[{res},
+  If[$Debug3,
+    Print["toplevel: LockQueue before"];
+  ];
   res = libraryFunctionWrapper[lockQueueFunc];
+  If[$Debug3,
+    Print["toplevel: LockQueue after"];
+  ];
   res
 ]
 
 UnlockQueue[] :=
 Module[{res},
+  If[$Debug3,
+    Print["toplevel: UnlockQueue before"];
+  ];
   res = libraryFunctionWrapper[unlockQueueFunc];
+  If[$Debug3,
+    Print["toplevel: UnlockQueue after"];
+  ];
   res
 ]
 
@@ -217,6 +237,8 @@ Module[{res, loaded, linkObject},
 ]]
 
 loadAllFuncs[] := (
+
+setDebug := setDebug = loadFunc["SetDebug_LibraryLink", {Integer}, "Void"];
 
 getStartupError := getStartupError = loadFunc["GetStartupError_LibraryLink", {}, Integer];
 
