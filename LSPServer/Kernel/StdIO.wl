@@ -86,39 +86,53 @@ TryQueue["StdIO"] :=
     ];
 
     (*
-    NOTE: when targeting 12.2 as minimum source version, Internal`WithLocalSettings -> WithCleanup
+    NOTE: when bug 419428 is fixed, then check bugfix and use WithCleanup
     *)
-    Internal`WithLocalSettings[
-      LockQueue[]
-      ,
+    (*
+    BEGIN LOCK REGION
+    *)
+    LockQueue[];
 
-      queueSize = GetQueueSize[];
+    queueSize = GetQueueSize[];
 
-      If[queueSize == 0,
-        Throw[Null]
-      ];
-
-      If[$Debug2,
-          log["\n\n"];
-          log["messages in queue: ", queueSize];
-          log["\n\n"]
-      ];
-
-      bytessIn = {};
-      Do[
-
-        frontMessageSize = GetFrontMessageSize[];
-
-        bytes = PopQueue[frontMessageSize];
-
-        AppendTo[bytessIn, bytes]
-        , 
-        queueSize
-      ]
-
-      ,
-      UnlockQueue[]
+    If[queueSize == 0,
+      UnlockQueue[];
+      Throw[Null]
     ];
+
+    If[$Debug2,
+        log["\n\n"];
+        log["messages in queue: ", queueSize];
+        log["\n\n"]
+    ];
+
+    bytessIn = {};
+    Do[
+
+      frontMessageSize = GetFrontMessageSize[];
+      
+      If[frontMessageSize == 0,
+
+        UnlockQueue[];
+
+        log["\n\n"];
+        log["FrontMessage size was 0; shutting down"];
+        log["\n\n"];
+
+        exitHard[];
+      ];
+
+      bytes = PopQueue[frontMessageSize];
+
+      AppendTo[bytessIn, bytes]
+      , 
+      queueSize
+    ];
+
+    UnlockQueue[];
+    (*
+    END LOCK REGION
+    *)
 
     contentsIn = {};
     Do[

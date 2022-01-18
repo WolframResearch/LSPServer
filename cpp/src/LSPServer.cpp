@@ -183,6 +183,12 @@ void threadBody() {
     
     int res;
     
+    //
+    // it is known that there is a race condition with this background thread and the main kernel thread
+    //
+    // this background thread may encounter an error and set backgroundReaderThreadError before main kernel thread
+    // has had a chance to even read all valid traffic before the error
+    //
     while (true) {
         
         if (debugLevel == DEBUG_VERBOSE) {
