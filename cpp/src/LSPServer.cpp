@@ -43,9 +43,6 @@ int startupError;
 
 std::thread readerThread;
 
-int backgroundReaderThreadError;
-std::mutex bgMutex;
-
 std::queue<Message> q;
 std::mutex qMutex;
 
@@ -160,8 +157,6 @@ DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData
 
         return LIBRARY_NO_ERROR;
     }
-
-    backgroundReaderThreadError = 0;
     
     readerThread = std::thread(threadBody);
     
@@ -183,12 +178,6 @@ void threadBody() {
     
     int res;
     
-    //
-    // it is known that there is a race condition with this background thread and the main kernel thread
-    //
-    // this background thread may encounter an error and set backgroundReaderThreadError before main kernel thread
-    // has had a chance to even read all valid traffic before the error
-    //
     while (true) {
         
         if (debugLevel == DEBUG_VERBOSE) {
@@ -267,12 +256,49 @@ void threadBody() {
     
 readThreadErr:
     
-    bgMutex.lock();
+    //
+    // construct a Message to contain the error code and put in queue
+    //
+
+    auto bodyStr = std::string("{\"method\": \"stdio/error\", \"code\": ") + std::to_string(res) + "}";
+
+    auto contentLengthStr = std::string("Content-Length: ") + std::to_string(bodyStr.size());
+
+    auto Headers = std::vector<std::string>({contentLengthStr});
     
-    backgroundReaderThreadError = res;
+    auto Body = std::unique_ptr<unsigned char[]>(new unsigned char[bodyStr.size()]);
+
+    std::memcpy(Body.get(), bodyStr.c_str(), bodyStr.size());
+
+    auto Size = bodyStr.size();
+
+    msg = Message(Headers, std::move(Body), Size);
     
-    bgMutex.unlock();
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: threadBody readThreadErr: qMutex lock: before\n");
+    }
+
+    qMutex.lock();
     
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: threadBody readThreadErr: qMutex lock: after\n");
+    }
+
+    q.push(std::move(msg));
+    
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: threadBody readThreadErr: qMutex unlock: before\n");
+    }
+
+    qMutex.unlock();
+    
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: threadBody readThreadErr: qMutex unlock: after\n");
+    }
+
+    if (debugLevel == DEBUG_VERBOSE) {
+        fprintf(stderr, "native: threadBody: exit\n");
+    }
 }
 
 
@@ -342,22 +368,6 @@ DLLEXPORT int PopQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgum
     q.pop();
     
     libData->numericarrayLibraryFunctions->MNumericArray_disown(na);
-    
-    return LIBRARY_NO_ERROR;
-}
-
-
-DLLEXPORT int GetBackgroundReaderThreadError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
-    
-    int backgroundReaderThreadErrorCopy;
-    
-    bgMutex.lock();
-    
-    backgroundReaderThreadErrorCopy = backgroundReaderThreadError;
-    
-    bgMutex.unlock();
-    
-    MArgument_setInteger(Res, backgroundReaderThreadErrorCopy);
     
     return LIBRARY_NO_ERROR;
 }

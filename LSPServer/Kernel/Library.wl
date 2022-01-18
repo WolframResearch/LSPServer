@@ -16,8 +16,6 @@ GetFrontMessageSize
 
 PopQueue
 
-GetBackgroundReaderThreadError
-
 GetStdInFEOF
 
 GetStdInFError
@@ -119,12 +117,6 @@ Module[{bytes},
   bytes = ByteArray[Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}]];
   libraryFunctionWrapper[popQueueFunc, bytes];
   bytes
-]
-
-GetBackgroundReaderThreadError[] :=
-Module[{res},
-  res = libraryFunctionWrapper[getBackgroundReaderThreadError];
-  res
 ]
 
 GetStdInFEOF[] :=
@@ -256,8 +248,6 @@ getQueueSizeFunc := getQueueSizeFunc = loadFunc["GetQueueSize_LibraryLink", {}, 
 getFrontMessageSizeFunc := getFrontMessageSizeFunc = loadFunc["GetFrontMessageSize_LibraryLink", {}, Integer];
 
 popQueueFunc := popQueueFunc = loadFunc["PopQueue_LibraryLink", { {LibraryDataType[ByteArray], "Shared"} }, "Void"];
-
-getBackgroundReaderThreadError := getBackgroundReaderThreadError = loadFunc["GetBackgroundReaderThreadError_LibraryLink", {}, Integer];
 
 getStdInFEOF := getStdInFEOF = loadFunc["GetStdInFEOF_LibraryLink", {}, Integer];
 

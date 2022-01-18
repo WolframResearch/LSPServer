@@ -85,8 +85,6 @@ EXTERN_C DLLEXPORT int GetFrontMessageSize_LibraryLink(WolframLibraryData libDat
 
 EXTERN_C DLLEXPORT int PopQueue_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
-EXTERN_C DLLEXPORT int GetBackgroundReaderThreadError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
-
 EXTERN_C DLLEXPORT int GetStdInFEOF_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);
 
 EXTERN_C DLLEXPORT int GetStdInFError_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res);

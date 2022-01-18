@@ -40,50 +40,7 @@ TryQueue["StdIO"] :=
   Module[{bytes,
     queueSize, frontMessageSize,
     content,
-    bytessIn, contentsIn,
-    backgroundReaderThreadError, errStr, ferror
-    },
-
-    backgroundReaderThreadError = GetBackgroundReaderThreadError[];
-
-    If[backgroundReaderThreadError != 0,
-
-      Switch[backgroundReaderThreadError,
-        $LSPServerLibraryError["FREAD_FAILED"],
-          Which[
-            GetStdInFEOF[] != 0,
-              errStr = "fread EOF"
-            ,
-            (ferror = GetStdInFError[]) != 0,
-              errStr = "fread error: " <> ToString[ferror]
-            ,
-            True,
-              errStr = "fread unknown error"
-          ]
-        ,
-        $LSPServerLibraryError["UNEXPECTED_LINEFEED"],
-          errStr = "unexpected linefeed"
-        ,
-        $LSPServerLibraryError["EXPECTED_LINEFEED"],
-          errStr = "expected linefeed"
-        ,
-        $LSPServerLibraryError["UNRECOGNIZED_HEADER"],
-          errStr = "unrecognized header"
-        ,
-        _,
-          errStr = "UNKNOWN ERROR: " <> ToString[backgroundReaderThreadError]
-      ];
-
-      log["\n\n"];
-      log["Background Reader Thread Error: ", errStr];
-      log["\n\n"];
-
-      If[TrueQ[$ServerState == "shutdown"],
-        exitSemiGracefully[]
-        ,
-        exitHard[]
-      ]
-    ];
+    bytessIn, contentsIn},
 
     (*
     NOTE: when bug 419428 is fixed, then check bugfix and use WithCleanup
@@ -162,6 +119,50 @@ TryQueue["StdIO"] :=
     expandContentsAndAppendToContentQueue[contentsIn]
 
   ]]
+
+
+handleContent[content:KeyValuePattern["method" -> "stdio/error"]] :=
+Module[{err, errStr, ferror},
+
+  err = content["code"];
+
+  Switch[err,
+    $LSPServerLibraryError["FREAD_FAILED"],
+      Which[
+        GetStdInFEOF[] != 0,
+          errStr = "fread EOF"
+        ,
+        (ferror = GetStdInFError[]) != 0,
+          errStr = "fread error: " <> ToString[ferror]
+        ,
+        True,
+          errStr = "fread unknown error"
+      ]
+    ,
+    $LSPServerLibraryError["UNEXPECTED_LINEFEED"],
+      errStr = "unexpected linefeed"
+    ,
+    $LSPServerLibraryError["EXPECTED_LINEFEED"],
+      errStr = "expected linefeed"
+    ,
+    $LSPServerLibraryError["UNRECOGNIZED_HEADER"],
+      errStr = "unrecognized header"
+    ,
+    _,
+      errStr = "UNKNOWN ERROR: " <> ToString[err]
+  ];
+
+  log["\n\n"];
+  log["StdIO Error: ", errStr];
+  log["\n\n"];
+
+  If[TrueQ[$ServerState == "shutdown"],
+    exitSemiGracefully[]
+    ,
+    exitHard[]
+  ]
+]
+
 
 (* ================   Write Message   ======================= *)
 (* contents is a list of Associations *)
