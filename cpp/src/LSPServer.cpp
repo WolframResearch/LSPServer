@@ -135,7 +135,7 @@ DLLEXPORT void WolframLibrary_uninitialize(WolframLibraryData libData) {
 
 DLLEXPORT int SetDebug_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
 
-    debugLevel = MArgument_getInteger(Args[0]);
+    debugLevel = static_cast<int>(MArgument_getInteger(Args[0]));
 
     return LIBRARY_NO_ERROR;
 }
@@ -181,7 +181,7 @@ void threadBody() {
     while (true) {
         
         if (debugLevel == DEBUG_VERBOSE) {
-            printf("threadBody: loop\n");
+            fprintf(stderr, "threadBody: loop\n");
         }
 
         //
@@ -218,8 +218,7 @@ void threadBody() {
                 
                 goto readThreadErr;
             }
-            
-        }
+        } // while
         
         body = std::unique_ptr<unsigned char[]>(new unsigned char[numBytes]);
         
@@ -252,7 +251,8 @@ void threadBody() {
         if (debugLevel == DEBUG_VERBOSE) {
             fprintf(stderr, "native: threadBody: qMutex unlock: after\n");
         }
-    }
+
+    } // while
     
 readThreadErr:
     
