@@ -111,6 +111,9 @@ Module[{res},
   res
 ]
 
+PopQueue[0] :=
+  Failure["PopQueue[0]", <||>]
+
 PopQueue[numBytes_Integer] :=
 Module[{bytes},
   bytes = ByteArray[Developer`AllocateNumericArray["UnsignedInteger8", {numBytes}]];
