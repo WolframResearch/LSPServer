@@ -134,9 +134,21 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
     Print["ERROR: StartProcess failed"];
     Throw[proc]
   ];
+ 
+  $timeoutExpr =.;
+  $timeout = False;
   
-  $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
+  (*
+  Only kill process here
+  Do not Print anything, Print output in a task will go to Messages Window
+ 
+  in earlier versions, $timeoutExpr evaluates immediately inside of ScheduledTask
+  so use a symbol with no definition, submit, then define
+  *)
+  $timeoutTask = SessionSubmit[ScheduledTask[$timeoutExpr, {Quantity[30, "Seconds"], 1}]];
 
+  $timeoutExpr := ($timeout = True; KillProcess[proc]);
+  
   Print["Waiting maximum of 30 seconds for any hangs."];
 
   str = "";
@@ -374,11 +386,19 @@ Module[{command, runPosition, run, startServerString, startServer,
     Throw[proc]
   ];
 
+  $timeoutExpr =.;
+  $timeout = False;
+
   (*
   Only kill process here
   Do not Print anything, Print output in a task will go to Messages Window
+
+  in earlier versions, $timeoutExpr evaluates immediately inside of ScheduledTask
+  so use a symbol with no definition, submit, then define
   *)
-  $timeoutTask = SessionSubmit[ScheduledTask[$timeout = True; KillProcess[proc], {Quantity[30, "Seconds"], 1}]];
+  $timeoutTask = SessionSubmit[ScheduledTask[$timeoutExpr, {Quantity[30, "Seconds"], 1}]];
+
+  $timeoutExpr := ($timeout = True; KillProcess[proc]);
 
   Print["Waiting maximum of 30 seconds for any hangs."];
 
