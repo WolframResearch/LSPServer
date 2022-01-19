@@ -809,42 +809,13 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
   build date checking
   *)
 
-  Quiet[
-  Check[
-  (*
-  Was:
-  lspServerBuildDate = DateObject[{lspServerBuildDateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
-  
-  but as discussed here:
-  https://github.com/WolframResearch/vscode-wolfram/issues/2
+  lspServerBuildDate = parseDateString[lspServerBuildDateStr];
 
-  it is more robust to use FromDateString with "Language" -> "en" option
-  *)
-  lspServerBuildDate = FromDateString[lspServerBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
-  ,
-  warningFunc["Messages while parsing LSPServer BuildDate: " <> ToString[$MessageList]]
-  ]];
+  codeParserBuildDate = parseDateString[codeParserBuildDateStr];
 
-  Quiet[
-  Check[
-  codeParserBuildDate = FromDateString[codeParserBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
-  ,
-  warningFunc["Messages while parsing CodeParser BuildDate: " <> ToString[$MessageList]]
-  ]];
+  codeInspectorBuildDate = parseDateString[codeInspectorBuildDateStr];
 
-  Quiet[
-  Check[
-  codeInspectorBuildDate = FromDateString[codeInspectorBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
-  ,
-  warningFunc["Messages while parsing CodeInspector BuildDate: " <> ToString[$MessageList]]
-  ]];
-
-  Quiet[
-  Check[
-  codeFormatterBuildDate = FromDateString[codeFormatterBuildDateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
-  ,
-  warningFunc["Messages while parsing CodeFormatter BuildDate: " <> ToString[$MessageList]]
-  ]];
+  codeFormatterBuildDate = parseDateString[codeFormatterBuildDateStr];
 
   If[!DateObjectQ[lspServerBuildDate],
     warningFunc["LSPServer BuildDate cannot be parsed: " <> ToString[lspServerBuildDate, InputForm]]
@@ -886,6 +857,28 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
       codeInspectorBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
   ];
 ]
+
+parseDateString[dateStr_] :=
+Module[{},
+  If[$VersionNumber >= 12.3,
+    (*
+    Was:
+    DateObject[{dateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}];
+    
+    but as discussed here:
+    https://github.com/WolframResearch/vscode-wolfram/issues/2
+
+    it is more robust to use FromDateString with "Language" -> "en" option
+    *)
+    FromDateString[dateStr, <| "Language" -> "en", "Elements" -> {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"} |>]
+    ,
+    (*
+    Must use DateObject in earlier versions
+    *)
+    DateObject[{dateStr, {"DayName", " ", "Day", " ", "MonthName", " ", "Year", " ", "Hour", ":", "Minute", ":", "Second"}}]
+  ]
+]
+
 
 
 handleContent[content:KeyValuePattern["method" -> "diagnostics"]] :=
