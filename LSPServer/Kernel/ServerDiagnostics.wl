@@ -234,11 +234,18 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
     Throw[res]
   ];
 
+  Print["waiting 2 seconds for exit..."];
   Pause[2.0];
 
   If[ProcessStatus[proc] != "Finished",
-    exitHard[proc, "ERROR: Mini Server kernel is not finished; exiting hard"];
-    Throw[$Failed]
+
+    Print["WARN: Mini Server kernel is not yet finished; waiting 2 more seconds..."];
+    Pause[2.0];
+
+    If[ProcessStatus[proc] != "Finished",
+      exitHard[proc, "ERROR: Mini Server kernel is still not finished; exiting hard"];
+      Throw[$Failed]
+    ];
   ];
 
   Print["Exiting was successful."];
@@ -660,11 +667,18 @@ Module[{command, runPosition, run, startServerString, startServer,
     Throw[res]
   ];
 
+  Print["waiting 2 seconds for exit..."];
   Pause[2.0];
 
   If[ProcessStatus[proc] != "Finished",
-    exitHard[proc, "ERROR: Language Server kernel is not finished; exiting hard"];
-    Throw[$Failed]
+    
+    Print["WARN: Language Server kernel is not yet finished; waiting 2 more seconds..."];
+    Pause[2.0];
+
+    If[ProcessStatus[proc] != "Finished",
+      exitHard[proc, "ERROR: Language Server kernel is still not finished; exiting hard"];
+      Throw[$Failed]
+    ];
   ];
 
   Print["exit message was successful."];
