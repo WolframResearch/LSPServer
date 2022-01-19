@@ -324,8 +324,18 @@ expandContentsAndAppendToContentQueue[contentsIn_] :=
   ]
 
 
-$DiagnosticsDelayAfterLastChange = 0.5
+(*
+
+Use 0.4 seconds, same as default value of spelling squiggly in FE
+
+In[7]:= CurrentValue[$FrontEnd, {SpellingOptions, "AutoSpellCheckDelay"}]
+
+Out[7]= 0.4
+*)
+$DiagnosticsDelayAfterLastChange = 0.4
+
 $ImplicitTokensDelayAfterLastChange = 3.0
+
 $BracketMatcherDelayAfterLastChange = 4.0
 
 
