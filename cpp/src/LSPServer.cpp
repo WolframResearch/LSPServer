@@ -159,6 +159,15 @@ DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData
 }
 
 
+//
+// start a background thread to read from stdin
+//
+// this allows simple semantics for quickly checking if there is anything read
+//
+// canceling IO operations is very complicated and I would prefer to not enter that morass
+//
+// also, the thread itself understands Content-Length header and does efficient reading of many bytes
+//
 void threadBody() {
     
     std::string str;
