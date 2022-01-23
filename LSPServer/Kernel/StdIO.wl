@@ -178,19 +178,20 @@ Module[{str, bytes, res},
 
     If[!ByteArrayQ[bytes],
 
-        log["\n\n"];
-        log["invalid bytes: ", bytes];
-        log["\n\n"];
+      log["\n\n"];
+      log["invalid bytes: ", bytes];
+      log["\n\n"];
 
-        exitHard[]
+      exitHard[]
     ];
+
     (*
     Write the headers
     *)
-    Do[
+    Do[ (* line *)
       If[$Debug2,
-          log[""];
-          log["C<--S  ", line]
+        log[""];
+        log["C<--S  ", line]
       ];
 
       res = WriteLineToStdOut[line];
@@ -202,7 +203,8 @@ Module[{str, bytes, res},
       ]
       ,
       {line, {"Content-Length: " <> ToString[Length[bytes]], ""}}
-    ];
+    ]; (* Do line *)
+    
     (*
     Write the body
     *)

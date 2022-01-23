@@ -169,7 +169,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     diagnostics = lintToDiagnostics[lint];
 
     If[$Debug2,
-      log["diagnostics: ", ToString[diagnostics]]
+      log["diagnostics (up to 20): ", ToString[Take[diagnostics, UpTo[20]]]]
     ];
 
     (*
@@ -178,7 +178,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     actions = Cases[lint, CodeAction[_, _, _], Infinity];
 
     If[$Debug2,
-      log["actions: ", ToString[actions]]
+      log["actions (up to 20): ", ToString[Take[actions, UpTo[20]]]]
     ];
 
     (*
@@ -187,7 +187,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     actions = Cases[actions, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberIntersectingQ[src, cursor]]]];
 
     If[$Debug2,
-      log["actions: ", ToString[actions]]
+      log["actions (up to 20): ", ToString[Take[actions, UpTo[20]]]]
     ];
 
     Do[

@@ -133,10 +133,6 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
   *)
   comments = Cases[cst[[2]], LeafNode[Token`Comment, _, _]];
 
-  If[$Debug2,
-    log["comments: ", comments]
-  ];
-
   Block[{$FlatBag},
     $FlatBag = Internal`Bag[];
     walkCommentPair /@ Partition[comments, 2, 1];
@@ -144,37 +140,27 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
     flatBag = $FlatBag;
   ];
 
-  If[$Debug2,
-    log["flatBag: ", flatBag]
-  ];
-
   (*
   sort
   *)
   sorted = SortBy[Internal`BagPart[flatBag, All], #[[3, Key[Source]]] &];
 
-  If[$Debug2,
-    log["sorted: ", sorted]
-  ];
-
   toInsert = createToInsert[sorted];
 
   completed = Fold[Insert[#1, #2[[1]], #2[[2]]] &, sorted, ReverseSortBy[Normal[Internal`BagPart[toInsert, All]], #[[2;;3]]&]];
 
-  If[$Debug2,
-    log["completed: ", completed]
-  ];
-
   nodeList = createNodeList[completed];
-
-  If[$Debug2,
-    log["nodeList: ", nodeList]
-  ];
 
   documentSymbols = Flatten[walkOutline /@ nodeList];
 
   If[$Debug2,
-    log["documentSymbols: ", documentSymbols]
+    log["documentSymbols (up to 20): ", Replace[Take[documentSymbols, UpTo[20]], {
+        (*
+        Do not print the internals
+        *)
+        KeyValuePattern["name" -> name_] :> <| "name" -> name |>
+      }, {1}
+    ]]
   ];
 
   If[$HierarchicalDocumentSymbolSupport,
