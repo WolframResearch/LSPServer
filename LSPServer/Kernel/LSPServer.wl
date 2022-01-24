@@ -27,6 +27,8 @@ shutdownLSPComm
 
 handleContent
 
+handleContentAfterShutdown
+
 
 
 $Debug

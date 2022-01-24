@@ -125,44 +125,29 @@ TryQueue["StdIO"] :=
 
 
 handleContent[content:KeyValuePattern["method" -> "stdio/error"]] :=
-Module[{err, errStr, ferror},
+Module[{err},
 
   err = content["code"];
 
-  Switch[err,
-    $LSPServerLibraryError["FREAD_FAILED"],
-      Which[
-        GetStdInFEOF[] != 0,
-          errStr = "fread EOF"
-        ,
-        (ferror = GetStdInFError[]) != 0,
-          errStr = "fread error: " <> ToString[ferror]
-        ,
-        True,
-          errStr = "fread unknown error"
-      ]
-    ,
-    $LSPServerLibraryError["UNEXPECTED_LINEFEED"],
-      errStr = "unexpected linefeed"
-    ,
-    $LSPServerLibraryError["EXPECTED_LINEFEED"],
-      errStr = "expected linefeed"
-    ,
-    $LSPServerLibraryError["UNRECOGNIZED_HEADER"],
-      errStr = "unrecognized header"
-    ,
-    _,
-      errStr = "UNKNOWN ERROR: " <> ToString[err]
-  ];
+  logStdIOErr[err];
 
-  log["\n\n"];
-  log["StdIO Error: ", errStr];
-  log["\n\n"];
+  exitHard[]
+]
 
-  If[TrueQ[$ServerState == "shutdown"],
+handleContentAfterShutdown[content:KeyValuePattern["method" -> "stdio/error"]] :=
+Module[{err, eof},
+
+  err = content["code"];
+
+  eof = logStdIOErr[err];
+
+  If[eof,
+    (*
+    e.g. VSCode sends shutdown message, then closes, so this is the best we can hope for
+    *)
+    exitGracefully[]
+    ,
     exitSemiGracefully[]
-    ,
-    exitHard[]
   ]
 ]
 
@@ -172,7 +157,7 @@ Module[{err, errStr, ferror},
 writeLSPResult["StdIO", sock_, contents_] := writeLSPResult["StdIO", contents]
 
 writeLSPResult["StdIO", contents_] :=
-Module[{bytess, res, errStr, ferror},
+Module[{bytess, res},
 
   Check[
     bytess = StringToByteArray[Developer`WriteRawJSONString[#]]& /@ contents
@@ -209,32 +194,9 @@ Module[{bytess, res, errStr, ferror},
       res = WriteLineToStdOut[line];
       If[res =!= 0,
 
-        Switch[res,
-          $LSPServerLibraryError["FWRITE_FAILED"] | $LSPServerLibraryError["FFLUSH_FAILED"],
-            Which[
-              GetStdOutFEOF[] != 0,
-                errStr = "fwrite EOF"
-              ,
-              (ferror = GetStdOutFError[]) != 0,
-                errStr = "fwrite error: " <> ToString[ferror]
-                ,
-                True,
-                  errStr = "fwrite unknown error"
-            ]
-          ,
-          _,
-            errStr = "UNKNOWN ERROR: " <> ToString[res]
-        ];
+        logStdIOErr[res];
 
-        log["\n\n"];
-        log["StdOut error: ", errStr];
-        log["\n\n"];
-
-        If[TrueQ[$ServerState == "shutdown"],
-          exitSemiGracefully[]
-          ,
-          exitHard[]
-          ]
+        exitHard[]
       ]
       ,
       {line, {"Content-Length: " <> ToString[Length[bytes]], ""}}
@@ -250,37 +212,67 @@ Module[{bytess, res, errStr, ferror},
     res = WriteBytesToStdOut[bytes];
     If[res =!= 0,
 
-      Switch[res,
-        $LSPServerLibraryError["FWRITE_FAILED"] | $LSPServerLibraryError["FFLUSH_FAILED"],
-          Which[
-            GetStdOutFEOF[] != 0,
-              errStr = "fwrite EOF"
-            ,
-            (ferror = GetStdOutFError[]) != 0,
-              errStr = "fwrite error: " <> ToString[ferror]
-            ,
-            True,
-              errStr = "fwrite unknown error"
-          ]
-        ,
-        _,
-          errStr = "UNKNOWN ERROR: " <> ToString[res]
-      ];
+      logStdIOErr[res];
 
-      log["\n\n"];
-      log["StdOut error: ", errStr];
-      log["\n\n"];
-
-      If[TrueQ[$ServerState == "shutdown"],
-        exitSemiGracefully[]
-        ,
-        exitHard[]
-      ]
+      exitHard[]
     ]
     ,
     {bytes, bytess} 
   ](*Do bytess*)
 ]
+
+
+logStdIOErr[err_] :=
+Module[{errStr, ferror, eof},
+
+  eof = False;
+
+  Switch[err,
+    $LSPServerLibraryError["FREAD_FAILED"],
+      Which[
+        GetStdInFEOF[] != 0,
+          errStr = "fread EOF";
+          eof = True;
+        ,
+        (ferror = GetStdInFError[]) != 0,
+          errStr = "fread error: " <> ToString[ferror]
+        ,
+        True,
+          errStr = "fread unknown error"
+      ]
+    ,
+    $LSPServerLibraryError["UNEXPECTED_LINEFEED"],
+      errStr = "unexpected linefeed"
+    ,
+    $LSPServerLibraryError["EXPECTED_LINEFEED"],
+      errStr = "expected linefeed"
+    ,
+    $LSPServerLibraryError["UNRECOGNIZED_HEADER"],
+      errStr = "unrecognized header"
+    ,
+    $LSPServerLibraryError["FWRITE_FAILED"] | $LSPServerLibraryError["FFLUSH_FAILED"],
+      Which[
+        GetStdOutFEOF[] != 0,
+          errStr = "fwrite EOF";
+        ,
+        (ferror = GetStdOutFError[]) != 0,
+          errStr = "fwrite error: " <> ToString[ferror]
+          ,
+        True,
+          errStr = "fwrite unknown error"
+      ]
+    ,
+    _,
+      errStr = "UNKNOWN ERROR: " <> ToString[err]
+  ];
+
+  log["\n\n"];
+  log["StdIO Error: ", errStr];
+  log["\n\n"];
+
+  eof
+]
+
 
 readEvalWriteLoop["StdIO", sock_]:= 
 Module[{content, contents},
