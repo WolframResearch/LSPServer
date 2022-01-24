@@ -151,18 +151,9 @@ DLLEXPORT int GetStartupError_LibraryLink(WolframLibraryData libData, mint Argc,
 
 DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
     
-    if (startupError != 0) {
-
-        MArgument_setInteger(Res, startupError);
-
-        return LIBRARY_NO_ERROR;
-    }
-    
     readerThread = std::thread(threadBody);
     
     readerThread.detach();
-    
-    MArgument_setInteger(Res, 0);
 
     return LIBRARY_NO_ERROR;
 }

@@ -237,7 +237,7 @@ setDebug := setDebug = loadFunc["SetDebug_LibraryLink", {Integer}, "Void"];
 
 getStartupError := getStartupError = loadFunc["GetStartupError_LibraryLink", {}, Integer];
 
-startBackgroundReaderThreadFunc := startBackgroundReaderThreadFunc = loadFunc["StartBackgroundReaderThread_LibraryLink", {}, Integer];
+startBackgroundReaderThreadFunc := startBackgroundReaderThreadFunc = loadFunc["StartBackgroundReaderThread_LibraryLink", {}, "Void"];
 
 lockQueueFunc := lockQueueFunc = loadFunc["LockQueue_LibraryLink", {}, "Void"];
 
