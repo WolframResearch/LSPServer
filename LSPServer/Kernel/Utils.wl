@@ -84,10 +84,15 @@ stringLineTake[s_String, spec_] :=
 timeString[] := DateString[{"Hour24", ":", "Minute", ":", "SecondExact", " "}]
 
 
-log[args___] := Write[$Messages, timeString[] //OutputForm, Sequence @@ (OutputForm /@ {args})]
+log[args___] :=
+Block[{$ContextPath = {"CodeParser`", "CodeInspector`", "System`"}},
+  Write[$Messages, timeString[] //OutputForm, Sequence @@ (OutputForm /@ {args})]
+]
 
-logFull[args___] := Write[$Messages, timeString[] //OutputForm, Sequence @@ {args}]
-
+logFull[args___] :=
+Block[{$ContextPath = {"CodeParser`", "CodeInspector`", "System`"}},
+  Write[$Messages, timeString[] //OutputForm, Sequence @@ {args}]
+]
 
 
 lintToDiagnostics[InspectionObject[tag_, message_, severity_, data_]] :=

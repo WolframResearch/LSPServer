@@ -158,7 +158,7 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
         (*
         Do not print the internals
         *)
-        KeyValuePattern["name" -> name_] :> <| "name" -> name |>
+        KeyValuePattern["name" -> name_] :> <| "name" -> name, "\[Ellipsis]" -> "\[Ellipsis]" |>
       }, {1}
     ]]
   ];

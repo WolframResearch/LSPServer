@@ -122,10 +122,6 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   lints = cstLints ~Join~ aggLints ~Join~ astLints;
 
   If[$Debug2,
-    log["after CodeInspectCST"]
-  ];
-
-  If[$Debug2,
     log["lints: ", stringLineTake[StringTake[ToString[lints, InputForm], UpTo[1000]], UpTo[20]]];
     log["...\n"]
   ];

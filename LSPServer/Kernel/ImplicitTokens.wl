@@ -99,10 +99,12 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runImplicitToken
           (*
           Do not print the internals
           *)
-          InfixNode[Times | Comma | CompoundExpression, _, _] :> InfixNode[Times, "\[Ellipsis]", "\[Ellipsis]"],
-          BinaryNode[Span, _, _] :> BinaryNode[Span, "\[Ellipsis]", "\[Ellipsis]"],
-          TernaryNode[Span, _, _] :> TernaryNode[Span, "\[Ellipsis]", "\[Ellipsis]"],
-          ErrorNode[Token`Error`ExpectedOperand, _, _] :> ErrorNode[Token`Error`ExpectedOperand, "\[Ellipsis]", "\[Ellipsis]"]
+          BinaryNode[tag_, _, _] :> BinaryNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+          InfixNode[tag_, _, _] :> InfixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+          PrefixNode[tag_, _, _] :> PrefixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+          PostfixNode[tag_, _, _] :> PostfixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+          TernaryNode[tag_, _, _] :> TernaryNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+          ErrorNode[tag_, _, _] :> ErrorNode[tag, "\[Ellipsis]", "\[Ellipsis]"]
         }, {1}
       ]]
     ];
