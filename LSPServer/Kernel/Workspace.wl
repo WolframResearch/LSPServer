@@ -121,24 +121,24 @@ Module[{params, id, command},
 
 
 handleContent[content:KeyValuePattern["method" -> "workspace/didChangeWatchedFiles"]] :=
-  Module[{},
+Module[{},
 
-    If[$Debug2,
-      log["workspace/didChangeWatchedFiles: enter"]
-    ];
-  
-    {}
-  ]
+  If[$Debug2,
+    log["workspace/didChangeWatchedFiles: enter"]
+  ];
+
+  {}
+]
 
 handleContent[content:KeyValuePattern["method" -> "workspace/didChangeConfiguration"]] :=
-  Module[{},
+Module[{},
 
-    If[$Debug2,
-      log["workspace/didChangeConfiguration: enter"]
-    ];
-  
-    {}
-  ]
+  If[$Debug2,
+    log["workspace/didChangeConfiguration: enter"]
+  ];
+
+  {}
+]
 
 
 End[]

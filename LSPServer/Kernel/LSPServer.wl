@@ -299,7 +299,7 @@ expandContentsAndAppendToContentQueue[contentsIn_] :=
 
     contents = contentsIn;
 
-    If[!MatchQ[contents, {_?AssociationQ...}],
+    If[!MatchQ[contents, {_?AssociationQ ...}],
       log["\n\n"];
       log["Internal assert 1 failed: list of Associations: ", contents];
       log["\n\n"];
@@ -816,37 +816,37 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     *)
     If[AssociationQ[initializationOptions],
 
-    (*
+      (*
 
-    "confidenceLevel" initialization option is deprecated
+      "confidenceLevel" initialization option is deprecated
 
-    Use ConfidenceLevel option for StartServer
+      Use ConfidenceLevel option for StartServer
 
-    If[KeyExistsQ[initializationOptions, "confidenceLevel"],
-      $ConfidenceLevelInitialization = initializationOptions["confidenceLevel"]
-    ];
-    *)
-    
-    If[KeyExistsQ[initializationOptions, "implicitTokens"],
-      implicitTokens = initializationOptions["implicitTokens"];
+      If[KeyExistsQ[initializationOptions, "confidenceLevel"],
+        $ConfidenceLevelInitialization = initializationOptions["confidenceLevel"]
+      ];
+      *)
+      
+      If[KeyExistsQ[initializationOptions, "implicitTokens"],
+        implicitTokens = initializationOptions["implicitTokens"];
 
-      $AllowedImplicitTokens = implicitTokens
-    ];
-    If[KeyExistsQ[initializationOptions, "bracketMatcher"],
-      bracketMatcher = initializationOptions["bracketMatcher"];
+        $AllowedImplicitTokens = implicitTokens
+      ];
+      If[KeyExistsQ[initializationOptions, "bracketMatcher"],
+        bracketMatcher = initializationOptions["bracketMatcher"];
 
-      $BracketMatcher = bracketMatcher
-    ];
-    If[KeyExistsQ[initializationOptions, "debugBracketMatcher"],
-      debugBracketMatcher = initializationOptions["debugBracketMatcher"];
+        $BracketMatcher = bracketMatcher
+      ];
+      If[KeyExistsQ[initializationOptions, "debugBracketMatcher"],
+        debugBracketMatcher = initializationOptions["debugBracketMatcher"];
 
-      $DebugBracketMatcher = debugBracketMatcher
-    ];
-    If[KeyExistsQ[initializationOptions, "semanticTokens"],
-      semanticTokens = initializationOptions["semanticTokens"];
+        $DebugBracketMatcher = debugBracketMatcher
+      ];
+      If[KeyExistsQ[initializationOptions, "semanticTokens"],
+        semanticTokens = initializationOptions["semanticTokens"];
 
-      $SemanticTokens = semanticTokens
-    ];
+        $SemanticTokens = semanticTokens
+      ];
     ];
   ];
 
