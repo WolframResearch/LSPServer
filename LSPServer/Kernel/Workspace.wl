@@ -130,6 +130,16 @@ handleContent[content:KeyValuePattern["method" -> "workspace/didChangeWatchedFil
     {}
   ]
 
+handleContent[content:KeyValuePattern["method" -> "workspace/didChangeConfiguration"]] :=
+  Module[{},
+
+    If[$Debug2,
+      log["workspace/didChangeConfiguration: enter"]
+    ];
+  
+    {}
+  ]
+
 
 End[]
 

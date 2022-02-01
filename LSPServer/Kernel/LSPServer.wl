@@ -812,6 +812,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     ];
 
     (*
+    initializationOptions may be Null, such as from Jupyter Lab LSP
+    *)
+    If[AssociationQ[initializationOptions],
+
+    (*
 
     "confidenceLevel" initialization option is deprecated
 
@@ -841,6 +846,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
       semanticTokens = initializationOptions["semanticTokens"];
 
       $SemanticTokens = semanticTokens
+    ];
     ];
   ];
 
