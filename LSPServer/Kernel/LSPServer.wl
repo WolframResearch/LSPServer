@@ -727,7 +727,7 @@ Module[{contents},
 
   If[!MatchQ[contents, {_?AssociationQ ...}],
     log["\n\n"];
-    log["invalid contents result (should match {_?AssociationQ ...}): ", contents];
+    log["Internal assert 3 failed: list of Associations: ", contents];
     log["\n\n"];
 
     exitHard[]
