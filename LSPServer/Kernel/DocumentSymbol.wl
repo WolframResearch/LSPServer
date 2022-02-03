@@ -175,7 +175,7 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
 
 
 abstractContextString[str_String /; StringStartsQ[str, "\""]] :=
-	Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
+  Quiet[ToExpression[str], {Syntax::stresc, Syntax::snthex, Syntax::sntoct1, Syntax::sntoct2, Syntax::snthex32}]
 
 
 flattenDocumentSymbolToSymbolInfo[documentSymbol:KeyValuePattern["children" -> children_]] :=

@@ -239,7 +239,7 @@ Module[{lines, lineMap, originalLineNumber, line,
 
       If[rules != {},
 
-        line = <| "line" -> originalLineNumber, "characters" -> ReplacePart[Table[" ", {originalColumnCount + 1}], rules]|>;
+        line = <| "line" -> originalLineNumber, "characters" -> ReplacePart[Table[" ", {originalColumnCount + 1}], rules] |>;
 
         If[KeyExistsQ[lineMap, line["line"]],
           lineMap[line["line"]] = merge[lineMap[line["line"]], line]
@@ -354,7 +354,7 @@ Module[{lines, lineMap, originalLineNumber, line,
 
         If[rules != {},
 
-          line = <| "line" -> originalLineNumber + segmentIndex[[1]] - 1, "characters" -> ReplacePart[Table[" ", {originalColumnCount + 1}], rules]|>;
+          line = <| "line" -> originalLineNumber + segmentIndex[[1]] - 1, "characters" -> ReplacePart[Table[" ", {originalColumnCount + 1}], rules] |>;
 
           If[KeyExistsQ[lineMap, line["line"]],
             lineMap[line["line"]] = merge[lineMap[line["line"]], line]

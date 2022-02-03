@@ -121,10 +121,10 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "RGBColor", _], {
-  r:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
-  g:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
-  b:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
-  a:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
+  r:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat,
+  g:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat,
+  b:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat,
+  a:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{rVal, gVal, bVal, aVal, src},
 
   rVal = fromNode[r];
@@ -259,8 +259,8 @@ Module[{hVal, sVal, bVal, aVal, src, rgba},
 
 
 colorNodeToColorInformation[CallNode[LeafNode[Symbol, "GrayLevel", _], {
-  g:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat,
-  a:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
+  g:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat,
+  a:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat:LeafNode[Integer, "1", <||>]}, data_]] :=
 Module[{gVal, aVal, src},
 
   gVal = fromNode[g];
@@ -338,7 +338,7 @@ Module[{rVal, gVal, bVal, aVal, src, info, c},
                    "alpha" -> aVal |> |>
 ]]
 
-colorNodeToColorInformation[CallNode[head:LeafNode[Symbol, "Darker" | "Lighter", _], {n_, f:LeafNode[Integer|Real, _, _]|fractionPat|rationalPat}, data_]] :=
+colorNodeToColorInformation[CallNode[head:LeafNode[Symbol, "Darker" | "Lighter", _], {n_, f:LeafNode[Integer|Real, _, _] | fractionPat | rationalPat}, data_]] :=
 Catch[
 Module[{rVal, gVal, bVal, aVal, src, info, c, fVal},
 
@@ -443,7 +443,7 @@ Module[{id, params, doc, uri, color, range, rVal, gVal, bVal, aVal, label, color
 
 
 
-fromNode[l:LeafNode[Integer|Real, _, _]] := FromNode[l]
+fromNode[l:LeafNode[Integer | Real, _, _]] := FromNode[l]
 
 (*
 Make sure to do N with Rational

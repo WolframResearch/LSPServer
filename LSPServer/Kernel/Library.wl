@@ -42,7 +42,6 @@ Begin["`Private`"]
 Needs["LSPServer`"]
 Needs["LSPServer`Utils`"]
 Needs["CodeParser`"]
-Needs["PacletManager`"] (* for PacletInformation *)
 
 
 $LSPServerLibraryError = <|

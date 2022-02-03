@@ -545,7 +545,7 @@ WindowMargins->{{29, Automatic}, {Automatic, 22}},
 TaggingRules->{"TryRealOnly" -> False},
 CellLabelAutoDelete->True,
 TrackCellChangeTimes->False,
-FrontEndVersion->"13.1 for Mac OS X x86 (64-bit) (February 3, 2022)",
+FrontEndVersion->"13.0 for Mac OS X x86 (64-bit) (January 26, 2022)",
 StyleDefinitions->"Default.nb",
 ExpressionUUID->"5a593db6-98eb-468e-9ecb-c9be7f6c8a37"
 ]

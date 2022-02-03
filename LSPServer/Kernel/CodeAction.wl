@@ -212,7 +212,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
         *)
         edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
                                                             "end" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |> |>,
-                                              "newText" -> ToSourceCharacterString[insertionNode]|> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
+                                              "newText" -> ToSourceCharacterString[insertionNode] |> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
         lspAction = <| "title"  -> label,
                        "kind"  -> "quickfix",
@@ -293,7 +293,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
                                                             "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
-                                              "newText" -> replacementText|> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
+                                              "newText" -> replacementText |> } |> |>)&[Map[Max[#, 0]&, actionSrc-1, {2}]];
 
         lspAction = <| "title" -> label,
                        "kind" -> "quickfix",

@@ -91,7 +91,7 @@ Module[{params, id, command},
       If[$Debug2, log["roundtrip_responsiveness_test:> \n\n"]];
       If[$Debug2, log[DateString[Now, {"Year", "-", "Month", "-", "Day", "_", "Hour24", "-", "Minute", "-", "Second", "-", "Millisecond"}]]];
 
-      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <|"method" -> "roundTripTest"|>}
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <| "method" -> "roundTripTest" |>}
     ,
     (*
     ping_pong_responsiveness_test is an undocumented, debug command
@@ -100,7 +100,7 @@ Module[{params, id, command},
 
       If[$Debug2, log["ping_pong_responsiveness_test:> \n\n"]];
 
-      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <|"method" -> "pingPongTest"|>}    
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <| "method" -> "pingPongTest" |>}    
     ,
     (*
     payload_responsiveness_test is an undocumented, debug command
@@ -109,7 +109,7 @@ Module[{params, id, command},
 
       If[$Debug2, log["payload_responsiveness_test:> \n\n"]];
 
-      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <|"method" -> "payloadTest", "payload" -> StringJoin@Flatten@Table[CharacterRange["a", "z"], 100000]|>}
+      {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> {} |>, <| "method" -> "payloadTest", "payload" -> StringJoin@Flatten@Table[CharacterRange["a", "z"], 100000] |>}
     ,
     _,
       If[$Debug,

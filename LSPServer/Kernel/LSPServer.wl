@@ -243,16 +243,14 @@ $ErrorCodes = <|
   "MethodNotFound" -> -32601,
   "InvalidParams" -> -32602,
   "InternalError" -> -32603,
-  "serverErrorStart" -> -32099,
-  "serverErrorEnd" -> -32000,
+  (* "jsonrpcReservedErrorRangeStart" -> -32099, *)
   "ServerNotInitialized" -> -32002,
   "UnknownErrorCode" -> -32001,
-
-  (*
-  Defined by the protocol.
-  *)
-  "RequestCancelled" -> -32800,
-  "ContentModified" -> -32801
+  (* "jsonrpcReservedErrorRangeEnd" -> -32000, *)
+  (* "lspReservedErrorRangeStart" -> -32899, *)
+  "ContentModified" -> -32801,
+  "RequestCancelled" -> -32800
+  (* "lspReservedErrorRangeEnd" -> -32800, *)
 |>
 
 
@@ -345,7 +343,7 @@ $BracketMatcherDelayAfterLastChange = 4.0
 StartServer::notebooks = "LSPServer cannot be started inside of a notebook session."
 
 Options[StartServer] = {
-	ConfidenceLevel -> Automatic,
+  ConfidenceLevel -> Automatic,
   CommunicationMethod -> "StdIO"
 }
 
@@ -997,7 +995,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
           *)
           "disable_bracket_matcher_design_colors",
           (*
-          nable_bracket_matcher_display_insertion_text is an undocumented, debug command
+          enable_bracket_matcher_display_insertion_text is an undocumented, debug command
           *)
           "enable_bracket_matcher_display_insertion_text",
           (*

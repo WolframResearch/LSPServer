@@ -122,7 +122,7 @@ Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, f
       "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
       "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>&[Extract[cst, pos][[3, Key[Source]]]-1];
 
-    Fold[<| "range" -> rangeify[#2], "parent" -> #1|>&, <| "range" -> rangeify[First[posChain]] |>, Rest[posChain]]
+    Fold[<| "range" -> rangeify[#2], "parent" -> #1 |>&, <| "range" -> rangeify[First[posChain]] |>, Rest[posChain]]
 
   ] /@ positions;
 
