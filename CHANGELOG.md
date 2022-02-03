@@ -1,4 +1,46 @@
 
+## 1.5 - 7 Mar, 2022
+
+Add ProcessDirectory option to RunServerDiagnostic
+
+Add hierarchical document symbol support
+
+Add a mini server to diagnostics to test for various bugs before doing actual diagnostics
+
+Work-around serious bug 419428 for now
+
+Internal\`WithLocalSettings is broken, so manually insert UnlockQueue[] calls
+
+Use 0.4 seconds, same as default value of spelling squiggly in FE
+
+Handle ScheduledTask in earlier versions before it held its expr
+
+FromDateString was introduced in 12.3, so use a version check
+
+https://github.com/WolframResearch/vscode-wolfram/issues/8
+
+Create a special message for the error and put in queue as regular traffic
+
+This guarantees the proper order of things being read
+
+initializationOptions may be Null
+
+Handle workspace/didChangeConfiguration notification
+
+https://github.com/WolframResearch/LSPServer/issues/1
+
+13.0.1 syntax updates
+
+Only try reporting stdout / stderr for up to 1 second
+
+
+### Fixes
+
+Fix race condition with stdio error being checked before all previous traffic has been processed
+
+Fix issues found by running with Jupyter Lab LSP
+
+
 ## 1.4 - 25 Oct, 2021
 
 Add Startup Message handling
