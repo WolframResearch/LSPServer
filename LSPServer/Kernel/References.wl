@@ -73,7 +73,7 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
   doc = params["textDocument"];
   uri = doc["uri"];
 
-  If[isStale[$ContentQueue, uri],
+  If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
     If[$Debug2,
       log["stale"]
