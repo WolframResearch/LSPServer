@@ -225,6 +225,9 @@ endforeach()
 # generated srcs
 #
 
+#
+# ReplaceLongNamePUA files
+#
 add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/wl/Kernel/ReplaceLongNamePUA.wl
