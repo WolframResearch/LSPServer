@@ -984,8 +984,10 @@ Module[{code},
 This reports license errors
 *)
 reportStdOut[proc_] :=
-Module[{stdOut, arr, str},
+Module[{stdOut, arr, str, time},
   stdOut = ProcessConnection[proc, "StandardOutput"];
+
+  time = Now;
 
   While[True,
     Pause[0.1];
@@ -993,6 +995,9 @@ Module[{stdOut, arr, str},
     arr = Quiet[ReadByteArray[stdOut, EndOfBuffer], {ReadByteArray::openx}];
 
     Which[
+      (Now - time) > Quantity[1, "Seconds"],
+        Break[]
+      ,
       arr === {},
         Print["INFO: stdout: (empty)"];
       ,
@@ -1015,8 +1020,10 @@ Module[{stdOut, arr, str},
 ]
 
 reportStdErr[proc_] :=
-Module[{stdErr, arr, str},
+Module[{stdErr, arr, str, time},
   stdErr = ProcessConnection[proc, "StandardError"];
+
+  time = Now;
 
   While[True,
     Pause[0.1];
@@ -1024,6 +1031,9 @@ Module[{stdErr, arr, str},
     arr = Quiet[ReadByteArray[stdErr, EndOfBuffer], {ReadByteArray::openx}];
 
     Which[
+      (Now - time) > Quantity[1, "Seconds"],
+        Break[]
+      ,
       arr === {},
         Print["INFO: stderr: (empty)"];
       ,
