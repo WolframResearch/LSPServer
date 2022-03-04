@@ -1,7 +1,7 @@
 
 ## 1.6 - XX May, 2022
 
-Add function usage and function call pattern information to hover.
+Add function usage and function definition patterns to hover.
 
 
 ### Fixes
@@ -13,7 +13,7 @@ Fix handling stale content for textDocument/documentSymbol and textDocument/refe
 
 Add ProcessDirectory option to RunServerDiagnostic
 
-Add hierarchical document symbol support
+Add Hierarchical Document Symbol support (outlines)
 
 Add a mini server to diagnostics to test for various bugs before doing actual diagnostics
 
