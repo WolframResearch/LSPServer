@@ -1,6 +1,10 @@
 
 ## 1.6 - XX May, 2022
 
+### Fixes
+
+Fix handling stale content for textDocument/documentSymbol and textDocument/references
+
 
 ## 1.5 - 7 Mar, 2022
 
