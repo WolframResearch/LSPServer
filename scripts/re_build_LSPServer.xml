@@ -1,94 +1,62 @@
 <?xml version="1.0"?>
-<project name='lspserver' basedir='..'>
+<project name='LSPServer' basedir='..' xmlns:if='ant:if' xmlns:unless='ant:unless'>
 
-  <property name='component' value='lspserver' />
-  <property name='app.name' value='LSPServer' />
-  <property name='inputDir' value='${basedir}/${app.name}/Documentation' />
-  <property environment='env' />
-  <import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
+	<property name='component' value='LSPServer' />
+	<property name='app.name' value='LSPServer' />
+	<property name='inputDir' value='${basedir}/${app.name}/Documentation' />
 
-  <!--
-    Native libraries (platform-specific)
-  -->
+	<property environment='env' />
+	<import file='${env.RE_ANTLIBRARY_HOME}/ant-lib.xml' />
 
-  <target name='NativeLibrary.lspserver.init.custom' extensionOf='NativeLibrary.init.custom'>
+	<target name='Paclet.LSPServer.init.custom' extensionOf='Paclet.init.custom'>
 
-    <!-- - CMake generates makefiles here -->
-    <property name='build.dir' value='${checkout_directory}${file.separator}${component}${file.separator}build' />
+		<!-- Paclet builds aren't supposed to have a system_id, but these do. -->
+		<required-property name='system_id' />
+		<property name='build_type' value='${system_id}' />
 
-  </target>
+		<!-- Report to the build monitor, publish artifacts to images-frontend, etc. -->
+		<property name='has-buildmonitor' value='true' />
 
-  <target name='NativeLibrary.lspserver.prebuild' extensionOf='NativeLibrary.prebuild'>
+		<!-- - CMake generates makefiles here -->
+		<property name='build.dir' location='${checkout_directory}/${component}/build' />
 
-    <delete dir='${build.dir}' />
-        <mkdir dir='${build.dir}' />
+	</target>
 
-  </target>
+	<target name='Paclet.LSPServer.clean' extensionOf='Paclet.clean'>
 
-  <target name='NativeLibrary.lspserver.execute' extensionOf='NativeLibrary.execute'>
+		<delete dir='${build.dir}' />
+		<mkdir dir='${build.dir}' />
 
-    <exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
-      <arg line='-DWOLFRAMKERNEL=${mathExe}' />
-      <arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
-      <arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
-      <arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
-      <arg value='${checkout_directory}/${component}' />
-    </exec>
+	</target>
 
-    <exec dir='${build.dir}' executable='${cmake.exe}' failonerror='true'>
-      <arg line='--build .' />
-      <arg line='--target paclet' />
-    </exec>
+	<target name='Paclet.LSPServer.execute' extensionOf='Paclet.execute'>
 
-  </target>
+		<re-cmake-exec dir='${build.dir}'>
+			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
+			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
+			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
+			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
+			<arg value='${checkout_directory}/${component}' />
+		</re-cmake-exec>
 
-  <target name='NativeLibrary.lspserver.postbuild' extensionOf='NativeLibrary.postbuild'>
-    <mkdir dir='${files_directory}/LSPServer' />
-    <copy todir='${files_directory}/LSPServer'>
-      <fileset dir='${build.dir}${file.separator}paclet${file.separator}LSPServer' />
-    </copy>
-    
-  </target>
+		<re-cmake-exec dir='${build.dir}'>
+			<arg line='--build .' />
+			<arg line='--target paclet' />
+		</re-cmake-exec>
 
-  <!--
-    Paclet (all platforms)
-  -->
+	</target>
 
-  <target name='Paclet.lspserver.init.custom' extensionOf='Paclet.init.custom'>
+	<target name='Paclet.LSPServer.postbuild' extensionOf='Paclet.postbuild'>
 
-    <!--
-      Prevent Paclet.clean from deleting files_directory,
-      since CopyAndUnarchiveArtifact just put all the paclet
-      files in there....
-    -->
+		<mkdir dir='${files_directory}/LSPServer' />
+		<copy todir='${files_directory}/LSPServer'>
+			<fileset dir='${build.dir}/paclet/LSPServer' />
+		</copy>
 
-    <property name='keep.files_directory' value='true' />
+		<copy todir='${output_directory}'>
+			<fileset dir='${build.dir}/paclet' includes='*.paclet' />
+		</copy>
 
-  </target>
-
-  <target name='Paclet.lspserver.prebuild' extensionOf='Paclet.prebuild' />
-
-  <target name='Paclet.lspserver.execute' extensionOf='Paclet.execute'>
-
-    <mathematica exe='${mathExe}' fresh='true' quit='true'><![CDATA[
-
-      Print["$Version: ", $Version];
-      Print["$InstallationDirectory: ", $InstallationDirectory];
-
-      Unset[$MessagePrePrint];
-      Needs["PacletManager`"];
-
-      src = AntProperty["files_directory"];
-      dest = FileNameJoin[AntProperty["output_directory"]];
-      PackPaclet[src, dest];
-
-      SetDirectory[dest]
-      If [TrueQ[FileExistsQ[FileNames["lspserver*.paclet"][[1]]]],
-        Print[FileNames["lspserver*.paclet"][[1]] " ... OK"],
-        AntFail["Paclet not produced" ]];
-
-    ]]></mathematica>
-
-  </target>
+	</target>
 
 </project>
