@@ -99,7 +99,7 @@ Module[{id, params, doc, uri, ast, position, locations, line, char, cases, sym, 
   ast = entry["AST"];
 
   If[FailureQ[ast],
-    Throw[ast]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
   (*

@@ -115,10 +115,14 @@ Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> <| "data" -> semanticTokens |> |>}]
   ];
 
-  scopingData = entry["ScopingData"];
+  scopingData = Lookup[entry, "ScopingData", Null];
+
+  If[scopingData === Null,
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
+  ];
 
   If[FailureQ[scopingData],
-    Throw[scopingData]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
   (*
@@ -216,6 +220,10 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingData"]
     ];
 
     ast = entry["AST"];
+
+    If[FailureQ[ast],
+      Throw[{}]
+    ];
 
     If[$Debug2,
       log["before ScopingData"]

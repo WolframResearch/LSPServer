@@ -102,7 +102,7 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
   ast = entry["AST"];
 
   If[FailureQ[ast],
-    Throw[ast]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
   colorNodes = Cases[ast,

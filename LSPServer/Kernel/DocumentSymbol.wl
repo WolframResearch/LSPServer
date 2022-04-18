@@ -119,13 +119,13 @@ Module[{id, params, doc, uri, cst, ast, entry, symbolInfo, documentSymbols,
   cst = entry["CST"];
 
   If[FailureQ[cst],
-    Throw[cst]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
   ast = entry["AST"];
 
   If[FailureQ[ast],
-    Throw[ast]
+    Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
   (*

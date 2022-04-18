@@ -236,6 +236,10 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
 
     ast = entry["AST"];
 
+    If[FailureQ[ast],
+      Throw[{}]
+    ];
+
     suppressedRegions = entry["SuppressedRegions"];
 
     If[$Debug2,
