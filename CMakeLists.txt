@@ -27,16 +27,29 @@ find_program(CODEPARSER_EXE
 set(PACLET "LSPServer")
 set(WOLFRAMKERNEL ${WOLFRAMKERNEL_DEFAULT} CACHE FILEPATH "Path to WolframKernel")
 set(LOCAL_BUILD OFF CACHE BOOL "Local build")
-# Work-around for bug 349779 is to pause ~1 second
-set(BUG349779_PAUSE 1 CACHE STRING "Bug 349779 pause")
 #
-# Evidence suggests that when bug 349779 strikes, the kernel does exit after 30 minutes
-# So double that and cross fingers.
+# Time to pause when starting kernel
+#
+# Work-around for bug 349779 is to pause ~1 second
+# bug 349779 was fixed in version 12.0
+# 
+# Related bugs: 349779
+#
+set(KERNEL_PAUSE 0 CACHE STRING "Kernel startup pause")
+#
+# Timeout for starting a kernel and getting a result
+#
+# RE machines can be very slow when starting a kernel, so we need to be very generous with this timeout
+#
+# Should be at least 10 minutes = 600 seconds
+#
+# Evidence suggests that when bug 349779 strikes, the kernel does exit after 30 minutes = 1800 seconds
+# bug 349779 was fixed in version 12.0
 #
 # Related bugs: 349779
 # Related issues: RE-514227
 #
-set(BUG349779_TIMEOUT 3600 CACHE STRING "Bug 349779 timeout")
+set(KERNEL_TIMEOUT 600 CACHE STRING "Kernel startup timeout")
 
 if(NOT DEFINED BUILDNUMBER)
 set(BUILDNUMBER 0)
@@ -50,8 +63,8 @@ if(LOCAL_BUILD)
 message(STATUS "Configuring for local build")
 endif()
 message(STATUS "CMAKE_SIZEOF_VOID_P: ${CMAKE_SIZEOF_VOID_P}")
-message(STATUS "BUG349779_PAUSE: ${BUG349779_PAUSE}")
-message(STATUS "BUG349779_TIMEOUT: ${BUG349779_TIMEOUT}")
+message(STATUS "KERNEL_PAUSE: ${KERNEL_PAUSE}")
+message(STATUS "KERNEL_TIMEOUT: ${KERNEL_TIMEOUT}")
 message(STATUS "CODEPARSER_EXE: ${CODEPARSER_EXE}")
 if(NOT CODEPARSER_EXE)
 message(STATUS "Optional tool CODEPARSER_EXE was not found; skipping")
@@ -159,7 +172,7 @@ add_custom_command(
 	OUTPUT
 		${COPIED_PACLETINFO}
 	COMMAND
-		${CMAKE_COMMAND} -DSRC=${PACLETINFO_IN_SOURCE} -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		${CMAKE_COMMAND} -DSRC=${PACLETINFO_IN_SOURCE} -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	COMMAND
 		${CMAKE_COMMAND} -E copy ${PACLETINFO_IN_SOURCE} ${COPIED_PACLETINFO}
 	DEPENDS
@@ -177,7 +190,7 @@ foreach(SRC ${STATIC_WL_PACLET_KERNEL_SOURCES})
 		OUTPUT
 			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL}
 		COMMAND
-			${CMAKE_COMMAND} -DSRC=${SRC} -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+			${CMAKE_COMMAND} -DSRC=${SRC} -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 		COMMAND
 			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL}
 		DEPENDS
@@ -232,9 +245,9 @@ add_custom_command(
 	OUTPUT
 		${PROJECT_BINARY_DIR}/generated/wl/Kernel/ReplaceLongNamePUA.wl
 	COMMAND
-		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ReplaceLongNamePUA.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ReplaceLongNamePUA.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
-		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Kernel/ReplaceLongNamePUA.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
+		${CMAKE_COMMAND} -DSRC=${PROJECT_BINARY_DIR}/generated/wl/Kernel/ReplaceLongNamePUA.wl -DCODEPARSER_EXE=${CODEPARSER_EXE} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InspectFile.cmake
 	DEPENDS
 		${PROJECT_SOURCE_DIR}/CodeParser/Data/LongNames.wl
 		${PROJECT_SOURCE_DIR}/LSPServer/Generate/ReplaceLongNamePUA.wl
@@ -381,7 +394,7 @@ add_custom_command(
 		#
 		# see: RE-515885
 		#
-		${CMAKE_COMMAND} -DRETRY_ON_FAILURE=ON -DSCRIPT=${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET=${PACLET} -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
+		${CMAKE_COMMAND} -DRETRY_ON_FAILURE=ON -DSCRIPT=${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DPACLET=${PACLET} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	DEPENDS
 		${PACLET_SOURCES}
 		${PROJECT_SOURCE_DIR}/CodeTools/Generate/CreatePacletArchive.wl
@@ -395,7 +408,7 @@ add_custom_command(
 
 install(
 	CODE
-		"execute_process(COMMAND ${CMAKE_COMMAND} -DPACLET_OUTPUT=${PACLET_OUTPUT} \"-DWOLFRAMKERNEL=${WOLFRAMKERNEL}\" -DBUG349779_TIMEOUT=${BUG349779_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InstallPaclet.cmake)"
+		"execute_process(COMMAND ${CMAKE_COMMAND} -DPACLET_OUTPUT=${PACLET_OUTPUT} \"-DWOLFRAMKERNEL=${WOLFRAMKERNEL}\" -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/InstallPaclet.cmake)"
 	COMPONENT
 		paclet
 )
