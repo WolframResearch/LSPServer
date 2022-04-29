@@ -1243,7 +1243,7 @@ Module[{id},
     {<| "jsonrpc" -> "2.0", "id" -> id,
       "error" -> <|
         "code" -> $ErrorCodes["InvalidRequest"],
-        "message"->"Invalid request" |> |>}
+        "message" -> "Invalid request" |> |>}
     ,
     (*
     does not have id, so this is a notification

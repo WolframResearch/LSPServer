@@ -219,7 +219,7 @@ Module[{res, loaded, linkObject},
   (*
   send fully-qualified symbol names over the wire
   library->kernel traffic has fully-qualified symbols.
-  This allows LibraryLink traffic to work when CodeParser` is not on $ContextPath.
+  This allows LibraryLink traffic to work when LSPServer` is not on $ContextPath.
   And we want kernel->library traffic to match this behavior, to minimize surprises.
   Note: this still does not enable sending fully-qualified System` symbols
   bug 283291
