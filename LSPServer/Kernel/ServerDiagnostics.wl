@@ -25,11 +25,11 @@ Options[RunServerDiagnostic] = {
 }
 
 RunServerDiagnostic[command:{_String...}, OptionsPattern[]] :=
-  Catch[
-  Module[{cwd, lspServerVersion, codeParserVersion,
-    codeInspectorVersion, codeFormatterVersion, lspServerBuildDate,
-    codeParserBuildDate, codeInspectorBuildDate,
-    codeFormatterBuildDate, serverKernel, baseName, res},
+Catch[
+Module[{cwd, lspServerVersion, codeParserVersion,
+  codeInspectorVersion, codeFormatterVersion, lspServerBuildDate,
+  codeParserBuildDate, codeInspectorBuildDate,
+  codeFormatterBuildDate, serverKernel, baseName, res},
 
   cwd = OptionValue[ProcessDirectory];
 

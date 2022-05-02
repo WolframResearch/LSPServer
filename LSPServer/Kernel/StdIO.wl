@@ -39,89 +39,89 @@ Module[{startupError},
 (* =================   Read Message   ======================= *)
 
 TryQueue["StdIO"] :=
-  Catch[
-  Module[{bytes,
-    queueSize, frontMessageSize,
-    content,
-    bytessIn, contentsIn},
+Catch[
+Module[{bytes,
+  queueSize, frontMessageSize,
+  content,
+  bytessIn, contentsIn},
 
-    (*
-    NOTE: when bug 419428 is fixed and targeting 12.2 as minimum source version, then check bugfix and use WithCleanup
-    *)
-    (*
-    BEGIN LOCK REGION
-    *)
-    LockQueue[];
+  (*
+  NOTE: when bug 419428 is fixed and targeting 12.2 as minimum source version, then check bugfix and use WithCleanup
+  *)
+  (*
+  BEGIN LOCK REGION
+  *)
+  LockQueue[];
 
-    queueSize = GetQueueSize[];
+  queueSize = GetQueueSize[];
 
-    If[queueSize == 0,
+  If[queueSize == 0,
+    UnlockQueue[];
+    Throw[Null]
+  ];
+
+  If[$Debug2,
+      log["\n\n"];
+      log["messages in queue: ", queueSize];
+      log["\n\n"]
+  ];
+
+  bytessIn = {};
+  Do[
+
+    frontMessageSize = GetFrontMessageSize[];
+    
+    If[frontMessageSize == 0,
+
       UnlockQueue[];
-      Throw[Null]
+
+      log["\n\n"];
+      log["FrontMessage size was 0; shutting down"];
+      log["\n\n"];
+
+      exitHard[];
+    ];
+
+    bytes = PopQueue[frontMessageSize];
+
+    AppendTo[bytessIn, bytes]
+    , 
+    queueSize
+  ];
+
+  UnlockQueue[];
+  (*
+  END LOCK REGION
+  *)
+
+  contentsIn = {};
+  Do[
+    If[FailureQ[bytesIn],
+      log["\n\n"];
+      log["invalid bytes from stdin: ", bytesIn];
+      log["\n\n"];
+      
+      exitHard[]
     ];
 
     If[$Debug2,
-        log["\n\n"];
-        log["messages in queue: ", queueSize];
-        log["\n\n"]
+      log["C-->S " <> ToString[Length[bytesIn]] <> " bytes"];
+      log["C-->S " <> stringLineTake[FromCharacterCode[Normal[Take[bytesIn, UpTo[1000]]]], UpTo[20]]];
+      log["...\n"]
     ];
 
-    bytessIn = {};
-    Do[
+    content = Developer`ReadRawJSONString[ByteArrayToString[bytesIn]];
 
-      frontMessageSize = GetFrontMessageSize[];
-      
-      If[frontMessageSize == 0,
+    AppendTo[contentsIn, content]
+    ,
+    {bytesIn, bytessIn}
+  ];
 
-        UnlockQueue[];
+  bytessIn = {};
 
-        log["\n\n"];
-        log["FrontMessage size was 0; shutting down"];
-        log["\n\n"];
+  expandContentsAndAppendToContentQueue[contentsIn]
 
-        exitHard[];
-      ];
-
-      bytes = PopQueue[frontMessageSize];
-
-      AppendTo[bytessIn, bytes]
-      , 
-      queueSize
-    ];
-
-    UnlockQueue[];
-    (*
-    END LOCK REGION
-    *)
-
-    contentsIn = {};
-    Do[
-      If[FailureQ[bytesIn],
-        log["\n\n"];
-        log["invalid bytes from stdin: ", bytesIn];
-        log["\n\n"];
-        
-        exitHard[]
-      ];
-
-      If[$Debug2,
-        log["C-->S " <> ToString[Length[bytesIn]] <> " bytes"];
-        log["C-->S " <> stringLineTake[FromCharacterCode[Normal[Take[bytesIn, UpTo[1000]]]], UpTo[20]]];
-        log["...\n"]
-      ];
-
-      content = Developer`ReadRawJSONString[ByteArrayToString[bytesIn]];
-
-      AppendTo[contentsIn, content]
-      ,
-      {bytesIn, bytessIn}
-    ];
-
-    bytessIn = {};
-
-    expandContentsAndAppendToContentQueue[contentsIn]
-
-  ]]
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "stdio/error"]] :=

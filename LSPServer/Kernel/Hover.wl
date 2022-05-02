@@ -11,46 +11,46 @@ Needs["CodeParser`Utils`"]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/hover"], pos_] :=
-  Catch[
-  Module[{params, id, doc, uri},
+Catch[
+Module[{params, id, doc, uri},
+
+  If[$Debug2,
+    log["textDocument/hover: enter expand"]
+  ];
+  
+  id = content["id"];
+  params = content["params"];
+  
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
 
     If[$Debug2,
-      log["textDocument/hover: enter expand"]
+      log["canceled"]
     ];
     
-    id = content["id"];
-    params = content["params"];
-    
-    If[Lookup[$CancelMap, id, False],
+    Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-      $CancelMap[id] =.;
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-      If[$Debug2,
-        log["canceled"]
-      ];
-      
-      Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
+    If[$Debug2,
+      log["stale"]
     ];
 
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-       "textDocument/concreteParse",
-       "textDocument/aggregateParse",
-       "textDocument/abstractParse",
-       "textDocument/hoverFencepost"
-    }
-  ]]
+  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+      "textDocument/concreteParse",
+      "textDocument/aggregateParse",
+      "textDocument/abstractParse",
+      "textDocument/hoverFencepost"
+  }
+]]
   
 handleContent[content:KeyValuePattern["method" -> "textDocument/hoverFencepost"]] :=
 Catch[
@@ -768,25 +768,25 @@ Module[{res},
 ]
 
 parseString[s_] :=
-  Module[{a1, unquoted, hasStartingQuote, hasEndingQuote},
+Module[{a1, unquoted, hasStartingQuote, hasEndingQuote},
 
-    (*
-    The string may be reassembled and there may have been an error in the linear syntax,
-    meaning that there is no trailing quote
-    *)
-    hasStartingQuote = StringMatchQ[s, "\"" ~~ ___];
-    hasEndingQuote = StringMatchQ[s, ___ ~~ "\""];
-    unquoted = StringReplace[s, (StartOfString ~~ "\"") | ("\"" ~~ EndOfString) -> ""];
+  (*
+  The string may be reassembled and there may have been an error in the linear syntax,
+  meaning that there is no trailing quote
+  *)
+  hasStartingQuote = StringMatchQ[s, "\"" ~~ ___];
+  hasEndingQuote = StringMatchQ[s, ___ ~~ "\""];
+  unquoted = StringReplace[s, (StartOfString ~~ "\"") | ("\"" ~~ EndOfString) -> ""];
 
-    a1 = reassembleEmbeddedLinearSyntax[CodeTokenize[unquoted]] /. {
-      LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
-      LeafNode[Token`LinearSyntaxBlob, s1_, _] :> parseLinearSyntaxBlob[s1],
-      LeafNode[String, s1_, _] :> parseString[s1],
-      LeafNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s1]]]],
-      ErrorNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s1]]]]
-    };
-    {If[hasStartingQuote, "\"", ""], a1, If[hasEndingQuote, "\"", ""]}
-  ]
+  a1 = reassembleEmbeddedLinearSyntax[CodeTokenize[unquoted]] /. {
+    LeafNode[Token`LinearSyntax`Bang, _, _] -> "",
+    LeafNode[Token`LinearSyntaxBlob, s1_, _] :> parseLinearSyntaxBlob[s1],
+    LeafNode[String, s1_, _] :> parseString[s1],
+    LeafNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s1]]]],
+    ErrorNode[_, s1_, _] :> escapeMarkdown[replaceLinearSyntax[replaceControl[replaceLongNamePUA[s1]]]]
+  };
+  {If[hasStartingQuote, "\"", ""], a1, If[hasEndingQuote, "\"", ""]}
+]
 
 
 (* :!CodeAnalysis::BeginBlock:: *)
@@ -1116,30 +1116,29 @@ TODO: dump explanation about terrible, terrible design mistake here
 *)
 reassembleEmbeddedLinearSyntax[toks_] :=
 Catch[
-  Module[{embeddedLinearSyntax, openerPoss, closerPoss},
+Module[{embeddedLinearSyntax, openerPoss, closerPoss},
 
-    openerPoss = Position[toks, LeafNode[String, s_ /; StringCount[s, "\("] == 1 && StringCount[s, "\)"] == 0, _]];
+  openerPoss = Position[toks, LeafNode[String, s_ /; StringCount[s, "\("] == 1 && StringCount[s, "\)"] == 0, _]];
 
-    closerPoss = Position[toks,
-      LeafNode[String, s_ /; StringCount[s, "\("] == 0 && StringCount[s, "\)"] == 1, _] |
-        ErrorNode[Token`Error`UnterminatedString, s_ /; StringCount[s, "\("] == 0 && StringCount[s, "\)"] == 1, _]];
+  closerPoss = Position[toks,
+    LeafNode[String, s_ /; StringCount[s, "\("] == 0 && StringCount[s, "\)"] == 1, _] |
+      ErrorNode[Token`Error`UnterminatedString, s_ /; StringCount[s, "\("] == 0 && StringCount[s, "\)"] == 1, _]];
 
-    If[Length[openerPoss] != Length[closerPoss],
-      Message[reassembleEmbeddedLinearSyntax::unhandled];
-      Throw[toks]
-    ];
+  If[Length[openerPoss] != Length[closerPoss],
+    Message[reassembleEmbeddedLinearSyntax::unhandled];
+    Throw[toks]
+  ];
 
-    Fold[
-      Function[{toks1, span},
-        embeddedLinearSyntax = LeafNode[String, StringJoin[#[[2]]& /@ Take[toks1, {span[[1, 1]], span[[2, 1]]}]], <||>];
-        ReplacePart[Drop[toks1, {span[[1, 1]] + 1, span[[2, 1]]}], span[[1]] -> embeddedLinearSyntax]]
-      ,
-      toks
-      ,
-      Transpose[{openerPoss, closerPoss}] //Reverse
-    ]
+  Fold[
+    Function[{toks1, span},
+      embeddedLinearSyntax = LeafNode[String, StringJoin[#[[2]]& /@ Take[toks1, {span[[1, 1]], span[[2, 1]]}]], <||>];
+      ReplacePart[Drop[toks1, {span[[1, 1]] + 1, span[[2, 1]]}], span[[1]] -> embeddedLinearSyntax]]
+    ,
+    toks
+    ,
+    Transpose[{openerPoss, closerPoss}] //Reverse
   ]
-]
+]]
 
 $messageNamePattern = CallNode[LeafNode[Symbol, "MessageName", _], 
   {

@@ -293,35 +293,35 @@ Expands contents and appends to $ContentQueue
 Returns Null
 *)
 expandContentsAndAppendToContentQueue[contentsIn_] :=
-  Module[{contents},
+Module[{contents},
 
-    contents = contentsIn;
+  contents = contentsIn;
 
-    If[!MatchQ[contents, {_?AssociationQ ...}],
-      log["\n\n"];
-      log["Internal assert 1 failed: list of Associations: ", contents];
-      log["\n\n"];
+  If[!MatchQ[contents, {_?AssociationQ ...}],
+    log["\n\n"];
+    log["Internal assert 1 failed: list of Associations: ", contents];
+    log["\n\n"];
 
-      exitHard[]
-    ];
+    exitHard[]
+  ];
 
-    preScanForCancels[contents];
+  preScanForCancels[contents];
 
-    (*
-    Now expand new contents
-    *)
+  (*
+  Now expand new contents
+  *)
 
-    contents = expandContents[contents];
+  contents = expandContents[contents];
 
-    $ContentQueue = $ContentQueue ~ Join ~ contents;
+  $ContentQueue = $ContentQueue ~Join~ contents;
 
-    If[$Debug2,
-      log["appending to $ContentQueue"];
-      log["$ContentQueue (up to 20): ", #["method"]& /@ Take[$ContentQueue, UpTo[20]]]
-    ];
+  If[$Debug2,
+    log["appending to $ContentQueue"];
+    log["$ContentQueue (up to 20): ", #["method"]& /@ Take[$ContentQueue, UpTo[20]]]
+  ];
 
-    
-  ]
+  
+]
 
 
 (*
@@ -539,24 +539,24 @@ _,
 
 
 preScanForCancels[contents:{_?AssociationQ ...}] :=
-  Module[{cancels, params, id},
+Module[{cancels, params, id},
 
-    cancels = Cases[contents, KeyValuePattern["method" -> "$/cancelRequest"]];
+  cancels = Cases[contents, KeyValuePattern["method" -> "$/cancelRequest"]];
 
-    Scan[
-      Function[{content},
-        params = content["params"];
+  Scan[
+    Function[{content},
+      params = content["params"];
 
-        id = params["id"];
+      id = params["id"];
 
-        $CancelMap[id] = True
-      ], cancels];
+      $CancelMap[id] = True
+    ], cancels];
 
-    If[$Debug2,
-      log["after preScanForCancels"];
-      log["$CancelMap: ", $CancelMap]
-    ]
+  If[$Debug2,
+    log["after preScanForCancels"];
+    log["$CancelMap: ", $CancelMap]
   ]
+]
 
 
 (*
@@ -1039,23 +1039,26 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   ];
 
   contents = {<| "jsonrpc" -> "2.0", "id" -> id,
-      "result" -> <| "capabilities"-> <| "referencesProvider" -> True,
-                                         "textDocumentSync" -> <| "openClose" -> True,
-                                                                  "save" -> <| "includeText" -> False |>,
-                                                                  "change" -> $TextDocumentSyncKind["Full"]
-                                                               |>,
-                                         "codeActionProvider" -> codeActionProviderValue,
-                                         "colorProvider" -> $ColorProvider,
-                                         "hoverProvider" -> True,
-                                         "definitionProvider" -> True,
-                                         "documentFormattingProvider" -> True,
-                                         "documentRangeFormattingProvider" -> True,
-                                         "executeCommandProvider" -> $ExecuteCommandProvider,
-                                         "documentSymbolProvider" -> True,
-                                         "selectionRangeProvider" -> True,
-                                         "semanticTokensProvider" -> semanticTokensProviderValue
-                                     |>
-                 |>
+    "result" -> <|
+      "capabilities"-> <|
+        "referencesProvider" -> True,
+        "textDocumentSync" -> <|
+          "openClose" -> True,
+          "save" -> <| "includeText" -> False |>,
+          "change" -> $TextDocumentSyncKind["Full"]
+        |>,
+        "codeActionProvider" -> codeActionProviderValue,
+        "colorProvider" -> $ColorProvider,
+        "hoverProvider" -> True,
+        "definitionProvider" -> True,
+        "documentFormattingProvider" -> True,
+        "documentRangeFormattingProvider" -> True,
+        "executeCommandProvider" -> $ExecuteCommandProvider,
+        "documentSymbolProvider" -> True,
+        "selectionRangeProvider" -> True,
+        "semanticTokensProvider" -> semanticTokensProviderValue
+      |>
+    |>
   |>};
 
   contents
@@ -1063,43 +1066,43 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
 
 handleContent[content:KeyValuePattern["method" -> "initialized"]] :=
-  Module[{warningMessages},
+Module[{warningMessages},
 
-    If[$Debug2,
-      log["initialized: enter"]
-    ];
+  If[$Debug2,
+    log["initialized: enter"]
+  ];
 
+  (*
+  Some simple thing to warm-up
+  *)
+  CodeParse["1+1"];
+
+  If[$BracketMatcher,
+
+    Block[{$ContextPath}, Needs["ML4Code`"]];
+  
     (*
     Some simple thing to warm-up
     *)
-    CodeParse["1+1"];
+    ML4Code`SuggestBracketEdits["f["];
+  ];
 
-    If[$BracketMatcher,
+  warningMessages = ServerDiagnosticWarningMessages[];
 
-      Block[{$ContextPath}, Needs["ML4Code`"]];
-   
-      (*
-      Some simple thing to warm-up
-      *)
-      ML4Code`SuggestBracketEdits["f["];
-    ];
+  If[$Debug2,
+    log["warningMessages: ", warningMessages]
+  ];
 
-    warningMessages = ServerDiagnosticWarningMessages[];
-
-    If[$Debug2,
-      log["warningMessages: ", warningMessages]
-    ];
-
-    <|
-      "jsonrpc" -> "2.0",
-      "method" -> "window/showMessage",
-      "params" ->
-        <|
-          "type" -> $MessageType["Warning"],
-          "message" -> #
-        |>
-    |>& /@ warningMessages
-  ]
+  <|
+    "jsonrpc" -> "2.0",
+    "method" -> "window/showMessage",
+    "params" ->
+      <|
+        "type" -> $MessageType["Warning"],
+        "message" -> #
+      |>
+  |>& /@ warningMessages
+]
 
 
 handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
@@ -1134,14 +1137,14 @@ Module[{id},
 Unexpected call to exit
 *)
 handleContent[content:KeyValuePattern["method" -> "exit"]] :=
-  Module[{},
+Module[{},
 
-    If[$Debug2,
-      log["exit: enter"]
-    ];
+  If[$Debug2,
+    log["exit: enter"]
+  ];
 
-    exitSemiGracefully[]
-  ]
+  exitSemiGracefully[]
+]
 
 
 handleContent[content:KeyValuePattern["method" -> "$/cancelRequest"]] :=
@@ -1213,69 +1216,69 @@ Module[{id},
 
 
 handleContentAfterShutdown[content:KeyValuePattern["method" -> "exit"]] :=
-  Module[{},
+Module[{},
 
-    If[$Debug2,
-      log["exit after shutdown: enter"]
-    ];
+  If[$Debug2,
+    log["exit after shutdown: enter"]
+  ];
 
-    exitGracefully[]
-  ]
+  exitGracefully[]
+]
 
 (*
 Called if any requests or notifications come in after shutdown
 *)
 handleContentAfterShutdown[content_?AssociationQ] :=
-  Module[{id},
+Module[{id},
 
-    If[$Debug2,
-      log["message after shutdown: enter: ", #["method"]&[content]]
-    ];
+  If[$Debug2,
+    log["message after shutdown: enter: ", #["method"]&[content]]
+  ];
 
-    If[KeyExistsQ[content, "id"],
-      (*
-      has id, so this is a request
-      *)
-      id = content["id"];
-      {<| "jsonrpc" -> "2.0", "id" -> id,
-        "error" -> <|
-          "code" -> $ErrorCodes["InvalidRequest"],
-          "message"->"Invalid request" |> |>}
-      ,
-      (*
-      does not have id, so this is a notification
-      just ignore
-      *)
-      {}
-    ]
+  If[KeyExistsQ[content, "id"],
+    (*
+    has id, so this is a request
+    *)
+    id = content["id"];
+    {<| "jsonrpc" -> "2.0", "id" -> id,
+      "error" -> <|
+        "code" -> $ErrorCodes["InvalidRequest"],
+        "message"->"Invalid request" |> |>}
+    ,
+    (*
+    does not have id, so this is a notification
+    just ignore
+    *)
+    {}
   ]
+]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didOpen"], pos_] :=
-  Catch[
-  Module[{params, doc, uri},
+Catch[
+Module[{params, doc, uri},
 
+  If[$Debug2,
+    log["textDocument/didOpen: enter expand"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
     If[$Debug2,
-      log["textDocument/didOpen: enter expand"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/didOpenFencepost", "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/didOpenFencepost", "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "params" -> params |>& /@ ({
-        "textDocument/didOpenFencepost"
-      } ~Join~ $didOpenMethods)
-  ]]
+  <| "method" -> #, "params" -> params |>& /@ ({
+      "textDocument/didOpenFencepost"
+    } ~Join~ $didOpenMethods)
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didOpenFencepost"]] :=
@@ -1631,30 +1634,30 @@ Module[{params, doc, uri, entry, agg, ast},
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didClose"], pos_] :=
-  Catch[
-  Module[{params, doc, uri},
+Catch[
+Module[{params, doc, uri},
 
+  If[$Debug2,
+    log["textDocument/didClose: enter expand"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
     If[$Debug2,
-      log["textDocument/didClose: enter expand"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/didCloseFencepost", "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/didCloseFencepost", "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "params" -> params |>& /@ ({
-        "textDocument/didCloseFencepost"
-      } ~Join~ $didCloseMethods)
-  ]]
+  <| "method" -> #, "params" -> params |>& /@ ({
+      "textDocument/didCloseFencepost"
+    } ~Join~ $didCloseMethods)
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didCloseFencepost"]] :=
 Module[{params, doc, uri},
@@ -1675,68 +1678,68 @@ Module[{params, doc, uri},
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didSave"], pos_] :=
-  Catch[
-  Module[{params, doc, uri},
+Catch[
+Module[{params, doc, uri},
 
+  If[$Debug2,
+    log["textDocument/didSave: enter expand"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
     If[$Debug2,
-      log["textDocument/didSave: enter expand"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/didSaveFencepost", "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/didSaveFencepost", "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "params" -> params |>& /@ ({
-        "textDocument/didSaveFencepost"
-      } ~Join~ $didSaveMethods)
-  ]]
+  <| "method" -> #, "params" -> params |>& /@ ({
+      "textDocument/didSaveFencepost"
+    } ~Join~ $didSaveMethods)
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSaveFencepost"]] :=
-  Module[{},
+Module[{},
 
-    If[$Debug2,
-      log["textDocument/didSaveFencepost: enter"]
-    ];
+  If[$Debug2,
+    log["textDocument/didSaveFencepost: enter"]
+  ];
 
-    {}
-  ]
+  {}
+]
 
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didChange"], pos_] :=
-  Catch[
-  Module[{params, doc, uri},
+Catch[
+Module[{params, doc, uri},
 
+  If[$Debug2,
+    log["textDocument/didChange: enter expand"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
     If[$Debug2,
-      log["textDocument/didChange: enter expand"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/didChangeFencepost", "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/didChangeFencepost", "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "params" -> params |>& /@ ({
-        "textDocument/didChangeFencepost"
-      } ~Join~ $didChangeMethods)
-  ]]
+  <| "method" -> #, "params" -> params |>& /@ ({
+      "textDocument/didChangeFencepost"
+    } ~Join~ $didChangeMethods)
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didChangeFencepost"]] :=

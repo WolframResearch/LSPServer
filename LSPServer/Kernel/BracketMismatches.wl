@@ -22,486 +22,486 @@ Needs["CodeParser`"]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismatches"], pos_] :=
-  Catch[
-  Module[{params, doc, uri},
+Catch[
+Module[{params, doc, uri},
 
+  If[$Debug2,
+    log["textDocument/runBracketMismatches: enter expand"]
+  ];
+  
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
     If[$Debug2,
-      log["textDocument/runBracketMismatches: enter expand"]
-    ];
-    
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
-
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{}]
+      log["stale"]
     ];
 
-    <| "method" -> #, "params" -> params |>& /@ {
-      "textDocument/concreteTabsParse",
-      "textDocument/aggregateTabsParse",
-      "textDocument/runBracketMismatchesFencepost"
-    }
-  ]]
+    Throw[{}]
+  ];
+
+  <| "method" -> #, "params" -> params |>& /@ {
+    "textDocument/concreteTabsParse",
+    "textDocument/aggregateTabsParse",
+    "textDocument/runBracketMismatchesFencepost"
+  }
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismatchesFencepost"]] :=
-  Catch[
-  Module[{params, doc, uri, entry, text, mismatches, aggTabs},
+Catch[
+Module[{params, doc, uri, entry, text, mismatches, aggTabs},
+  
+  If[$Debug2,
+    log["textDocument/runBracketMismatchesFencepost: enter"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  
+  If[isStale[$ContentQueue, uri],
     
     If[$Debug2,
-      log["textDocument/runBracketMismatchesFencepost: enter"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
-    
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
+    Throw[{}]
+  ];
 
-      Throw[{}]
-    ];
+  entry = $OpenFilesMap[uri];
 
-    entry = $OpenFilesMap[uri];
+  mismatches = Lookup[entry, "BracketMismatches", Null];
 
-    mismatches = Lookup[entry, "BracketMismatches", Null];
+  If[mismatches =!= Null,
+    Throw[{}]
+  ];
 
-    If[mismatches =!= Null,
-      Throw[{}]
-    ];
+  text = entry["Text"];
+  aggTabs = entry["AggTabs"];
 
-    text = entry["Text"];
-    aggTabs = entry["AggTabs"];
+  (*
+  Using $BracketMatcher here
+  *)
 
-    (*
-    Using $BracketMatcher here
-    *)
+  If[$Debug2,
+    log["before CodeInspectBracketMismatchesAgg"]
+  ];
 
-    If[$Debug2,
-      log["before CodeInspectBracketMismatchesAgg"]
-    ];
+  mismatches = CodeInspectBracketMismatchesAgg[aggTabs];
 
-    mismatches = CodeInspectBracketMismatchesAgg[aggTabs];
+  If[$Debug2,
+    log["after CodeInspectBracketMismatchesAgg"]
+  ];
 
-    If[$Debug2,
-      log["after CodeInspectBracketMismatchesAgg"]
-    ];
+  If[$Debug2,
+    log["mismatches: ", stringLineTake[StringTake[ToString[mismatches], UpTo[1000]], UpTo[20]]];
+    log["...\n"]
+  ];
 
-    If[$Debug2,
-      log["mismatches: ", stringLineTake[StringTake[ToString[mismatches], UpTo[1000]], UpTo[20]]];
-      log["...\n"]
-    ];
+  entry["BracketMismatches"] = mismatches;
 
-    entry["BracketMismatches"] = mismatches;
+  $OpenFilesMap[uri] = entry;
 
-    $OpenFilesMap[uri] = entry;
-
-    {}
-  ]]
+  {}
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/suggestBracketEdits"]] :=
-  Catch[
-  Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badChunkLineNums,
-    badChunkLines, badChunk, data, res},
+Catch[
+Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badChunkLineNums,
+  badChunkLines, badChunk, data, res},
+  
+  If[$Debug2,
+    log["textDocument/suggestBracketEdits: enter"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  
+  If[isStale[$ContentQueue, uri],
     
     If[$Debug2,
-      log["textDocument/suggestBracketEdits: enter"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
-    
-    If[isStale[$ContentQueue, uri],
-      
+    Throw[{}]
+  ];
+
+  entry = $OpenFilesMap[uri];
+
+  data = Lookup[entry, "BracketEditsData", Null];
+
+  If[data =!= Null,
+    Throw[{}]
+  ];
+
+  text = entry["Text"];
+
+  mismatches = entry["BracketMismatches"];
+
+  textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+
+  If[$Debug2,
+    log["mismatches: ", mismatches]
+  ];
+
+  data =
+    Function[{mismatch},
+
+      badChunkLineNums = mismatch[[3, Key[Source], All, 1]];
+      badChunkLines = Take[textLines, badChunkLineNums];
+      badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
+
       If[$Debug2,
-        log["stale"]
+        log["before ML4Code`SuggestBracketEdits"];
+        log["badChunk: ", badChunk]
       ];
 
-      Throw[{}]
-    ];
-  
-    entry = $OpenFilesMap[uri];
+      (*
+      A message DataStructure`EmptyQ::shdw may be emitted the first time this is evaluated
+      *)
+      Block[{$ContextPath}, Needs["ML4Code`"]];
 
-    data = Lookup[entry, "BracketEditsData", Null];
+      (*
+      Using tab width of 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
 
-    If[data =!= Null,
-      Throw[{}]
-    ];
+      FIXME: must properly call CodeConcreteParse with "TabWidth" -> 4
 
-    text = entry["Text"];
-
-    mismatches = entry["BracketMismatches"];
-
-    textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
-
-    If[$Debug2,
-      log["mismatches: ", mismatches]
-    ];
-
-    data =
-      Function[{mismatch},
-
-        badChunkLineNums = mismatch[[3, Key[Source], All, 1]];
-        badChunkLines = Take[textLines, badChunkLineNums];
-        badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
-
-        If[$Debug2,
-          log["before ML4Code`SuggestBracketEdits"];
-          log["badChunk: ", badChunk]
+      FIXME: Must use the tab width from the editor
+      *)
+      res =
+        TimeConstrained[
+          ML4Code`SuggestBracketEdits[badChunk]
+          ,
+          $ML4CodeTimeLimit
+          ,
+          $timeOut
         ];
-
-        (*
-        A message DataStructure`EmptyQ::shdw may be emitted the first time this is evaluated
-        *)
-        Block[{$ContextPath}, Needs["ML4Code`"]];
-
-        (*
-        Using tab width of 4 here because the notification is rendered down to HTML and tabs need to be expanded in HTML
-
-        FIXME: must properly call CodeConcreteParse with "TabWidth" -> 4
-
-        FIXME: Must use the tab width from the editor
-        *)
-        res =
-          TimeConstrained[
-            ML4Code`SuggestBracketEdits[badChunk]
-            ,
-            $ML4CodeTimeLimit
-            ,
-            $timeOut
-          ];
-          If[$Debug2,
-            log["res: ", res]
-          ];
-          suggestions = res /. {$timeOut -> {}, $Failed -> {}};
-
         If[$Debug2,
-          log["after ML4Code`SuggestBracketEdits"]
+          log["res: ", res]
         ];
+        suggestions = res /. {$timeOut -> {}, $Failed -> {}};
 
-        {badChunkLineNums, badChunkLines, suggestions}
+      If[$Debug2,
+        log["after ML4Code`SuggestBracketEdits"]
+      ];
 
-      ] /@ mismatches;
+      {badChunkLineNums, badChunkLines, suggestions}
 
-    entry["BracketEditsData"] = data;
+    ] /@ mismatches;
 
-    $OpenFilesMap[uri] = entry;
+  entry["BracketEditsData"] = data;
 
-    {}
-  ]]
+  $OpenFilesMap[uri] = entry;
+
+  {}
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/clearBracketMismatches"]] :=
-  Catch[
-  Module[{params, doc, uri, entry},
+Catch[
+Module[{params, doc, uri, entry},
 
+  If[$Debug2,
+    log["textDocument/clearBracketMismatches: enter"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$ContentQueue, uri],
+    
     If[$Debug2,
-      log["textDocument/clearBracketMismatches: enter"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{}]
+  ];
 
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
+  entry = $OpenFilesMap[uri];
 
-      Throw[{}]
-    ];
+  entry["BracketMismatches"] =.;
 
-    entry = $OpenFilesMap[uri];
+  entry["BracketEditsData"] =.;
 
-    entry["BracketMismatches"] =.;
+  $OpenFilesMap[uri] = entry;
 
-    entry["BracketEditsData"] =.;
-
-    $OpenFilesMap[uri] = entry;
-
-    {}
-  ]]
+  {}
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/publishBracketMismatches"]] :=
-  Catch[
-  Module[{params, doc, uri, lines, entry, text, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
-    badChunkLines, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
-    line1Map, line2Map, line3Map, line4Map,
-    data},
-    
-    If[$Debug2,
-      log["textDocument/publishBracketMismatches: enter"]
-    ];
-    
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
-    
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{}]
-    ];
+Catch[
+Module[{params, doc, uri, lines, entry, text, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
+  badChunkLines, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
+  line1Map, line2Map, line3Map, line4Map,
+  data},
   
-    entry = Lookup[$OpenFilesMap, uri, Null];
-
-    (*
-    Possibly cleared
-    *)
-    If[entry === Null,
-      Throw[{<| "jsonrpc" -> "2.0",
-                "method" -> "textDocument/publishHTMLSnippet",
-                "params" -> <| "uri" -> uri,
-                               "lines" -> {},
-                               "actions" -> {} |> |>}]
+  If[$Debug2,
+    log["textDocument/publishBracketMismatches: enter"]
+  ];
+  
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+  
+  If[isStale[$ContentQueue, uri],
+    
+    If[$Debug2,
+      log["stale"]
     ];
 
-    text = Lookup[entry, "Text", Null];
+    Throw[{}]
+  ];
 
-    (*
-    Possibly cleared
-    *)
-    If[text === Null,
-      Throw[{<| "jsonrpc" -> "2.0",
-                "method" -> "textDocument/publishHTMLSnippet",
-                "params" -> <| "uri" -> uri,
-                               "lines" -> {},
-                               "actions" -> {} |> |>}]
+  entry = Lookup[$OpenFilesMap, uri, Null];
+
+  (*
+  Possibly cleared
+  *)
+  If[entry === Null,
+    Throw[{<| "jsonrpc" -> "2.0",
+              "method" -> "textDocument/publishHTMLSnippet",
+              "params" -> <| "uri" -> uri,
+                              "lines" -> {},
+                              "actions" -> {} |> |>}]
+  ];
+
+  text = Lookup[entry, "Text", Null];
+
+  (*
+  Possibly cleared
+  *)
+  If[text === Null,
+    Throw[{<| "jsonrpc" -> "2.0",
+              "method" -> "textDocument/publishHTMLSnippet",
+              "params" -> <| "uri" -> uri,
+                              "lines" -> {},
+                              "actions" -> {} |> |>}]
+  ];
+
+  data = Lookup[entry, "BracketEditsData", Null];
+
+  (*
+  Possibly cleared
+  *)
+  If[data === Null,
+    Throw[{<| "jsonrpc" -> "2.0",
+              "method" -> "textDocument/publishHTMLSnippet",
+              "params" -> <| "uri" -> uri,
+                              "lines" -> {},
+                              "actions" -> {} |> |>}]
+  ];
+
+  lines = {};
+  actions = {};
+
+  textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+
+  line1Map = <||>;
+  line2Map = <||>;
+  line3Map = <||>;
+  line4Map = <||>;
+
+  Function[{datum},
+
+    {badChunkLineNums, badChunkLines, suggestions} = datum;
+
+    suggestions = convertSuggestionToLineColumn[#, badChunkLines]& /@ suggestions;
+    If[AnyTrue[suggestions, FailureQ],
+      (*
+      If any of the suggestions are malformed, then just give up. There is something wrong with ML4Code
+      *)
+      suggestions = {}
     ];
 
-    data = Lookup[entry, "BracketEditsData", Null];
+    confidenceMap = Association[MapIndexed[(#1 -> #2[[1]])&, Reverse[Union[suggestions[[All, 3]]]]]];
+    Function[{suggestion},
+      rank = confidenceMap[suggestion[[3]]];
 
-    (*
-    Possibly cleared
-    *)
-    If[data === Null,
-      Throw[{<| "jsonrpc" -> "2.0",
-                "method" -> "textDocument/publishHTMLSnippet",
-                "params" -> <| "uri" -> uri,
-                               "lines" -> {},
-                               "actions" -> {} |> |>}]
-    ];
+      (*
+      offset to add to relative line numbers inside suggestions to obtain line numbers of text
+      *)
+      chunkOffset = badChunkLineNums[[1]] - 1;
+      originalColumnCount = StringLength[textLines[[suggestion[[1, 3, 1]] + chunkOffset]]];
 
-    lines = {};
-    actions = {};
-
-    textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
-
-    line1Map = <||>;
-    line2Map = <||>;
-    line3Map = <||>;
-    line4Map = <||>;
-
-    Function[{datum},
-
-      {badChunkLineNums, badChunkLines, suggestions} = datum;
-
-      suggestions = convertSuggestionToLineColumn[#, badChunkLines]& /@ suggestions;
-      If[AnyTrue[suggestions, FailureQ],
-        (*
-        If any of the suggestions are malformed, then just give up. There is something wrong with ML4Code
-        *)
-        suggestions = {}
+      If[$Debug2,
+        log["rank: ", rank];
+        log["chunkOffset: ", chunkOffset];
+        log["originalColumnCount: ", originalColumnCount]
       ];
 
-      confidenceMap = Association[MapIndexed[(#1 -> #2[[1]])&, Reverse[Union[suggestions[[All, 3]]]]]];
-      Function[{suggestion},
-        rank = confidenceMap[suggestion[[3]]];
-
+      {line1, line2, line3, line4, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
+      If[TrueQ[$DebugBracketMatcher],
         (*
-        offset to add to relative line numbers inside suggestions to obtain line numbers of text
+        if debug, then keep all lines separated
         *)
-        chunkOffset = badChunkLineNums[[1]] - 1;
-        originalColumnCount = StringLength[textLines[[suggestion[[1, 3, 1]] + chunkOffset]]];
-
-        If[$Debug2,
-          log["rank: ", rank];
-          log["chunkOffset: ", chunkOffset];
-          log["originalColumnCount: ", originalColumnCount]
-        ];
-
-        {line1, line2, line3, line4, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
-        If[TrueQ[$DebugBracketMatcher],
-          (*
-          if debug, then keep all lines separated
-          *)
-          AppendTo[lines, line1];
-          (* AppendTo[lines, line2];
-          AppendTo[lines, line3];
-          AppendTo[lines, line4]; *)
+        AppendTo[lines, line1];
+        (* AppendTo[lines, line2];
+        AppendTo[lines, line3];
+        AppendTo[lines, line4]; *)
+        ,
+        (*
+        if not debug, then merge lines together
+        *)
+        If[KeyExistsQ[line1Map, line1["line"]],
+          line1Map[line1["line"]] = merge[line1Map[line1["line"]], line1]
           ,
-          (*
-          if not debug, then merge lines together
-          *)
-          If[KeyExistsQ[line1Map, line1["line"]],
-            line1Map[line1["line"]] = merge[line1Map[line1["line"]], line1]
-            ,
-            line1Map[line1["line"]] = line1
-          ];
-          If[KeyExistsQ[line2Map, line2["line"]],
-            line2Map[line2["line"]] = merge[line2Map[line2["line"]], line2]
-            ,
-            line2Map[line2["line"]] = line2
-          ];
-          If[KeyExistsQ[line3Map, line3["line"]],
-            line3Map[line3["line"]] = merge[line3Map[line3["line"]], line3]
-            ,
-            line3Map[line3["line"]] = line3
-          ];
-          If[KeyExistsQ[line4Map, line4["line"]],
-            line4Map[line4["line"]] = merge[line4Map[line4["line"]], line4]
-            ,
-            line4Map[line4["line"]] = line4
-          ]
+          line1Map[line1["line"]] = line1
         ];
+        If[KeyExistsQ[line2Map, line2["line"]],
+          line2Map[line2["line"]] = merge[line2Map[line2["line"]], line2]
+          ,
+          line2Map[line2["line"]] = line2
+        ];
+        If[KeyExistsQ[line3Map, line3["line"]],
+          line3Map[line3["line"]] = merge[line3Map[line3["line"]], line3]
+          ,
+          line3Map[line3["line"]] = line3
+        ];
+        If[KeyExistsQ[line4Map, line4["line"]],
+          line4Map[line4["line"]] = merge[line4Map[line4["line"]], line4]
+          ,
+          line4Map[line4["line"]] = line4
+        ]
+      ];
 
-        AppendTo[actions, action]
+      AppendTo[actions, action]
 
-      ] /@ suggestions
-    ] /@ data;
+    ] /@ suggestions
+  ] /@ data;
 
-    If[TrueQ[$DebugBracketMatcher],
+  If[TrueQ[$DebugBracketMatcher],
 
-      lines = <| #, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]] |>& /@ lines
-      ,
+    lines = <| #, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]] |>& /@ lines
+    ,
 
-      lines = Values[line1Map] ~Join~ Values[line2Map] ~Join~ Values[line3Map] ~Join~ Values[line4Map];
+    lines = Values[line1Map] ~Join~ Values[line2Map] ~Join~ Values[line3Map] ~Join~ Values[line4Map];
 
-      lines = <| #, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]] |>& /@ lines;
+    lines = <| #, "content" -> StringJoin[#["characters"]], "characterCount" -> Length[#["characters"]] |>& /@ lines;
 
-      lines = Merge[<| #["line"] -> # |>& /@ lines, Function[{vals}, {StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ vals, "<br>"], "</div>"], vals[[1]]["characterCount"]}]];
-      
-      lines = KeyValueMap[<| "line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]] |>&, lines]
-    ];
+    lines = Merge[<| #["line"] -> # |>& /@ lines, Function[{vals}, {StringJoin["<div style=\"" <> "margin: 0;border: 0;padding: 0;\">", Riffle[(#["content"])& /@ vals, "<br>"], "</div>"], vals[[1]]["characterCount"]}]];
+    
+    lines = KeyValueMap[<| "line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]] |>&, lines]
+  ];
 
-    If[$Debug2,
-      log["lines: ", lines];
-      log["textDocument/publishBracketMismatches: exit"]
-    ];
+  If[$Debug2,
+    log["lines: ", lines];
+    log["textDocument/publishBracketMismatches: exit"]
+  ];
 
-    {<| "jsonrpc" -> "2.0",
-        "method" -> "textDocument/publishHTMLSnippet",
-        "params" -> <| "uri" -> uri,
-                       "lines" -> lines,
-                       "actions" -> actions |> |>}
-  ]]
+  {<| "jsonrpc" -> "2.0",
+      "method" -> "textDocument/publishHTMLSnippet",
+      "params" -> <| "uri" -> uri,
+                      "lines" -> lines,
+                      "actions" -> actions |> |>}
+]]
 
 
 suggestionToLinesAndAction[{{Insert, insertionText_String, {line_Integer, column_Integer}}, completed_String, prob_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
-  Module[{escaped, probStr},
-    escaped = StringReplace[Characters[insertionText], {"<" -> "&lt;", ">" -> "&gt;"}];
-    probStr = " probability: " <> ToString[PercentForm[prob]];
+Module[{escaped, probStr},
+  escaped = StringReplace[Characters[insertionText], {"<" -> "&lt;", ">" -> "&gt;"}];
+  probStr = " probability: " <> ToString[PercentForm[prob]];
 
-    $hrefIdCounter++;
-    
-    {
-      (*
-      top most line
-      *)
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2|3, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
-      |>
-      ,
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
-      |>
-      ,
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
-      |>
-      ,
-      (*
-      bottom most line
-      *)
-      <|
-        "line" -> line + chunkOffset,
-        "characters" ->
-          If[TrueQ[$DebugBracketMatcher],
-            ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {
-              column -> makeHTML[blueRank[rank], escaped[[1]], ToString[$hrefIdCounter], ""],
-              column + 1 -> If[Length[escaped] == 2, makeHTML[blueRank[rank], escaped[[2]], ToString[$hrefIdCounter], ""], "&nbsp;"]
-            }]
-            ,
-            Table["&nbsp;", {originalColumnCount + 1}]
-          ]
-      |>
-      ,
-      (*
-      action
-      *)
-      <| "command" -> "insert",
-         "insertionText" -> insertionText,
-         "line" -> line + chunkOffset,
-         "column" -> column,
-         "href" -> ToString[$hrefIdCounter]
-      |>
-    }
-  ]
-
-suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_Integer}}, completed_String, prob_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
-  Module[{escaped, probStr},
-    escaped = StringReplace[deletionText, {"<" -> "&lt;", ">" -> "&gt;"}];
-    probStr = " probability: " <> ToString[PercentForm[prob]];
-
-    $hrefIdCounter++;
-    
-    {
-      (*
-      top most line
-      *)
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2|3, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
-      |>
-      ,
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
-      |>
-      ,
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
-      |>
-      ,
-      (*
-      bottom most line
-      *)
-      <|
-        "line" -> line + chunkOffset,
-        "characters" -> Table["&nbsp;", {originalColumnCount + 1}]
-      |>
-      ,
-      (*
-      action
-      *)
-      <|
-        "command" -> "delete",
-        "deletionText" -> deletionText,
+  $hrefIdCounter++;
+  
+  {
+    (*
+    top most line
+    *)
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2|3, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
+    |>
+    ,
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1|2, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
+    |>
+    ,
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {column -> makeHTML[Switch[rank, 1, blueRank[rank], _, gray[]], $upArrow, ToString[$hrefIdCounter], "Insert " <> escaped <> " " <> probStr]}]
+    |>
+    ,
+    (*
+    bottom most line
+    *)
+    <|
+      "line" -> line + chunkOffset,
+      "characters" ->
+        If[TrueQ[$DebugBracketMatcher],
+          ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], {
+            column -> makeHTML[blueRank[rank], escaped[[1]], ToString[$hrefIdCounter], ""],
+            column + 1 -> If[Length[escaped] == 2, makeHTML[blueRank[rank], escaped[[2]], ToString[$hrefIdCounter], ""], "&nbsp;"]
+          }]
+          ,
+          Table["&nbsp;", {originalColumnCount + 1}]
+        ]
+    |>
+    ,
+    (*
+    action
+    *)
+    <| "command" -> "insert",
+        "insertionText" -> insertionText,
         "line" -> line + chunkOffset,
         "column" -> column,
         "href" -> ToString[$hrefIdCounter]
-      |>
-    }
-  ]
+    |>
+  }
+]
+
+suggestionToLinesAndAction[{{Delete, deletionText_String, {line_Integer, column_Integer}}, completed_String, prob_}, chunkOffset_Integer, originalColumnCount_Integer, rank_Integer] :=
+Module[{escaped, probStr},
+  escaped = StringReplace[deletionText, {"<" -> "&lt;", ">" -> "&gt;"}];
+  probStr = " probability: " <> ToString[PercentForm[prob]];
+
+  $hrefIdCounter++;
+  
+  {
+    (*
+    top most line
+    *)
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2|3, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
+    |>
+    ,
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1|2, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
+    |>
+    ,
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> ReplacePart[Table["&nbsp;", {originalColumnCount + 1}], column -> makeHTML[Switch[rank, 1, redRank[rank], _, gray[]], $downArrow, ToString[$hrefIdCounter], "Delete " <> escaped <> " prob: " <> probStr]]
+    |>
+    ,
+    (*
+    bottom most line
+    *)
+    <|
+      "line" -> line + chunkOffset,
+      "characters" -> Table["&nbsp;", {originalColumnCount + 1}]
+    |>
+    ,
+    (*
+    action
+    *)
+    <|
+      "command" -> "delete",
+      "deletionText" -> deletionText,
+      "line" -> line + chunkOffset,
+      "column" -> column,
+      "href" -> ToString[$hrefIdCounter]
+    |>
+  }
+]
 
 
 gray[] :=
@@ -561,33 +561,33 @@ FIXME: Use the same font as the editor
 style = font-family: xxx;
 *)
 makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; TrueQ[$DebugBracketMatcher] :=
-  Module[{colorHex},
-    colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
+Module[{colorHex},
+  colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
 "\
 <span style=\"" <> "margin: 0;border: 0;padding: 0;" <> "\">\
 <a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a><br>\
 <a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> debugStr <> "</a>\
 </span>\
 "
-  ]
+]
 
 makeHTML[color_RGBColor, arrow_String, href_String, debugStr_String] /; !TrueQ[$DebugBracketMatcher] :=
-  Module[{colorHex},
-    colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
+Module[{colorHex},
+  colorHex = StringJoin[IntegerString[Round[255 List @@ color], 16, 2]];
 "\
 <span style=\"" <> "margin: 0;border: 0;padding: 0;" <> "\">\
 <a style=\"" <> "margin: 0;border: 0;padding: 0;text-decoration: none;" <> "color:#" <> colorHex <> ";" <> "\" href=" <> "\"" <> href <> "\"" <> ">" <> arrow <> "</a>\
 </span>\
 "
-  ]
+]
 
 
 
 convertSuggestionToLineColumn[{{command_Symbol, text_String, index_Integer}, completed_String, prob_}, badChunkLines_] :=
-  Module[{line, column},
-    {line, column} = indexToLineColumn[index, badChunkLines];
-    {{command, text, {line, column}}, completed, prob}
-  ]
+Module[{line, column},
+  {line, column} = indexToLineColumn[index, badChunkLines];
+  {{command, text, {line, column}}, completed, prob}
+]
 
 (*
 ML4Code`SuggestBracketEdits may be broken and return crazy unevaluated stuff
@@ -599,14 +599,14 @@ convertSuggestionToLineColumn[___] :=
 
 
 indexToLineColumn[index_, badChunkLines_] :=
-  Module[{indexs, line, taken, lineStartIndex, column},
-    indexs = FoldList[(#1 + StringLength[#2] + 1)&, 1, badChunkLines];
-    taken = TakeWhile[indexs, (# <= index)&];
-    line = Length[taken];
-    lineStartIndex = Last[taken];
-    column = index - lineStartIndex + 1;
-    {line, column}
-  ]
+Module[{indexs, line, taken, lineStartIndex, column},
+  indexs = FoldList[(#1 + StringLength[#2] + 1)&, 1, badChunkLines];
+  taken = TakeWhile[indexs, (# <= index)&];
+  line = Length[taken];
+  lineStartIndex = Last[taken];
+  column = index - lineStartIndex + 1;
+  {line, column}
+]
 
 
 End[]

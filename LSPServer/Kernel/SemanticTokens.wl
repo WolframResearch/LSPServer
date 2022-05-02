@@ -30,47 +30,47 @@ $SemanticTokenModifiers = <|
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/full"], pos_] :=
-  Catch[
-  Module[{params, id, doc, uri},
+Catch[
+Module[{params, id, doc, uri},
+
+  If[$Debug2,
+    log["textDocument/semanticTokens/full: enter expand"]
+  ];
+
+  id = content["id"];
+  params = content["params"];
+  
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
 
     If[$Debug2,
-      log["textDocument/semanticTokens/full: enter expand"]
+      log["canceled"]
     ];
-
-    id = content["id"];
-    params = content["params"];
     
-    If[Lookup[$CancelMap, id, False],
+    Throw[{<| "method" -> "textDocument/semanticTokens/fullFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-      $CancelMap[id] =.;
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-      If[$Debug2,
-        log["canceled"]
-      ];
-      
-      Throw[{<| "method" -> "textDocument/semanticTokens/fullFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
+    If[$Debug2,
+      log["stale"]
     ];
 
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/semanticTokens/fullFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/semanticTokens/fullFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/aggregateParse",
-      "textDocument/abstractParse",
-      "textDocument/runScopingData",
-      "textDocument/semanticTokens/fullFencepost"
-    }
-  ]]
+  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/aggregateParse",
+    "textDocument/abstractParse",
+    "textDocument/runScopingData",
+    "textDocument/semanticTokens/fullFencepost"
+  }
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/semanticTokens/fullFencepost"]] :=
 Catch[
@@ -191,56 +191,56 @@ Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingData"]] :=
-  Catch[
-  Module[{params, doc, uri, entry, ast, scopingData},
+Catch[
+Module[{params, doc, uri, entry, ast, scopingData},
 
-    If[$Debug2,
-      log["textDocument/runScopingData: enter"]
-    ];
+  If[$Debug2,
+    log["textDocument/runScopingData: enter"]
+  ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{}]
-    ];
-
-    entry = $OpenFilesMap[uri];
-
-    scopingData = Lookup[entry, "ScopingData", Null];
-
-    If[scopingData =!= Null,
-      Throw[{}]
-    ];
-
-    ast = entry["AST"];
-
-    If[FailureQ[ast],
-      Throw[{}]
-    ];
-
-    If[$Debug2,
-      log["before ScopingData"]
-    ];
+  If[isStale[$ContentQueue, uri],
     
-    scopingData = ScopingData[ast];
-
     If[$Debug2,
-      log["after ScopingData"]
+      log["stale"]
     ];
 
-    entry["ScopingData"] = scopingData;
+    Throw[{}]
+  ];
 
-    $OpenFilesMap[uri] = entry;
+  entry = $OpenFilesMap[uri];
 
-    {}
-  ]]
+  scopingData = Lookup[entry, "ScopingData", Null];
+
+  If[scopingData =!= Null,
+    Throw[{}]
+  ];
+
+  ast = entry["AST"];
+
+  If[FailureQ[ast],
+    Throw[{}]
+  ];
+
+  If[$Debug2,
+    log["before ScopingData"]
+  ];
+  
+  scopingData = ScopingData[ast];
+
+  If[$Debug2,
+    log["after ScopingData"]
+  ];
+
+  entry["ScopingData"] = scopingData;
+
+  $OpenFilesMap[uri] = entry;
+
+  {}
+]]
 
 
 End[]

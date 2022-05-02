@@ -9,44 +9,44 @@ Needs["CodeParser`Utils`"]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/selectionRange"], pos_] :=
-  Catch[
-  Module[{params, id, doc, uri},
+Catch[
+Module[{params, id, doc, uri},
+
+  If[$Debug2,
+    log["textDocument/selectionRange: enter expand"]
+  ];
+
+  id = content["id"];
+  params = content["params"];
+  
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
 
     If[$Debug2,
-      log["textDocument/selectionRange: enter expand"]
+      log["canceled"]
     ];
-
-    id = content["id"];
-    params = content["params"];
     
-    If[Lookup[$CancelMap, id, False],
+    Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-      $CancelMap[id] =.;
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-      If[$Debug2,
-        log["canceled"]
-      ];
-      
-      Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
+    If[$Debug2,
+      log["stale"]
     ];
 
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/selectionRangeFencepost"
-    }
-  ]]
+  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/selectionRangeFencepost"
+  }
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/selectionRangeFencepost"]] :=
 Catch[

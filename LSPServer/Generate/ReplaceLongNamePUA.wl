@@ -51,15 +51,15 @@ But handles newly-added characters by converting to \: notation
 TODO: I would just write out \:xxxx if it were easy to do...
 *)
 toChar[k_, v_] :=
-  Module[{},
-    If[MatchQ[v[[3]], KeyValuePattern["Added" -> _]],
-      With[{str = "\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""},
-        HoldFormBlindToInputForm[ToExpression[str]]
-      ]
-      ,
-      ToExpression["\"\\["<> k <> "]\""]
+Module[{},
+  If[MatchQ[v[[3]], KeyValuePattern["Added" -> _]],
+    With[{str = "\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""},
+      HoldFormBlindToInputForm[ToExpression[str]]
     ]
+    ,
+    ToExpression["\"\\["<> k <> "]\""]
   ]
+]
 
 
 

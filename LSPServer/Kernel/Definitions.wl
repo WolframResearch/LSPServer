@@ -9,46 +9,46 @@ Needs["CodeParser`Utils`"]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/definition"], pos_] :=
-  Catch[
-  Module[{params, id, doc, uri},
+Catch[
+Module[{params, id, doc, uri},
+
+  If[$Debug2,
+    log["textDocument/definition: enter expand"]
+  ];
+  
+  id = content["id"];
+  params = content["params"];
+  
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
 
     If[$Debug2,
-      log["textDocument/definition: enter expand"]
+      log["canceled"]
     ];
     
-    id = content["id"];
-    params = content["params"];
-    
-    If[Lookup[$CancelMap, id, False],
+    Throw[{<| "method" -> "textDocument/definitionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-      $CancelMap[id] =.;
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-      If[$Debug2,
-        log["canceled"]
-      ];
-      
-      Throw[{<| "method" -> "textDocument/definitionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
+    If[$Debug2,
+      log["stale"]
     ];
 
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/definitionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/definitionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/aggregateParse",
-      "textDocument/abstractParse",
-      "textDocument/definitionFencepost"
-    }
-  ]]
+  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/aggregateParse",
+    "textDocument/abstractParse",
+    "textDocument/definitionFencepost"
+  }
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/definitionFencepost"]] :=
 Catch[

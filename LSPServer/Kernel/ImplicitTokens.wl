@@ -10,235 +10,235 @@ Needs["CodeParser`"]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/runImplicitTokens"], pos_] :=
-  Catch[
-  Module[{params, doc, uri},
+Catch[
+Module[{params, doc, uri},
 
+  If[$Debug2,
+    log["textDocument/runImplicitTokens: enter expand"]
+  ];
+  
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
     If[$Debug2,
-      log["textDocument/runImplicitTokens: enter expand"]
-    ];
-    
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
-
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{}]
+      log["stale"]
     ];
 
-    <| "method" -> #, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/aggregateParse",
-      "textDocument/runImplicitTokensFencepost"
-    }
-  ]]
+    Throw[{}]
+  ];
+
+  <| "method" -> #, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/aggregateParse",
+    "textDocument/runImplicitTokensFencepost"
+  }
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runImplicitTokensFencepost"]] :=
-  Catch[
-  Module[{params, doc, uri, entry, cst, inspectedFileObj, implicitTokens, agg},
+Catch[
+Module[{params, doc, uri, entry, cst, inspectedFileObj, implicitTokens, agg},
 
+  If[$Debug2,
+    log["textDocument/runImplicitTokensFencepost: enter"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$ContentQueue, uri],
+    
     If[$Debug2,
-      log["textDocument/runImplicitTokensFencepost: enter"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{}]
+  ];
 
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
+  entry = $OpenFilesMap[uri];
 
-      Throw[{}]
-    ];
+  inspectedFileObj = Lookup[entry, "InspectedFileObject", Null];
 
-    entry = $OpenFilesMap[uri];
+  If[inspectedFileObj =!= Null,
+    Throw[{}]
+  ];
 
-    inspectedFileObj = Lookup[entry, "InspectedFileObject", Null];
+  cst = entry["CST"];
 
-    If[inspectedFileObj =!= Null,
-      Throw[{}]
-    ];
+  agg = entry["Agg"];
 
-    cst = entry["CST"];
+  If[$Debug2,
+    log["before CodeStructuralSyntaxAggQ"]
+  ];
 
-    agg = entry["Agg"];
+  If[!CodeStructuralSyntaxAggQ[agg],
 
-    If[$Debug2,
-      log["before CodeStructuralSyntaxAggQ"]
-    ];
-
-    If[!CodeStructuralSyntaxAggQ[agg],
-
-      entry["InspectedFileObject"] = Failure["NotCodeStructuralSyntaxAggQ", <| "URI" -> uri |>];
-
-      $OpenFilesMap[uri] = entry;
-
-      Throw[{}]
-    ];
-
-    If[$Debug2,
-      log["after CodeStructuralSyntaxAggQ"]
-    ];
-
-    If[$Debug2,
-      log["before CodeInspectImplicitTokensAgg"]
-    ];
-
-    implicitTokens = CodeInspectImplicitTokensAgg[agg, "AllowedImplicitTokens" -> $AllowedImplicitTokens];
-
-    If[$Debug2,
-      log["after CodeInspectImplicitTokensAgg"];
-      log["implicitTokens (up to 20): ", Replace[Take[implicitTokens, UpTo[20]], {
-          (*
-          Do not print the internals
-          *)
-          BinaryNode[tag_, _, _] :> BinaryNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
-          InfixNode[tag_, _, _] :> InfixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
-          PrefixNode[tag_, _, _] :> PrefixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
-          PostfixNode[tag_, _, _] :> PostfixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
-          TernaryNode[tag_, _, _] :> TernaryNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
-          ErrorNode[tag_, _, _] :> ErrorNode[tag, "\[Ellipsis]", "\[Ellipsis]"]
-        }, {1}
-      ]]
-    ];
-
-    If[$Debug2,
-      log["before CodeInspectImplicitTokensCSTSummarize"]
-    ];
-
-    inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst, implicitTokens];
-
-    If[$Debug2,
-      log["after CodeInspectImplicitTokensCSTSummarize"]
-    ];
-
-    entry["InspectedFileObject"] = inspectedFileObj;
+    entry["InspectedFileObject"] = Failure["NotCodeStructuralSyntaxAggQ", <| "URI" -> uri |>];
 
     $OpenFilesMap[uri] = entry;
 
-    {}
-  ]]
+    Throw[{}]
+  ];
+
+  If[$Debug2,
+    log["after CodeStructuralSyntaxAggQ"]
+  ];
+
+  If[$Debug2,
+    log["before CodeInspectImplicitTokensAgg"]
+  ];
+
+  implicitTokens = CodeInspectImplicitTokensAgg[agg, "AllowedImplicitTokens" -> $AllowedImplicitTokens];
+
+  If[$Debug2,
+    log["after CodeInspectImplicitTokensAgg"];
+    log["implicitTokens (up to 20): ", Replace[Take[implicitTokens, UpTo[20]], {
+        (*
+        Do not print the internals
+        *)
+        BinaryNode[tag_, _, _] :> BinaryNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+        InfixNode[tag_, _, _] :> InfixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+        PrefixNode[tag_, _, _] :> PrefixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+        PostfixNode[tag_, _, _] :> PostfixNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+        TernaryNode[tag_, _, _] :> TernaryNode[tag, "\[Ellipsis]", "\[Ellipsis]"],
+        ErrorNode[tag_, _, _] :> ErrorNode[tag, "\[Ellipsis]", "\[Ellipsis]"]
+      }, {1}
+    ]]
+  ];
+
+  If[$Debug2,
+    log["before CodeInspectImplicitTokensCSTSummarize"]
+  ];
+
+  inspectedFileObj = CodeInspectImplicitTokensCSTSummarize[cst, implicitTokens];
+
+  If[$Debug2,
+    log["after CodeInspectImplicitTokensCSTSummarize"]
+  ];
+
+  entry["InspectedFileObject"] = inspectedFileObj;
+
+  $OpenFilesMap[uri] = entry;
+
+  {}
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/clearImplicitTokens"]] :=
-  Catch[
-  Module[{params, doc, uri, entry},
+Catch[
+Module[{params, doc, uri, entry},
 
+  If[$Debug2,
+    log["textDocument/clearImplicitTokens: enter"]
+  ];
+
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$ContentQueue, uri],
+    
     If[$Debug2,
-      log["textDocument/clearImplicitTokens: enter"]
+      log["stale"]
     ];
 
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{}]
+  ];
 
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
+  entry = $OpenFilesMap[uri];
 
-      Throw[{}]
-    ];
+  entry["InspectedFileObject"] =.;
 
-    entry = $OpenFilesMap[uri];
+  $OpenFilesMap[uri] = entry;
 
-    entry["InspectedFileObject"] =.;
-
-    $OpenFilesMap[uri] = entry;
-
-    {}
-  ]]
+  {}
+]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/publishImplicitTokens"]] :=
-  Catch[
-  Module[{params, doc, uri, entry, inspectedFileObj, tokens},
+Catch[
+Module[{params, doc, uri, entry, inspectedFileObj, tokens},
 
+  If[$Debug2,
+    log["textDocument/publishImplicitTokens: enter"]
+  ];
+  
+  params = content["params"];
+  doc = params["textDocument"];
+  uri = doc["uri"];
+
+  If[isStale[$ContentQueue, uri],
+    
     If[$Debug2,
-      log["textDocument/publishImplicitTokens: enter"]
-    ];
-    
-    params = content["params"];
-    doc = params["textDocument"];
-    uri = doc["uri"];
-
-    If[isStale[$ContentQueue, uri],
-      
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{}]
-    ];
-    
-    entry = Lookup[$OpenFilesMap, uri, Null];
-
-    (*
-    Possibly cleared
-    *)
-    If[entry === Null,
-      Throw[{<| "jsonrpc" -> "2.0",
-                "method" -> "textDocument/publishImplicitTokens",
-                "params" -> <| "uri" -> uri,
-                               "tokens" -> {} |> |>}]
+      log["stale"]
     ];
 
-    inspectedFileObj = Lookup[entry, "InspectedFileObject", Null];
+    Throw[{}]
+  ];
+  
+  entry = Lookup[$OpenFilesMap, uri, Null];
 
-    (*
-    Possibly cleared
-    *)
-    If[inspectedFileObj === Null,
-      Throw[{<| "jsonrpc" -> "2.0",
-                "method" -> "textDocument/publishImplicitTokens",
-                "params" -> <| "uri" -> uri,
-                               "tokens" -> {} |> |>}]
-    ];
+  (*
+  Possibly cleared
+  *)
+  If[entry === Null,
+    Throw[{<| "jsonrpc" -> "2.0",
+              "method" -> "textDocument/publishImplicitTokens",
+              "params" -> <| "uri" -> uri,
+                              "tokens" -> {} |> |>}]
+  ];
 
-    (*
-    Might get something like FileTooLarge or NotCodeStructuralSyntaxAggQ
-    Still want to update
-    *)
-    If[FailureQ[inspectedFileObj],
-      Throw[{<| "jsonrpc" -> "2.0",
-                "method" -> "textDocument/publishImplicitTokens",
-                "params" -> <| "uri" -> uri,
-                               "tokens" -> {} |> |>}]
-    ];
+  inspectedFileObj = Lookup[entry, "InspectedFileObject", Null];
 
-    (*
-    Even though we have:
-    Format[LintTimesCharacter, StandardForm] := "\[Times]"
+  (*
+  Possibly cleared
+  *)
+  If[inspectedFileObj === Null,
+    Throw[{<| "jsonrpc" -> "2.0",
+              "method" -> "textDocument/publishImplicitTokens",
+              "params" -> <| "uri" -> uri,
+                              "tokens" -> {} |> |>}]
+  ];
 
-    we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
-    *)
+  (*
+  Might get something like FileTooLarge or NotCodeStructuralSyntaxAggQ
+  Still want to update
+  *)
+  If[FailureQ[inspectedFileObj],
+    Throw[{<| "jsonrpc" -> "2.0",
+              "method" -> "textDocument/publishImplicitTokens",
+              "params" -> <| "uri" -> uri,
+                              "tokens" -> {} |> |>}]
+  ];
 
-    tokens = Flatten[
-      Function[{ignored1, line, content1(*, ignore rest of args*)},
-        MapIndexed[
-          Function[{sym, columnList},
-            <| "character" -> markupSymbolToChar[sym], "line" -> line, "column" -> columnList[[1]] |>]
-          ,
-          content1[[2, 2;;]]
-        ]
-      ] @@@ inspectedFileObj[[2]]
-    ];
+  (*
+  Even though we have:
+  Format[LintTimesCharacter, StandardForm] := "\[Times]"
 
-    tokens = DeleteCases[tokens, KeyValuePattern["character" -> " "]];
+  we cannot evaluate Format[LintTimesCharacter, StandardForm] to get "\[Times]"
+  *)
 
-    {<| "jsonrpc" -> "2.0",
-        "method" -> "textDocument/publishImplicitTokens",
-        "params" -> <| "uri" -> uri,
-                       "tokens" -> tokens |> |>}
-  ]]
+  tokens = Flatten[
+    Function[{ignored1, line, content1(*, ignore rest of args*)},
+      MapIndexed[
+        Function[{sym, columnList},
+          <| "character" -> markupSymbolToChar[sym], "line" -> line, "column" -> columnList[[1]] |>]
+        ,
+        content1[[2, 2;;]]
+      ]
+    ] @@@ inspectedFileObj[[2]]
+  ];
+
+  tokens = DeleteCases[tokens, KeyValuePattern["character" -> " "]];
+
+  {<| "jsonrpc" -> "2.0",
+      "method" -> "textDocument/publishImplicitTokens",
+      "params" -> <| "uri" -> uri,
+                      "tokens" -> tokens |> |>}
+]]
 
 
 (*

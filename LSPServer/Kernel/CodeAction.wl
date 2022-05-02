@@ -11,50 +11,50 @@ Needs["CodeParser`Utils`"]
 
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/codeAction"], pos_] :=
-  Catch[
-  Module[{params, id, doc, uri},
+Catch[
+Module[{params, id, doc, uri},
+
+  If[$Debug2,
+    log["textDocument/codeAction: enter expand"]
+  ];
+
+  id = content["id"];
+  params = content["params"];
+  
+  If[Lookup[$CancelMap, id, False],
+
+    $CancelMap[id] =.;
 
     If[$Debug2,
-      log["textDocument/codeAction: enter expand"]
+      log["canceled"]
     ];
-
-    id = content["id"];
-    params = content["params"];
     
-    If[Lookup[$CancelMap, id, False],
+    Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-      $CancelMap[id] =.;
+  doc = params["textDocument"];
+  uri = doc["uri"];
 
-      If[$Debug2,
-        log["canceled"]
-      ];
-      
-      Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
+  
+    If[$Debug2,
+      log["stale"]
     ];
 
-    doc = params["textDocument"];
-    uri = doc["uri"];
+    Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
+  ];
 
-    If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
-    
-      If[$Debug2,
-        log["stale"]
-      ];
-
-      Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
-    ];
-
-    <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
-      "textDocument/concreteParse",
-      "textDocument/suppressedRegions",
-      "textDocument/runConcreteDiagnostics",
-      "textDocument/aggregateParse",
-      "textDocument/runAggregateDiagnostics",
-      "textDocument/abstractParse",
-      "textDocument/runAbstractDiagnostics",
-      "textDocument/codeActionFencepost"
-    }
-  ]]
+  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/suppressedRegions",
+    "textDocument/runConcreteDiagnostics",
+    "textDocument/aggregateParse",
+    "textDocument/runAggregateDiagnostics",
+    "textDocument/abstractParse",
+    "textDocument/runAbstractDiagnostics",
+    "textDocument/codeActionFencepost"
+  }
+]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/codeActionFencepost"]] :=
 Catch[
