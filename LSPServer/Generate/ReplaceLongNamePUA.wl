@@ -40,7 +40,7 @@ Format[HoldFormBlindToInputForm[s_Symbol], InputForm] := s
 Format[HoldFormBlindToInputForm[s_String], InputForm] := s
 
 Format[HoldFormBlindToInputForm[h_[arg1_]], InputForm] :=
-	HoldFormBlindToInputForm[h][HoldFormBlindToInputForm[arg1]]
+  HoldFormBlindToInputForm[h][HoldFormBlindToInputForm[arg1]]
 
 
 (*
@@ -51,34 +51,34 @@ But handles newly-added characters by converting to \: notation
 TODO: I would just write out \:xxxx if it were easy to do...
 *)
 toChar[k_, v_] :=
-	Module[{},
-		If[MatchQ[v[[3]], KeyValuePattern["Added" -> _]],
-			With[{str = "\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""},
-				HoldFormBlindToInputForm[ToExpression[str]]
-			]
-			,
-			ToExpression["\"\\["<> k <> "]\""]
-		]
-	]
+  Module[{},
+    If[MatchQ[v[[3]], KeyValuePattern["Added" -> _]],
+      With[{str = "\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""},
+        HoldFormBlindToInputForm[ToExpression[str]]
+      ]
+      ,
+      ToExpression["\"\\["<> k <> "]\""]
+    ]
+  ]
 
 
 
 replaceLongNamePUARules =
-	KeyValueMap[
-		Function[{k, v},
-			toChar[k, v] -> v[[3, Key["ASCIIReplacements"], -1]]
-		]
-		,
-		replacements
-	] ~Join~
+  KeyValueMap[
+    Function[{k, v},
+      toChar[k, v] -> v[[3, Key["ASCIIReplacements"], -1]]
+    ]
+    ,
+    replacements
+  ] ~Join~
 
-	KeyValueMap[
-		Function[{k, v},
-			toChar[k, v] -> (" " <> k <> " ")
-		]
-		,
-		nonReplacements
-	]
+  KeyValueMap[
+    Function[{k, v},
+      toChar[k, v] -> (" " <> k <> " ")
+    ]
+    ,
+    nonReplacements
+  ]
 
 
 generate[] := (
