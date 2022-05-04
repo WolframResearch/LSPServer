@@ -304,6 +304,8 @@ set_target_properties(lspserver-lib PROPERTIES
 		11
 	CXX_STANDARD_REQUIRED
 		ON
+	CXX_VISIBILITY_PRESET
+		hidden
 	#
 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
 	#
