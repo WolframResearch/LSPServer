@@ -1,6 +1,9 @@
 
 ## 1.6 - XX May, 2022
 
+Add function usage and function call pattern information to hover.
+
+
 ### Fixes
 
 Fix handling stale content for textDocument/documentSymbol and textDocument/references
