@@ -518,7 +518,7 @@ Module[{tokenSymbol, functionSource,
       "SymbolType" -> "UserDefined",
       "Usage" -> None,
       "DocumentationLink" -> None,
-      "FunctionCallPattern" -> None,
+      "FunctionDefinitionPatterns" -> None,
       "FunctionInformation" -> False
     |>
     ,
@@ -540,7 +540,7 @@ Module[{tokenSymbol, functionSource,
       "SymbolType" -> "UserDefined",
       "Usage" -> requiredUsage,
       "DocumentationLink" -> None,
-      "FunctionCallPattern" -> functionCallPattern,
+      "FunctionDefinitionPatterns" -> functionCallPattern,
       "FunctionInformation" -> True
     |>
   ];
@@ -592,7 +592,7 @@ Module[{usage, symbolType, documentationLink, functionInformation},
     "SymbolType" -> symbolType,
     "Usage" -> usage,
     "DocumentationLink" -> documentationLink,
-    "FunctionCallPattern" -> None,
+    "FunctionDefinitionPatterns" -> None,
     "FunctionInformation" -> functionInformation
   |>
 
@@ -703,8 +703,8 @@ Module[{res},
       res = StringRiffle[{
         "**Usage**", 
         StringJoin[linearToMDSyntax[assoc["Usage"]]], 
-        "**Function Call Patterns**", 
-        StringJoin[linearToMDSyntax[assoc["FunctionCallPattern"]]]
+        "**Function Definition Patterns**", 
+        StringJoin[linearToMDSyntax[assoc["FunctionDefinitionPatterns"]]]
         }, 
         "\n\n"]
     ];
