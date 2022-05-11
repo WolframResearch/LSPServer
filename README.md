@@ -87,6 +87,66 @@ Make sure that the paclets can be found on your system:
 Needs["LSPServer`"]
 ```
 
+You may get `LibraryFunction` messages:
+```
+14:49:15.663 $CommandLine: {/Applications/Mathematica.app/Contents/MacOS/WolframKernel, -noinit, -noprompt, -nopaclet, -nostartuppaclets, -noicon, -run, Needs["LSPServer`"];LSPServer`StartServer["/Users/user/logs/"]}
+14:49:15.664 
+
+
+14:49:15.664 $commProcess: StdIO
+14:49:15.664 
+
+
+14:49:15.665 $ProcessID: 22400
+14:49:15.665 
+
+
+14:49:15.666 $ParentProcessID: 22394
+14:49:15.666 
+
+
+14:49:15.667 Directory[]: /private/var/folders/90/4fbnjdqx3f791xb65c02fm2m000bfy/T/Wolfram-LSPServer
+14:49:15.667 
+
+
+14:49:15.668 Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)
+14:49:15.668 
+
+
+
+LibraryFunction::version: The version number 7 of the library is not consistent with the current or any previous WolframLibraryVersion.
+
+LibraryFunction::initerr: A nonzero error code 7 was returned during the initialization of the library /Users/user/Library/Mathematica/Paclets/Repository/LSPServer-1.6/LibraryResources/MacOSX-x86-64/LSPServer.dylib.
+
+LibraryFunction::libload: The function GetStartupError_LibraryLink was not loaded from the file /Users/user/Library/Mathematica/Paclets/Repository/LSPServer-1.6/LibraryResources/MacOSX-x86-64/LSPServer.dylib.
+14:49:16.129 
+
+
+14:49:16.129 Initialization failed: Failure["LibraryFunctionLoad", <|"Result" -> $Failed|>]
+14:49:16.484 
+
+
+14:49:16.485 Language Server kernel did not shutdown properly.
+14:49:16.485 
+14:49:16.487 This is the command that was used:
+14:49:16.488 {/Applications/Mathematica.app/Contents/MacOS/WolframKernel, -noinit, -noprompt, -nopaclet, -nostartuppaclets, -noicon, -run, Needs["LSPServer`"];LSPServer`StartServer["/Users/user/logs/"]}
+14:49:16.488 
+14:49:16.489 To help diagnose the problem, run this in a notebook:
+             Needs["LSPServer`"]
+             LSPServer`RunServerDiagnostic[{"/Applications/Mathematica.app/Contents/MacOS/WolframKernel", "-noinit", "-noprompt", "-nopaclet", "-nostartuppaclets", "-noicon", "-run", "Needs[\"LSPServer`\"];LSPServer`StartServer[\"/Users/user/logs/\"]"}]
+14:49:16.490 
+14:49:16.490 Fix any problems then restart and try again.
+14:49:16.491 
+
+
+14:49:16.492 KERNEL IS EXITING HARD
+14:49:16.492 
+```
+
+This means that LSPServer was built with a newer version of Wolfram System than your system supports.
+
+To fix this, build LSPServer from source with the version of Wolfram System that you will use.
+
 
 ### Server settings
 
