@@ -548,55 +548,58 @@ Module[{tokenSymbol, functionSource,
   functionInformationAssoc
 ]
 
-handleSystemSymbols[symIn_] := 
-Module[{usage, symbolType, documentationLink, functionInformation},
-  usage = ToExpression[symIn <> "::usage"];
+handleSystemSymbols[symIn_] :=
+Catch[
+Module[{usage, documentationLink, sym},
 
-  If[StringQ[usage],
-    symbolType = "System";
-    functionInformation = True;
-    usage = StringJoin[linearToMDSyntax[usage]];
+  sym = StringReplace[symIn, StartOfString ~~ "System`" -> ""];
 
-    (*
-    
-    Do not care about CONSTANT
+  usage = ToExpression[sym <> "::usage"];
 
-    If[MemberQ[WolframLanguageSyntax`Generate`$constants, sym],
-      line = line <> "\n\nCONSTANT"
-    ];
-    *)
-
-    If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, StringReplace[symIn, StartOfString ~~ "System`" -> ""]],
-      usage = usage <> "\n\nUNDOCUMENTED"
-    ];
-
-    If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, StringReplace[symIn, StartOfString ~~ "System`" -> ""]],
-      usage = usage <> "\n\nEXPERIMENTAL"
-    ];
-
-    If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, StringReplace[symIn, StartOfString ~~ "System`" -> ""]],
-      usage = usage <> "\n\nOBSOLETE"
-    ];
-
-    documentationLink = "[" <> symIn <> ": "<> "Web Documentation]" <> 
-          "(" <> "https://reference.wolfram.com/language/ref/" <> symIn <> ".html" <> ")";
-    ,
-    symbolType = "INVALID";
-    usage = "INVALID";
-    documentationLink = None;
-    functionInformation = False;
-
+  If[!StringQ[usage],
+    Throw[<|
+      "SymbolType" -> "INVALID",
+      "Usage" -> "INVALID",
+      "DocumentationLink" -> None,
+      "FunctionDefinitionPatterns" -> None,
+      "FunctionInformation" -> False
+    |>]
   ];
 
+  usage = StringJoin[linearToMDSyntax[usage]];
+
+  (*
+  
+  Do not care about CONSTANT
+
+  If[MemberQ[WolframLanguageSyntax`Generate`$constants, sym],
+    line = line <> "\n\nCONSTANT"
+  ];
+  *)
+
+  If[MemberQ[WolframLanguageSyntax`Generate`$undocumentedSymbols, sym],
+    usage = usage <> "\n\nUNDOCUMENTED"
+  ];
+
+  If[MemberQ[WolframLanguageSyntax`Generate`$experimentalSymbols, sym],
+    usage = usage <> "\n\nEXPERIMENTAL"
+  ];
+
+  If[MemberQ[WolframLanguageSyntax`Generate`$obsoleteSymbols, sym],
+    usage = usage <> "\n\nOBSOLETE"
+  ];
+
+  documentationLink = "[" <> sym <> ": "<> "Web Documentation]" <> 
+        "(" <> "https://reference.wolfram.com/language/ref/" <> sym <> ".html" <> ")";
+  
   <|
-    "SymbolType" -> symbolType,
+    "SymbolType" -> "System",
     "Usage" -> usage,
     "DocumentationLink" -> documentationLink,
     "FunctionDefinitionPatterns" -> None,
-    "FunctionInformation" -> functionInformation
+    "FunctionInformation" -> True
   |>
-
-]
+]]
 
 handleSymbols[id_, astIn_, cstIn_, symsIn_] :=
 Catch[
