@@ -552,6 +552,16 @@ handleSystemSymbols[symIn_] :=
 Catch[
 Module[{usage, documentationLink, sym},
 
+  If[!(NameQ[symIn] && Context[symIn] == "System`"),
+    Throw[<|
+      "SymbolType" -> "INVALID",
+      "Usage" -> "INVALID",
+      "DocumentationLink" -> None,
+      "FunctionDefinitionPatterns" -> None,
+      "FunctionInformation" -> False
+    |>]
+  ];
+
   sym = StringReplace[symIn, StartOfString ~~ "System`" -> ""];
 
   usage = ToExpression[sym <> "::usage"];
