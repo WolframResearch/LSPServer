@@ -22,7 +22,13 @@ May return Null or a Failure object
 initializeLSPComm["StdIO"] :=
 Catch[
 Module[{startupError},
+  
   startupError = GetStartupError[];
+
+  If[FailureQ[startupError],
+    Throw[startupError]
+  ];
+
   If[startupError != 0,
     (*
     For example, on Windows, running WolframKernel.exe from command prompt will give library error 1
