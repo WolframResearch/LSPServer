@@ -23,7 +23,7 @@ dataDir = FileNameJoin[{srcDir, "CodeParser", "Data"}]
 importedLongNames = Get[FileNameJoin[{dataDir, "LongNames.wl"}]]
 
 
-longNamePUAChars = Select[importedLongNames, (16^^e000 <= #[[2]] <= 16^^f8ff)&]
+longNamePUAChars = Select[importedLongNames, ((16^^e000 <= #[[2]] <= 16^^f8ff) || (16^^0f0000 <= #[[2]] <= 16^^0ffffd) || (16^^100000 <= #[[2]] <=  16^^10fffd))&]
 
 replacements = Select[longNamePUAChars, MatchQ[#[[3]], KeyValuePattern["ASCIIReplacements" -> _]]&]
 
@@ -53,7 +53,7 @@ TODO: I would just write out \:xxxx if it were easy to do...
 toChar[k_, v_] :=
 Module[{},
   If[MatchQ[v[[3]], KeyValuePattern["Added" -> _]],
-    With[{str = "\"\\:" <> IntegerString[v[[2]], 16, 4] <> "\""},
+    With[{str = "\"" <> If[v[[2]] > 16^^FFFF, "\\|" <> IntegerString[v[[2]], 16, 6], "\\:" <> IntegerString[v[[2]], 16, 4]] <> "\""},
       HoldFormBlindToInputForm[ToExpression[str]]
     ]
     ,
