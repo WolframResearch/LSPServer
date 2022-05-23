@@ -394,11 +394,12 @@ Module[{logFile, logFileStream,
 
   If[$Debug,
 
-    If[$VersionNumber >= 12.3,
-      Quiet[CreateDirectory[logDir], {CreateDirectory::eexist}];
-      ,
-      Quiet[CreateDirectory[logDir], {CreateDirectory::filex}];
-    ];
+    (
+    (* :!CodeAnalysis::BeginBlock:: *)
+    (* :!CodeAnalysis::Disable::BackwardsCompatibility:: *)
+    Quiet[CreateDirectory[logDir], {CreateDirectory::eexist, CreateDirectory::filex}];
+    (* :!CodeAnalysis::EndBlock:: *)
+    );
 
     (*
     Cleanup existing log files
@@ -1789,7 +1790,13 @@ exitGracefully[] := (
   log["KERNEL IS EXITING GRACEFULLY"];
   log["\n\n"];
   shutdownLSPComm[$commProcess, $initializedComm];
-  Pause[1];Exit[0]
+  Pause[1];
+  (
+  (* :!CodeAnalysis::BeginBlock:: *)
+  (* :!CodeAnalysis::Disable::SuspiciousSessionSymbol:: *)
+  Exit[0]
+  (* :!CodeAnalysis::EndBlock:: *)
+  )
 )
 
 exitSemiGracefully[] := (
@@ -1809,7 +1816,13 @@ exitSemiGracefully[] := (
   log["KERNEL IS EXITING SEMI-GRACEFULLY"];
   log["\n\n"];
   shutdownLSPComm[$commProcess, $initializedComm];
-  Pause[1];Exit[1]
+  Pause[1];
+  (
+  (* :!CodeAnalysis::BeginBlock:: *)
+  (* :!CodeAnalysis::Disable::SuspiciousSessionSymbol:: *)
+  Exit[1]
+  (* :!CodeAnalysis::EndBlock:: *)
+  )
 )
 
 exitHard[] := (
@@ -1829,7 +1842,13 @@ exitHard[] := (
   log["KERNEL IS EXITING HARD"];
   log["\n\n"];
   shutdownLSPComm[$commProcess, $initializedComm];
-  Pause[1];Exit[1]
+  Pause[1];
+  (
+  (* :!CodeAnalysis::BeginBlock:: *)
+  (* :!CodeAnalysis::Disable::SuspiciousSessionSymbol:: *)
+  Exit[1]
+  (* :!CodeAnalysis::EndBlock:: *)
+  )
 )
 
 
