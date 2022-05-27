@@ -16,9 +16,10 @@ Needs["LSPServer`Library`"]
 Needs["LSPServer`Utils`"]
 
 
-$MinimumRecommendedCodeToolsVersion = 1.2
+$MinimumRecommendedCodeToolsVersionString = "1.2"
 
-$MinimumRecommendedKernelVersion = 12.1
+$MinimumRecommendedKernelVersionString = "12.1"
+
 
 Options[RunServerDiagnostic] = {
   ProcessDirectory -> Inherited
@@ -55,7 +56,7 @@ Module[{cwd, lspServerVersion, codeParserVersion,
   It could just be "WolframKernel" and not useful
   *)
   Print["INFORMATION: Host Kernel: ", $CommandLine[[1]]];
-  Print["INFORMATION: Host Kernel version: ", $VersionNumber];
+  Print["INFORMATION: Host Kernel version: ", NumberForm[$VersionNumber, {2, 1}]];
   Print["INFORMATION: Host Kernel Directory[]: ", Directory[]];
   Print["INFORMATION: Host Kernel $MaxLicenseProcesses: ", $MaxLicenseProcesses];
   Print["INFORMATION: Host Kernel LSPServer version: ", lspServerVersion];
@@ -758,7 +759,7 @@ Module[{kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion
 
 
 checkWarnings[
-  {kernelVersion_, lspServerVersion_, codeParserVersion_, codeInspectorVersion_, codeFormatterVersion_}
+  {kernelVersionStr_, lspServerVersionStr_, codeParserVersionStr_, codeInspectorVersionStr_, codeFormatterVersionStr_}
   ,
   {lspServerBuildDateStr_, codeParserBuildDateStr_, codeInspectorBuildDateStr_, codeFormatterBuildDateStr_}
   ,
@@ -770,39 +771,39 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
   minimum version checking;
   *)
 
-  If[kernelVersion < $MinimumRecommendedKernelVersion,
+  If[kernelVersionStr ~versionLess~ $MinimumRecommendedKernelVersionString,
     warningFunc["Kernel is below recommended version. Minimum recommended kernel version is: " <>
-      ToString[$MinimumRecommendedKernelVersion] <> ". Actual kernel version is: " <> ToString[kernelVersion]]
+      ToString[$MinimumRecommendedKernelVersionString] <> ". Actual kernel version is: " <> kernelVersionStr];
   ];
 
-  If[lspServerVersion < $MinimumRecommendedCodeToolsVersion,
+  If[lspServerVersionStr ~versionLess~ $MinimumRecommendedCodeToolsVersionString,
     warningFunc["LSPServer is below recommended version. Minimum recommended LSPServer version is: " <>
-      ToString[$MinimumRecommendedCodeToolsVersion] <> ". Actual LSPServer version is: " <> ToString[lspServerVersion]];
+      ToString[$MinimumRecommendedCodeToolsVersionString] <> ". Actual LSPServer version is: " <> lspServerVersionStr];
   ];
-  If[codeParserVersion < $MinimumRecommendedCodeToolsVersion,
+  If[codeParserVersionStr ~versionLess~ $MinimumRecommendedCodeToolsVersionString,
     warningFunc["CodeParser is below recommended version. Minimum recommended CodeParser version is: " <>
-      ToString[$MinimumRecommendedCodeToolsVersion] <> ". Actual CodeParser version is: " <> ToString[codeParserVersion]];
+      ToString[$MinimumRecommendedCodeToolsVersionString] <> ". Actual CodeParser version is: " <> codeParserVersionStr];
   ];
-  If[codeInspectorVersion < $MinimumRecommendedCodeToolsVersion,
+  If[codeInspectorVersionStr ~versionLess~ $MinimumRecommendedCodeToolsVersionString,
     warningFunc["CodeInspector is below recommended version. Minimum recommended CodeInspector version is: " <>
-      ToString[$MinimumRecommendedCodeToolsVersion] <> ". Actual CodeInspector version is: " <> ToString[codeInspectorVersion]];
+      ToString[$MinimumRecommendedCodeToolsVersionString] <> ". Actual CodeInspector version is: " <> codeInspectorVersionStr];
   ];
-  If[codeFormatterVersion < $MinimumRecommendedCodeToolsVersion,
+  If[codeFormatterVersionStr ~versionLess~ $MinimumRecommendedCodeToolsVersionString,
     warningFunc["CodeFormatter is below recommended version. Minimum recommended CodeFormatter version is: " <>
-      ToString[$MinimumRecommendedCodeToolsVersion] <> ". Actual CodeFormatter version is: " <> ToString[codeFormatterVersion]];
+      ToString[$MinimumRecommendedCodeToolsVersionString] <> ". Actual CodeFormatter version is: " <> codeFormatterVersionStr];
   ];
 
-  If[lspServerVersion =!= codeParserVersion,
-    warningFunc["LSPServer and CodeParser do not have the same version. LSPServer version: " <>
-      ToString[lspServerVersion] <> ". CodeParser version: " <> ToString[codeParserVersion]];
+  If[lspServerVersionStr ~majorMinorVersionUnequal~ codeParserVersionStr,
+    warningFunc["LSPServer and CodeParser do not have the same major.minor version. LSPServer version: " <>
+      lspServerVersionStr <> ". CodeParser version: " <> codeParserVersionStr];
   ];
-  If[lspServerVersion =!= codeInspectorVersion,
-    warningFunc["LSPServer and CodeInspector do not have the same version. LSPServer version: " <>
-      ToString[lspServerVersion] <> ". CodeInspector version: " <> ToString[codeInspectorVersion]];
+  If[lspServerVersionStr ~majorMinorVersionUnequal~ codeInspectorVersionStr,
+    warningFunc["LSPServer and CodeInspector do not have the same major.minor version. LSPServer version: " <>
+      lspServerVersionStr <> ". CodeInspector version: " <> codeInspectorVersionStr];
   ];
-  If[lspServerVersion =!= codeFormatterVersion,
-    warningFunc["LSPServer and CodeFormatter do not have the same version. LSPServer version: " <>
-      ToString[lspServerVersion] <> ". CodeFormatter version: " <> ToString[codeFormatterVersion]];
+  If[lspServerVersionStr ~majorMinorVersionUnequal~ codeFormatterVersionStr,
+    warningFunc["LSPServer and CodeFormatter do not have the same major.minor version. LSPServer version: " <>
+      lspServerVersionStr <> ". CodeFormatter version: " <> codeFormatterVersionStr];
   ];
 
   (*
@@ -832,27 +833,52 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
 
   quantity10Days = Quantity[10, "Days"];
 
-  If[DateObjectQ[lspServerBuildDate] && DateObjectQ[codeParserBuildDate] && Abs[lspServerBuildDate - codeParserBuildDate] > quantity10Days,
+  (*
+  only do build date checking if versions are identical
+
+  a patch version of a paclet may be released some time later and
+  that should not trigger this warning
+  *)
+
+  If[lspServerVersionStr == codeParserVersionStr &&
+      DateObjectQ[lspServerBuildDate] &&
+      DateObjectQ[codeParserBuildDate] &&
+      Abs[lspServerBuildDate - codeParserBuildDate] > quantity10Days,
     warningFunc["LSPServer and CodeParser were built too far apart. LSPServer build date: " <>
       lspServerBuildDateStr <> ". CodeParser build date: " <> codeParserBuildDateStr]
   ];
-  If[DateObjectQ[lspServerBuildDate] && DateObjectQ[codeInspectorBuildDate] && Abs[lspServerBuildDate - codeInspectorBuildDate] > quantity10Days,
+  If[lspServerVersionStr == codeInspectorVersionStr &&
+      DateObjectQ[lspServerBuildDate] &&
+      DateObjectQ[codeInspectorBuildDate] &&
+      Abs[lspServerBuildDate - codeInspectorBuildDate] > quantity10Days,
     warningFunc["LSPServer and CodeInspector were built too far apart. LSPServer build date: " <>
       lspServerBuildDateStr <> ". CodeInspector build date: " <> codeInspectorBuildDateStr]
   ];
-  If[DateObjectQ[lspServerBuildDate] && DateObjectQ[codeFormatterBuildDate] && Abs[lspServerBuildDate - codeFormatterBuildDate] > quantity10Days,
+  If[lspServerVersionStr == codeFormatterVersionStr &&
+      DateObjectQ[lspServerBuildDate] &&
+      DateObjectQ[codeFormatterBuildDate] &&
+      Abs[lspServerBuildDate - codeFormatterBuildDate] > quantity10Days,
     warningFunc["LSPServer and CodeFormatter were built too far apart. LSPServer build date: " <>
       lspServerBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
   ];
-  If[DateObjectQ[codeParserBuildDate] && DateObjectQ[codeInspectorBuildDate] && Abs[codeParserBuildDate - codeInspectorBuildDate] > quantity10Days,
+  If[codeParserVersionStr == codeInspectorVersionStr &&
+      DateObjectQ[codeParserBuildDate] &&
+      DateObjectQ[codeInspectorBuildDate] &&
+      Abs[codeParserBuildDate - codeInspectorBuildDate] > quantity10Days,
     warningFunc["CodeParser and CodeInspector were built too far apart. CodeParser build date: " <>
       codeParserBuildDateStr <> ". CodeInspector build date: " <> codeInspectorBuildDateStr]
   ];
-  If[DateObjectQ[codeParserBuildDate] && DateObjectQ[codeFormatterBuildDate] && Abs[codeParserBuildDate - codeFormatterBuildDate] > quantity10Days,
+  If[codeParserVersionStr == codeFormatterVersionStr &&
+      DateObjectQ[codeParserBuildDate] &&
+      DateObjectQ[codeFormatterBuildDate] &&
+      Abs[codeParserBuildDate - codeFormatterBuildDate] > quantity10Days,
     warningFunc["CodeParser and CodeFormatter were built too far apart. CodeParser build date: " <>
       codeParserBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
   ];
-  If[DateObjectQ[codeInspectorBuildDate] && DateObjectQ[codeFormatterBuildDate] && Abs[codeInspectorBuildDate - codeFormatterBuildDate] > quantity10Days,
+  If[codeInspectorVersionStr == codeFormatterVersionStr &&
+      DateObjectQ[codeInspectorBuildDate] &&
+      DateObjectQ[codeFormatterBuildDate] &&
+      Abs[codeInspectorBuildDate - codeFormatterBuildDate] > quantity10Days,
     warningFunc["CodeInspector and CodeFormatter were built too far apart. CodeInspector build date: " <>
       codeInspectorBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
   ];
@@ -883,8 +909,11 @@ Module[{},
 
 handleContent[content:KeyValuePattern["method" -> "diagnostics"]] :=
 Catch[
-Module[{id, kernelVersion, commandLine, directory, maxLicenseProcesses, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion, diags,
-  lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate},
+Module[{id, kernelVersionStr, commandLine, directory,
+  maxLicenseProcesses, lspServerVersionStr, codeParserVersionStr,
+  codeInspectorVersionStr, codeFormatterVersionStr, diags,
+  lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
+  codeFormatterBuildDate},
 
   If[$Debug2,
     log["diagnostics: enter"]
@@ -892,7 +921,7 @@ Module[{id, kernelVersion, commandLine, directory, maxLicenseProcesses, lspServe
 
   id = content["id"];
 
-  kernelVersion = $VersionNumber;
+  kernelVersionStr = ToString[NumberForm[$VersionNumber, {2, 1}]];
 
   commandLine = $CommandLine;
 
@@ -900,13 +929,13 @@ Module[{id, kernelVersion, commandLine, directory, maxLicenseProcesses, lspServe
 
   maxLicenseProcesses = $MaxLicenseProcesses;
 
-  lspServerVersion = Information[PacletObject["LSPServer"], "Version"];
+  lspServerVersionStr = Information[PacletObject["LSPServer"], "Version"];
 
-  codeParserVersion = Information[PacletObject["CodeParser"], "Version"];
+  codeParserVersionStr = Information[PacletObject["CodeParser"], "Version"];
 
-  codeInspectorVersion = Information[PacletObject["CodeInspector"], "Version"];
+  codeInspectorVersionStr = Information[PacletObject["CodeInspector"], "Version"];
 
-  codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
+  codeFormatterVersionStr = Information[PacletObject["CodeFormatter"], "Version"];
 
   lspServerBuildDate = PacletObject["LSPServer"]["BuildDate"];
 
@@ -917,14 +946,14 @@ Module[{id, kernelVersion, commandLine, directory, maxLicenseProcesses, lspServe
   codeFormatterBuildDate = PacletObject["CodeFormatter"]["BuildDate"];
 
   diags = <|
-    "kernelVersion" -> kernelVersion,
+    "kernelVersion" -> kernelVersionStr,
     "commandLine" -> commandLine,
     "directory" -> directory,
     "maxLicenseProcesses" -> maxLicenseProcesses,
-    "lspServerVersion" -> lspServerVersion,
-    "codeParserVersion" -> codeParserVersion,
-    "codeInspectorVersion" -> codeInspectorVersion,
-    "codeFormatterVersion" -> codeFormatterVersion,
+    "lspServerVersion" -> lspServerVersionStr,
+    "codeParserVersion" -> codeParserVersionStr,
+    "codeInspectorVersion" -> codeInspectorVersionStr,
+    "codeFormatterVersion" -> codeFormatterVersionStr,
     "lspServerBuildDate" -> lspServerBuildDate,
     "codeParserBuildDate" -> codeParserBuildDate,
     "codeInspectorBuildDate" -> codeInspectorBuildDate,
@@ -1188,6 +1217,64 @@ Module[{startupError, e, line},
     WriteLineToStdOut[line];
   ]
 ]]
+
+
+
+(*
+convert "0.9" to {0, 9}
+*)
+convertVersionString[s_String] := 
+  FromDigits /@ StringSplit[s, ".", All]
+
+
+versionLess[a_String, b_String] :=
+  versionLess[convertVersionString[a], convertVersionString[b]]
+
+versionLess[a_List, b_List] :=
+  !versionGreaterEqual[a, b]
+
+
+majorMinorVersionUnequal[a_String, b_String] :=
+  !versionEqual[convertVersionString[a][[1;;2]], convertVersionString[b][[1;;2]]]
+
+
+versionGreaterEqual[{}, {}] := True
+
+versionGreaterEqual[{_, ___}, {}] := True
+
+versionGreaterEqual[{}, {_, ___}] := False
+
+versionGreaterEqual[{aFirst_, aRest___}, {bFirst_, bRest___}] :=
+  Which[
+    aFirst > bFirst,
+      True
+    ,
+    aFirst < bFirst,
+      False
+    ,
+    True,
+      versionGreaterEqual[{aRest}, {bRest}]
+  ]
+
+
+versionEqual[{}, {}] := True
+
+versionEqual[{_, ___}, {}] := False
+
+versionEqual[{}, {_, ___}] := False
+
+versionEqual[{aFirst_, aRest___}, {bFirst_, bRest___}] :=
+  Which[
+    aFirst > bFirst,
+      False
+    ,
+    aFirst < bFirst,
+      False
+    ,
+    True,
+      versionEqual[{aRest}, {bRest}]
+  ]
+
 
 End[]
 
