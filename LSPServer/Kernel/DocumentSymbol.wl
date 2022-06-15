@@ -545,7 +545,7 @@ Module[{walkedChildren, src},
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
@@ -586,7 +586,7 @@ Module[{walkedChildren, src},
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
@@ -627,7 +627,7 @@ Module[{walkedChildren, src},
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
@@ -668,7 +668,7 @@ Module[{walkedChildren, src},
     "kind" -> $SymbolKind["File"],
     "range" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
-      "end" -> walkedChildren[[-1, Key["range"], Key["end"]]]
+      "end" -> <| "line" -> src[[2, 1]], "character" -> src[[2, 2]] |>
     |>, 
     "selectionRange" -> <|
       "start" -> <| "line" -> src[[1, 1]], "character" -> src[[1, 2]] |>,
