@@ -109,18 +109,8 @@ Module[{id, params, doc, uri, cst, entry, foldingRange,
 
 
 
-walkOutline[packageCommentNode[_, {}, data_]] :=
-Module[{src},
-  src = data[Source];
-  src--;
-  {<|
-    "kind" -> $FoldingRangeKind["Region"],
-    "startLine" -> src[[1, 1]],
-    "endLine" -> src[[2, 1]]
-  |>}
-]
-
 walkOutline[packageCommentNode[_, children_, data_]] :=
+Catch[
 Module[{walkedChildren, src},
 
   walkedChildren = Flatten[walkOutline /@ children];
@@ -128,25 +118,23 @@ Module[{walkedChildren, src},
   src = data[Source];
   src--;
   
+  If[walkedChildren == {},
+    Throw[{<|
+      "kind" -> $FoldingRangeKind["Region"],
+      "startLine" -> src[[1, 1]],
+      "endLine" -> src[[2, 1]]
+    |>}]
+  ];
+
   {<|
     "kind" -> $FoldingRangeKind["Region"],
     "startLine" -> src[[1, 1]],
     "endLine" -> walkedChildren[[-1, Key["endLine"]]]
   |>, walkedChildren}
-]
-
-walkOutline[sectionCommentNode[name_, {}, data_]] :=
-Module[{src},
-  src = data[Source];
-  src--;
-  {<|
-    "kind" -> $FoldingRangeKind["Region"],
-    "startLine" -> src[[1, 1]],
-    "endLine" -> src[[2, 1]]
-  |>}
-]
+]]
 
 walkOutline[sectionCommentNode[name_, children_, data_]] :=
+Catch[
 Module[{walkedChildren, src},
 
   walkedChildren = Flatten[walkOutline /@ children];
@@ -154,25 +142,23 @@ Module[{walkedChildren, src},
   src = data[Source];
   src--;
   
+  If[walkedChildren == {},
+    Throw[{<|
+      "kind" -> $FoldingRangeKind["Region"],
+      "startLine" -> src[[1, 1]],
+      "endLine" -> src[[2, 1]]
+    |>}]
+  ];
+
   {<|
     "kind" -> $FoldingRangeKind["Region"],
     "startLine" -> src[[1, 1]],
     "endLine" -> walkedChildren[[-1, Key["endLine"]]]
   |>, walkedChildren}
-]
-
-walkOutline[subsectionCommentNode[name_, {}, data_]] :=
-Module[{src},
-  src = data[Source];
-  src--;
-  {<|
-    "kind" -> $FoldingRangeKind["Region"],
-    "startLine" -> src[[1, 1]],
-    "endLine" -> src[[2, 1]]
-  |>}
-]
+]]
 
 walkOutline[subsectionCommentNode[name_, children_, data_]] :=
+Catch[
 Module[{walkedChildren, src},
 
   walkedChildren = Flatten[walkOutline /@ children];
@@ -180,25 +166,23 @@ Module[{walkedChildren, src},
   src = data[Source];
   src--;
   
+  If[walkedChildren == {},
+    Throw[{<|
+      "kind" -> $FoldingRangeKind["Region"],
+      "startLine" -> src[[1, 1]],
+      "endLine" -> src[[2, 1]]
+    |>}]
+  ];
+
   {<|
     "kind" -> $FoldingRangeKind["Region"],
     "startLine" -> src[[1, 1]],
     "endLine" -> walkedChildren[[-1, Key["endLine"]]]
   |>, walkedChildren}
-]
-
-walkOutline[subsubsectionCommentNode[name_, {}, data_]] :=
-Module[{src},
-  src = data[Source];
-  src--;
-  {<|
-    "kind" -> $FoldingRangeKind["Region"],
-    "startLine" -> src[[1, 1]],
-    "endLine" -> src[[2, 1]]
-  |>}
-]
+]]
 
 walkOutline[subsubsectionCommentNode[name_, children_, data_]] :=
+Catch[
 Module[{walkedChildren, src},
 
   walkedChildren = Flatten[walkOutline /@ children];
@@ -206,12 +190,20 @@ Module[{walkedChildren, src},
   src = data[Source];
   src--;
   
+  If[walkedChildren == {},
+    Throw[{<|
+      "kind" -> $FoldingRangeKind["Region"],
+      "startLine" -> src[[1, 1]],
+      "endLine" -> src[[2, 1]]
+    |>}]
+  ];
+
   {<|
     "kind" -> $FoldingRangeKind["Region"],
     "startLine" -> src[[1, 1]],
     "endLine" -> walkedChildren[[-1, Key["endLine"]]]
   |>, walkedChildren}
-]
+]]
 
 walkOutline[functionDefinitionNode[name_, _, data_]] :=
 Module[{},
