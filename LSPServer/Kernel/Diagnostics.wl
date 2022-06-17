@@ -140,6 +140,11 @@ Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
     log["after CodeInspectCST"]
   ];
 
+  If[!MatchQ[cstLints, _List],
+    log["cstLints: NOT A LIST!!!"];
+    Throw[{}]
+  ];
+
   If[$Debug2,
     log["cstLints: ", #["Tag"]& /@ cstLints]
   ];
@@ -192,6 +197,11 @@ Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
   If[$Debug2,
     log["after CodeInspectAgg"]
+  ];
+
+  If[!MatchQ[aggLints, _List],
+    log["aggLints: NOT A LIST!!!"];
+    Throw[{}]
   ];
 
   If[$Debug2,
@@ -250,6 +260,11 @@ Module[{params, doc, uri, entry, ast, astLints, suppressedRegions},
 
   If[$Debug2,
     log["after CodeInspectAST"]
+  ];
+
+  If[!MatchQ[astLints, _List],
+    log["astLints: NOT A LIST!!!"];
+    Throw[{}]
   ];
 
   If[$Debug2,
