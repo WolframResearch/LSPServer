@@ -1,5 +1,16 @@
 
-## 1.7 - XX June, 2022
+## 1.7 - 4 July, 2022
+
+Fix handling non-BMP PUA characters
+
+Address issues here: https://github.com/WolframResearch/vscode-wolfram/issues/10
+
+Only compare major.minor when doing version checks and only do build
+date check if versions are identical
+
+Add foldingRange
+
+13.1 syntax updates
 
 
 ## 1.6 - 12 May, 2022
