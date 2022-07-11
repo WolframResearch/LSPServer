@@ -97,8 +97,12 @@ Module[{id, params, doc, uri, colorInformations, ast, colorNodes, entry},
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   ast = entry["AST"];
 
   If[FailureQ[ast],

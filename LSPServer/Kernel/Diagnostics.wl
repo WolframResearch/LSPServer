@@ -66,7 +66,11 @@ Module[{params, doc, uri, entry, cst, suppressedRegions},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   suppressedRegions = Lookup[entry, "SuppressedRegions", Null];
 
@@ -118,7 +122,11 @@ Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   cstLints = Lookup[entry, "CSTLints", Null];
 
@@ -177,7 +185,11 @@ Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   aggLints = Lookup[entry, "AggLints", Null];
 
@@ -236,7 +248,11 @@ Module[{params, doc, uri, entry, ast, astLints, suppressedRegions},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   astLints = Lookup[entry, "ASTLints", Null];
 
@@ -299,7 +315,11 @@ Module[{params, doc, uri, entry, scopingLints, scopingData, filtered, suppressed
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   scopingLints = Lookup[entry, "ScopingLints", Null];
 
@@ -388,8 +408,12 @@ Module[{params, doc, uri, entry},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   entry["CSTLints"] =.;
 
   entry["AggLints"] =.;

@@ -70,7 +70,11 @@ Module[{params, doc, uri, entry, text, mismatches, aggTabs},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   mismatches = Lookup[entry, "BracketMismatches", Null];
 
@@ -130,7 +134,11 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   data = Lookup[entry, "BracketEditsData", Null];
 
@@ -222,8 +230,12 @@ Module[{params, doc, uri, entry},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   entry["BracketMismatches"] =.;
 
   entry["BracketEditsData"] =.;

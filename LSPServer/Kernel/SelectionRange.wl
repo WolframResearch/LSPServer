@@ -85,8 +85,12 @@ Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, f
 
   positions = params["positions"];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   cst = entry["CST"];
 
   If[FailureQ[cst],

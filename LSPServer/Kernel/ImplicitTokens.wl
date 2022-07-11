@@ -58,7 +58,11 @@ Module[{params, doc, uri, entry, cst, inspectedFileObj, implicitTokens, agg},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   inspectedFileObj = Lookup[entry, "InspectedFileObject", Null];
 
@@ -148,8 +152,12 @@ Module[{params, doc, uri, entry},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   entry["InspectedFileObject"] =.;
 
   $OpenFilesMap[uri] = entry;

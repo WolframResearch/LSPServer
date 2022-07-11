@@ -103,8 +103,12 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
     log["hover: before parse"]
   ];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   text = entry["Text"];
   ast = entry["AST"];
   cstTabs = Lookup[entry, "CSTTabs", Null];

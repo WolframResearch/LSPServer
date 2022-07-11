@@ -94,8 +94,12 @@ Module[{id, params, doc, uri, cst, entry, foldingRange,
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
     
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   nodeList = Lookup[entry, "NodeList", Null];
 
   If[nodeList === Null,

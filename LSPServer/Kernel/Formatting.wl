@@ -48,7 +48,11 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
   tabSize = options["tabSize"];
   insertSpaces = options["insertSpaces"];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   text = entry["Text"];
 
@@ -138,8 +142,12 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
   tabSize = options["tabSize"];
   insertSpaces = options["insertSpaces"];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   text = entry["Text"];
 
   lines = StringSplit[text, {"\r\n", "\n", "\r"}, All];

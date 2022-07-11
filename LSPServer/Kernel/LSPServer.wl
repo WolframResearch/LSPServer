@@ -1329,7 +1329,11 @@ Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   cst = Lookup[entry, "CST", Null];
 
@@ -1414,7 +1418,11 @@ Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   cstTabs = Lookup[entry, "CSTTabs", Null];
 
@@ -1492,7 +1500,11 @@ Module[{params, doc, uri, cst, text, entry, agg},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   text = entry["Text"];
 
@@ -1550,7 +1562,11 @@ Module[{params, doc, uri, entry, cstTabs, aggTabs},
     Throw[{}]
   ];
 
-  entry = $OpenFilesMap[uri];
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
 
   aggTabs = Lookup[entry, "AggTabs", Null];
 
@@ -1607,8 +1623,12 @@ Module[{params, doc, uri, entry, agg, ast},
     Throw[{}]
   ];
   
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   ast = Lookup[entry, "AST", Null];
 
   If[ast =!= Null,

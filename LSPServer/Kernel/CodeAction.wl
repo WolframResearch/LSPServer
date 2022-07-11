@@ -104,8 +104,12 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     log["cursor: ", ToString[cursor]]
   ];
 
-  entry = $OpenFilesMap[uri];
-
+  entry = Lookup[$OpenFilesMap, uri, Null];
+  
+  If[entry === Null,
+    Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
+  ];
+  
   cstLints = entry["CSTLints"];
 
   (*
