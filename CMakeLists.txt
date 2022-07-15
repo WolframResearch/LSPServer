@@ -302,6 +302,13 @@ set_target_properties(lspserver-lib PROPERTIES
 	CXX_VISIBILITY_PRESET
 		hidden
 	#
+	# prevent
+	# /Volumes/TeamCity/work/4466f913884ff7b4/MathLink/CompilerAdditions
+	# from being added to rpath
+	#
+	SKIP_BUILD_RPATH
+		ON
+	#
 	# https://cmake.org/cmake/help/latest/manual/cmake-buildsystem.7.html#library-output-artifacts
 	#
 	LIBRARY_OUTPUT_DIRECTORY
