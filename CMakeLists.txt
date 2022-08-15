@@ -302,6 +302,10 @@ set_target_properties(lspserver-lib PROPERTIES
 		ON
 	CXX_VISIBILITY_PRESET
 		hidden
+	#
+	# see page 23 of:
+	# https://github.com/CppCon/CppCon2019/blob/master/Presentations/deep_cmake_for_library_authors/deep_cmake_for_library_authors__craig_scott__cppcon_2019.pdf
+	#
 	VISIBILITY_INLINES_HIDDEN
 		ON
 	#

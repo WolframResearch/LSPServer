@@ -12,6 +12,17 @@ LSPServer has source compatibility with 12.0+
 Any source .wl files that have `(* ::Package::"Tags" *)` or `(* ::Code::Initialization::"Tags" *)` syntax may only be edited with a version 12.3+ FE 
 
 
+## Runtime Compatibility
+
+Building with Wolfram 12.0+ and running with the same version should always work, provided that all other dependencies are also built with the same version.
+
+Building and running with different Wolfram versions will not always work.
+
+Building with the latest Wolfram version (which is 13.1) is only guaranteed to work back to Wolfram 13.1+.
+
+This is due to various issues including LibraryLink versioning and rpath changes on MacOSX.
+
+
 ## WolframVersion
 
 WolframVersion in PacletInfo is 12.1+ to maintain the same minimum required version as CodeParser
