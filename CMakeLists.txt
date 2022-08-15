@@ -301,6 +301,8 @@ set_target_properties(lspserver-lib PROPERTIES
 		ON
 	CXX_VISIBILITY_PRESET
 		hidden
+	VISIBILITY_INLINES_HIDDEN
+		ON
 	#
 	# prevent
 	# /Volumes/TeamCity/work/4466f913884ff7b4/MathLink/CompilerAdditions
