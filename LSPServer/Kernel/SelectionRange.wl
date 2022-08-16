@@ -108,7 +108,7 @@ Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, f
 
     firstCasePos = Position[cst, firstCase][[1]];
 
-    posChain = NestWhileList[#[[;; -3]]&, firstCasePos, (Length[#] >= 2)&];
+    posChain = NestWhileList[If[ListQ[Extract[cst, #[[;; -2]]]], #[[;; -3]], #[[;; -2]]]&, firstCasePos, (Length[#] >= 2)&];
 
     posChain = Reverse[posChain];
 
