@@ -910,7 +910,7 @@ Module[{},
 handleContent[content:KeyValuePattern["method" -> "diagnostics"]] :=
 Catch[
 Module[{id, kernelVersionStr, commandLine, directory,
-  maxLicenseProcesses, lspServerVersionStr, codeParserVersionStr,
+  maxLicenseProcessesStr, lspServerVersionStr, codeParserVersionStr,
   codeInspectorVersionStr, codeFormatterVersionStr, diags,
   lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
   codeFormatterBuildDate},
@@ -927,7 +927,10 @@ Module[{id, kernelVersionStr, commandLine, directory,
 
   directory = Directory[];
 
-  maxLicenseProcesses = $MaxLicenseProcesses;
+  (*
+  handle when $MaxLicenseProcesses is the symbol Infinity and cannot be converted to JSON 
+  *)
+  maxLicenseProcessesStr = ToString[$MaxLicenseProcesses];
 
   lspServerVersionStr = Information[PacletObject["LSPServer"], "Version"];
 
@@ -949,7 +952,7 @@ Module[{id, kernelVersionStr, commandLine, directory,
     "kernelVersion" -> kernelVersionStr,
     "commandLine" -> commandLine,
     "directory" -> directory,
-    "maxLicenseProcesses" -> maxLicenseProcesses,
+    "maxLicenseProcesses" -> maxLicenseProcessesStr,
     "lspServerVersion" -> lspServerVersionStr,
     "codeParserVersion" -> codeParserVersionStr,
     "codeInspectorVersion" -> codeInspectorVersionStr,
