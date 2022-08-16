@@ -10,9 +10,16 @@ Needs["CodeParser`Utils`"]
 
 
 $FoldingRangeKind = <|
+  (*
+  pre-defined range kinds
+  *)
 	"Comment" -> "comment",
 	"Imports" -> "imports",
-	"Region" -> "region"
+	"Region" -> "region",
+  (*
+  custom range kinds
+  *)
+  "Function" -> "function"
 |>
 
 
@@ -210,9 +217,18 @@ Module[{walkedChildren, src},
 ]]
 
 walkOutline[functionDefinitionNode[name_, _, data_]] :=
-Module[{},
-  {}
-]
+Catch[
+Module[{src},
+
+  src = data[Source];
+  src--;
+  
+  <|
+    "kind" -> $FoldingRangeKind["Function"],
+    "startLine" -> src[[1, 1]],
+    "endLine" -> src[[2, 1]]
+  |>
+]]
 
 walkOutline[constantDefinitionNode[name_, _, data_]] :=
 Module[{},
