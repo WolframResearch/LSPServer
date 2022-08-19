@@ -363,20 +363,25 @@ set_target_properties(lspserver-lib PROPERTIES
 		""
 )
 
+
+if(ENABLE_WARNINGS)
+
 #
 # Setup warnings
 #
+# https://www.foonathan.net/2018/10/cmake-warnings/
+#
 if(MSVC)
 	target_compile_options(lspserver-lib
-		# specify /MT to statically link runtime on Windows
-		# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
-		PRIVATE /W3 /EHsc /MT
+		PRIVATE /W4 /wd4100
 	)
 else(MSVC)
 	target_compile_options(lspserver-lib
-		PRIVATE -Wextra -Wall -Weffc++ -Wno-unused-parameter -Wno-unused-function -Wno-comment
+		PRIVATE -pedantic-errors -Wall -Wextra -Wconversion -Wsign-conversion -Wno-unused-parameter
 	)
 endif(MSVC)
+
+endif(ENABLE_WARNINGS)
 
 
 

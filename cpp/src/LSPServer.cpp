@@ -523,12 +523,10 @@ DLLEXPORT int WriteLineToStdOut_LibraryLink(WolframLibraryData libData, mint Arg
 
 
 DLLEXPORT int WriteBytesToStdOut_LibraryLink(WolframLibraryData libData, mint Argc, MArgument *Args, MArgument Res) {
+    
+    auto na = MArgument_getMNumericArray(Args[0]);
 
-    MNumericArray na;
-    na = MArgument_getMNumericArray(Args[0]);
-
-    size_t numBytes;
-    numBytes = libData->numericarrayLibraryFunctions->MNumericArray_getFlattenedLength(na);
+    auto numBytes = static_cast<size_t>(libData->numericarrayLibraryFunctions->MNumericArray_getFlattenedLength(na));
 
     auto data = reinterpret_cast<unsigned char *>(libData->numericarrayLibraryFunctions->MNumericArray_getData(na));
 
