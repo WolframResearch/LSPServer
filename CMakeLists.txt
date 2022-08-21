@@ -181,6 +181,7 @@ endif()
 file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/paclet/${PACLET}
 	${PROJECT_BINARY_DIR}/generated/wl/Kernel
+	${PROJECT_BINARY_DIR}/pdb-output/
 )
 
 
@@ -356,6 +357,12 @@ set_target_properties(lspserver-lib PROPERTIES
 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
 	RUNTIME_OUTPUT_DIRECTORY_RELEASE
 		${PROJECT_BINARY_DIR}/paclet/${PACLET}/LibraryResources/${SYSTEMID}
+	PDB_OUTPUT_DIRECTORY
+		${PROJECT_BINARY_DIR}/pdb-output
+	PDB_OUTPUT_DIRECTORY_DEBUG
+		${PROJECT_BINARY_DIR}/pdb-output
+	PDB_OUTPUT_DIRECTORY_RELEASE
+		${PROJECT_BINARY_DIR}/pdb-output
 	#
 	# WL / LibraryLink style dictates that the library be named "LSPServer.dylib" and not "libLSPServer.dylib"
 	#
