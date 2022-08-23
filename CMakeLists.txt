@@ -158,11 +158,11 @@ set_property(
 )
 
 
-if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1200)
+if(NOT VERSION_NUMBER GREATER_EQUAL 1200)
 message(FATAL_ERROR "VERSION_NUMBER is below 1200; LSPServer uses NumericArrays that were added to LibraryLink in version 12.0. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 
-if(NOT ${VERSION_NUMBER} GREATER_EQUAL 1210)
+if(NOT VERSION_NUMBER GREATER_EQUAL 1210)
 message(WARNING "VERSION_NUMBER is below 1210; ForceVersionInstall was added in 12.1. Installing paclets via CMake may not work. (VERSION_NUMBER is ${VERSION_NUMBER})")
 endif()
 
