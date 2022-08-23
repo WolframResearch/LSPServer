@@ -35,6 +35,7 @@
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
+			<arg line='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/${component}' />
 		</re-cmake-exec>
