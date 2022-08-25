@@ -31,11 +31,23 @@
 
 	<target name='Paclet.LSPServer.execute' extensionOf='Paclet.execute'>
 
+		<switch value='${system_id}'>
+			<case value='MacOSX-x86-64'>
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
+			</case>
+			<case value='MacOSX-ARM64'>
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0' />
+			</case>
+			<default>
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='' />
+			</default>
+		</switch>
+
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
 			<arg line='-DBUILDNUMBER=${env.BUILD_NUMBER}' />
-			<arg line='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.14' />
+			<arg line='${CMAKE_OSX_DEPLOYMENT_TARGET_LINE}' />
 			<arg line='-DENABLE_WARNINGS=ON' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/${component}' />
