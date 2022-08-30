@@ -1,4 +1,15 @@
 
+## 1.7.1 - 5 September, 2022
+
+### Fixes
+
+Fix $MaxLicenseProcesses with Infinity crashes LSPServer
+
+https://github.com/WolframResearch/vscode-wolfram/issues/14
+
+Fix 426896: Expand Selection and Shrink Selection fails in VSCode
+
+
 ## 1.7 - 4 July, 2022
 
 Fix handling non-BMP PUA characters
