@@ -81,7 +81,7 @@ ParseWolframLibraryHeader()
 
 message(STATUS "WOLFRAMLIBRARY_VERSION: ${WOLFRAMLIBRARY_VERSION}")
 
-if(${WOLFRAMLIBRARY_VERSION} GREATER_EQUAL 7)
+if(WOLFRAMLIBRARY_VERSION GREATER_EQUAL 7)
 message(WARNING "WOLFRAMLIBRARY_VERSION >= 7 is only compatible with Wolfram System 13.1+ and will not work with earlier versions.")
 endif()
 
