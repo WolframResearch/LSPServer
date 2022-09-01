@@ -369,6 +369,21 @@ set_target_properties(lspserver-lib PROPERTIES
 )
 
 
+if(MSVC)
+target_compile_options(lspserver-lib
+	#
+	# specify /EHsc to force compiler to assume that functions declared as extern "C" never throw a C++ exception
+	#
+	# specify /MT to statically link runtime on Windows
+	# This prevents "The program can't start because ucrtbased.dll is missing from your computer" error on Windows 7
+	# and fixes bug 427427:
+	# error 126 "The specified module could not be found"
+	# when Visual Studio is not installed
+	PRIVATE /EHsc /MT
+)
+endif(MSVC)
+
+
 if(ENABLE_WARNINGS)
 
 #
