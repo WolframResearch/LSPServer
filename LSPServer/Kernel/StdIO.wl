@@ -21,7 +21,7 @@ May return Null or a Failure object
 *)
 initializeLSPComm["StdIO"] :=
 Catch[
-Module[{startupError},
+Module[{startupError, res},
   
   startupError = GetStartupError[];
 
@@ -36,7 +36,11 @@ Module[{startupError},
     Throw[Failure["LSPServerNativeLibraryStartupError", <| "StartupError" -> startupError |>]]
   ];
 
-  StartBackgroundReaderThread[];
+  res = StartBackgroundReaderThread[];
+
+  If[FailureQ[res],
+    Throw[res]
+  ];
 
   Null
 ]]
