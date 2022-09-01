@@ -171,7 +171,7 @@ DLLEXPORT int StartBackgroundReaderThread_LibraryLink(WolframLibraryData libData
 void threadBody() {
     
     std::string str;
-    size_t numBytes;
+    size_t numBytes = 0;
     
     std::unique_ptr<unsigned char[]> body;
     Message msg;
