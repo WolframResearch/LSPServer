@@ -589,8 +589,7 @@ Module[{command, runPosition, run, startServerString, startServer,
   Print["INFORMATION: Server Kernel CodeFormatter build date: ", codeFormatterBuildDate];
 
   checkWarnings[
-    {kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion},
-    {lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate}
+    {kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion}
     ,
     (Print["WARNING: ", #];)&
   ];
@@ -721,8 +720,7 @@ Module[{command, runPosition, run, startServerString, startServer,
 ]]
 
 ServerDiagnosticWarningMessages[] :=
-Module[{kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion,
-  lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate},
+Module[{kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion},
 
   kernelVersion = $VersionNumber;
 
@@ -734,19 +732,9 @@ Module[{kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion
 
   codeFormatterVersion = Information[PacletObject["CodeFormatter"], "Version"];
 
-  lspServerBuildDate = PacletObject["LSPServer"]["BuildDate"];
-
-  codeParserBuildDate = PacletObject["CodeParser"]["BuildDate"];
-
-  codeInspectorBuildDate = PacletObject["CodeInspector"]["BuildDate"];
-
-  codeFormatterBuildDate = PacletObject["CodeFormatter"]["BuildDate"];
-
   Reap[
     checkWarnings[
       {kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion, codeFormatterVersion}
-      ,
-      {lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate}
       ,
       Sow
     ]
@@ -761,11 +749,9 @@ Module[{kernelVersion, lspServerVersion, codeParserVersion, codeInspectorVersion
 checkWarnings[
   {kernelVersionStr_, lspServerVersionStr_, codeParserVersionStr_, codeInspectorVersionStr_, codeFormatterVersionStr_}
   ,
-  {lspServerBuildDateStr_, codeParserBuildDateStr_, codeInspectorBuildDateStr_, codeFormatterBuildDateStr_}
-  ,
   warningFunc_
 ] :=
-Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFormatterBuildDate, quantity10Days},
+Module[{},
 
   (*
   minimum version checking;
@@ -807,81 +793,34 @@ Module[{lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate, codeFor
   ];
 
   (*
-  build date checking
+  Used to do build date checking.
+
+  But this was fragile and error-prone.
+
+  Here is problem #1:
+  DATE 1: release paclet A version 1.0 and paclet B version 1.0
+
+  DATE 2: release paclet B version 1.0.1
+
+  Everything is perfectly fine, but DATE 1 != DATE 2, so the system complains about paclets being built too far apart.
+
+  OK, so maybe fix is to only check build date if major.minor.revision versions are equal
+
+
+  problem #2:
+  DATE 1: release paclet A version 1.0, paclet B version 1.0, paclet C version 1.0
+
+  DATE 2: release paclet C version 1.0.1
+
+  DATE 3: release paclet B version 1.0.1
+
+  paclet B and paclet C have the same version, but they were released on different dates.
+
+  OK, so maybe only check major.minor versions and allow revision to be incremented freely.
+
+
+  Well, this is getting complicated for no real benefit, so I just removed it.
   *)
-
-  lspServerBuildDate = parseDateString[lspServerBuildDateStr];
-
-  codeParserBuildDate = parseDateString[codeParserBuildDateStr];
-
-  codeInspectorBuildDate = parseDateString[codeInspectorBuildDateStr];
-
-  codeFormatterBuildDate = parseDateString[codeFormatterBuildDateStr];
-
-  If[!DateObjectQ[lspServerBuildDate],
-    warningFunc["LSPServer BuildDate cannot be parsed: " <> ToString[lspServerBuildDate, InputForm]]
-  ];
-  If[!DateObjectQ[codeParserBuildDate],
-    warningFunc["CodeParser BuildDate cannot be parsed: " <> ToString[codeParserBuildDate, InputForm]]
-  ];
-  If[!DateObjectQ[codeInspectorBuildDate],
-    warningFunc["CodeInspector BuildDate cannot be parsed: " <> ToString[codeInspectorBuildDate, InputForm]]
-  ];
-  If[!DateObjectQ[codeFormatterBuildDate],
-    warningFunc["CodeFormatter BuildDate cannot be parsed: " <> ToString[codeFormatterBuildDate, InputForm]]
-  ];
-
-  quantity10Days = Quantity[10, "Days"];
-
-  (*
-  only do build date checking if versions are identical
-
-  a patch version of a paclet may be released some time later and
-  that should not trigger this warning
-  *)
-
-  If[lspServerVersionStr == codeParserVersionStr &&
-      DateObjectQ[lspServerBuildDate] &&
-      DateObjectQ[codeParserBuildDate] &&
-      Abs[lspServerBuildDate - codeParserBuildDate] > quantity10Days,
-    warningFunc["LSPServer and CodeParser were built too far apart. LSPServer build date: " <>
-      lspServerBuildDateStr <> ". CodeParser build date: " <> codeParserBuildDateStr]
-  ];
-  If[lspServerVersionStr == codeInspectorVersionStr &&
-      DateObjectQ[lspServerBuildDate] &&
-      DateObjectQ[codeInspectorBuildDate] &&
-      Abs[lspServerBuildDate - codeInspectorBuildDate] > quantity10Days,
-    warningFunc["LSPServer and CodeInspector were built too far apart. LSPServer build date: " <>
-      lspServerBuildDateStr <> ". CodeInspector build date: " <> codeInspectorBuildDateStr]
-  ];
-  If[lspServerVersionStr == codeFormatterVersionStr &&
-      DateObjectQ[lspServerBuildDate] &&
-      DateObjectQ[codeFormatterBuildDate] &&
-      Abs[lspServerBuildDate - codeFormatterBuildDate] > quantity10Days,
-    warningFunc["LSPServer and CodeFormatter were built too far apart. LSPServer build date: " <>
-      lspServerBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
-  ];
-  If[codeParserVersionStr == codeInspectorVersionStr &&
-      DateObjectQ[codeParserBuildDate] &&
-      DateObjectQ[codeInspectorBuildDate] &&
-      Abs[codeParserBuildDate - codeInspectorBuildDate] > quantity10Days,
-    warningFunc["CodeParser and CodeInspector were built too far apart. CodeParser build date: " <>
-      codeParserBuildDateStr <> ". CodeInspector build date: " <> codeInspectorBuildDateStr]
-  ];
-  If[codeParserVersionStr == codeFormatterVersionStr &&
-      DateObjectQ[codeParserBuildDate] &&
-      DateObjectQ[codeFormatterBuildDate] &&
-      Abs[codeParserBuildDate - codeFormatterBuildDate] > quantity10Days,
-    warningFunc["CodeParser and CodeFormatter were built too far apart. CodeParser build date: " <>
-      codeParserBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
-  ];
-  If[codeInspectorVersionStr == codeFormatterVersionStr &&
-      DateObjectQ[codeInspectorBuildDate] &&
-      DateObjectQ[codeFormatterBuildDate] &&
-      Abs[codeInspectorBuildDate - codeFormatterBuildDate] > quantity10Days,
-    warningFunc["CodeInspector and CodeFormatter were built too far apart. CodeInspector build date: " <>
-      codeInspectorBuildDateStr <> ". CodeFormatter build date: " <> codeFormatterBuildDateStr]
-  ];
 ]
 
 parseDateString[dateStr_] :=
