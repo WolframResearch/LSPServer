@@ -56,7 +56,7 @@ Module[{cwd, lspServerVersion, codeParserVersion,
   It could just be "WolframKernel" and not useful
   *)
   Print["INFORMATION: Host Kernel: ", $CommandLine[[1]]];
-  Print["INFORMATION: Host Kernel version: ", NumberForm[$VersionNumber, {2, 1}]];
+  Print["INFORMATION: Host Kernel version: ", NumberForm[$VersionNumber, {3, 1}]];
   Print["INFORMATION: Host Kernel Directory[]: ", Directory[]];
   Print["INFORMATION: Host Kernel $MaxLicenseProcesses: ", $MaxLicenseProcesses];
   Print["INFORMATION: Host Kernel LSPServer version: ", lspServerVersion];
@@ -921,7 +921,7 @@ Module[{id, kernelVersionStr, commandLine, directory,
 
   id = content["id"];
 
-  kernelVersionStr = ToString[NumberForm[$VersionNumber, {2, 1}]];
+  kernelVersionStr = ToString[NumberForm[$VersionNumber, {3, 1}]];
 
   commandLine = $CommandLine;
 
