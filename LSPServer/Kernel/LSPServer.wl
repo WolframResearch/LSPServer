@@ -725,9 +725,26 @@ Module[{contents},
       contents = handleContent[content]
   ];
 
-  If[!MatchQ[contents, {_?AssociationQ ...}],
+  If[MatchQ[contents, Failure["URINotFound", _]],
+
+    (*
+    This can happen under some circumstances
+
+    A file is closed, and something like publishDiagnostics is after the close in the queue
+
+    Do not kill the kernel for this
+    *)
+
     log["\n\n"];
     log["Internal assert 3 failed: list of Associations: ", contents];
+    log["\n\n"];
+
+    Throw[contents]
+  ];
+
+  If[!MatchQ[contents, {_?AssociationQ ...}],
+    log["\n\n"];
+    log["Internal assert 4 failed: list of Associations: ", contents];
     log["\n\n"];
 
     exitHard[]
