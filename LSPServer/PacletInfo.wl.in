@@ -16,6 +16,7 @@ Paclet[
     {"LibraryLink"},
     {"Resource", Root -> "Resources",
       Resources -> {
+        {"AnalyzableMessages", "Data/AnalyzableMessages.wl"},
         {"BuiltinFunctions", "Data/BuiltinFunctions.wl"},
         {"Options", "Data/Options.wl"},
         {"Constants", "Data/Constants.wl"},

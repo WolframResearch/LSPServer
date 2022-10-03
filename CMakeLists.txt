@@ -110,7 +110,8 @@ set(STATIC_WL_PACLET_KERNEL_SOURCES
 	${PROJECT_SOURCE_DIR}/LSPServer/Kernel/Workspace.wl
 )
 
-set(PROCESSED_SYMBOLS_DATA_FILES
+set(PROCESSED_DATA_FILES
+	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/AnalyzableMessages.wl
 	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/BadSymbols.wl
 	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/BuiltinFunctions.wl
 	${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/Constants.wl
@@ -228,7 +229,7 @@ endforeach()
 #
 # processed Data sources
 #
-foreach(SRC ${PROCESSED_SYMBOLS_DATA_FILES})
+foreach(SRC ${PROCESSED_DATA_FILES})
 	file(RELATIVE_PATH REL ${PROJECT_SOURCE_DIR}/WolframLanguageSyntax/Data/ ${SRC})
 	add_custom_command(
 		OUTPUT
@@ -413,7 +414,6 @@ endif(ENABLE_WARNINGS)
 set(PACLET_SOURCES
 	${REPLACED_PACLETINFO}
 	${COPIED_WL_PACLET_SOURCES}
-	${COPIED_PROCESSED_SYMBOLS_DUMP}
 	lspserver-lib
 )
 
