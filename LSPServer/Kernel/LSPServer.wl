@@ -153,7 +153,7 @@ Needs["PacletManager`"] (* for PacletInformation *)
 (*
 TODO: when targeting 12.1 as a minimum, then use paclet["AssetLocation", "BuiltInFunctions"]
 *)
-location = "Location" /. PacletInformation["LSPServer"];
+location = "Location" /. PacletInformation["LSPServer"]
 
 WolframLanguageSyntax`Generate`$builtinFunctions = Get[FileNameJoin[{location, "Resources", "Data", "BuiltinFunctions.wl"}]]
 WolframLanguageSyntax`Generate`$options = Get[FileNameJoin[{location, "Resources", "Data", "Options.wl"}]]

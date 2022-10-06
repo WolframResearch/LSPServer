@@ -1,5 +1,13 @@
 
-## 1.8 - XX Sep, 2022
+## 1.8 - 10 Oct, 2022
+
+Get rid of build date checking.
+
+Do not kill the kernel if URINotFound is thrown.
+
+### Fixes
+
+Fix bad formatting of kernel version.
 
 
 ## 1.7 - 4 July, 2022

@@ -116,7 +116,7 @@ EndPackage[]
 };
 
 Print["exporting ReplaceLongNamePUA.wl"];
-res = Export[FileNameJoin[{generatedWLDir, "Kernel", "ReplaceLongNamePUA.wl"}], Column[replaceLongNamePUAWL], "String"];
+res = Export[FileNameJoin[{buildDir, "paclet", "LSPServer", "Kernel", "ReplaceLongNamePUA.wl"}], Column[replaceLongNamePUAWL], "String"];
 
 If[FailureQ[res],
   Print[res];
