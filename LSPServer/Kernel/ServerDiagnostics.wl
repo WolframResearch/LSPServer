@@ -282,7 +282,8 @@ Module[{command, runPosition, run, startServerString, startServer,
   commandLine, directory, maxLicenseProcesses, lspServerVersion,
   codeParserVersion, codeInspectorVersion, codeFormatterVersion,
   lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
-  codeFormatterBuildDate, code},
+  codeFormatterBuildDate, code,
+  diff, exceeded, fifteenSeconds},
 
   command = commandIn;
 
@@ -707,9 +708,18 @@ Module[{command, runPosition, run, startServerString, startServer,
 
   Print["INFO: Time to initialize server: ", (serverInitializeTime - serverStartTime)];
 
-  If[(serverInitializeTime - serverStartTime) > Quantity[15, "Seconds"],
-    Print["ERROR: Time to initialize server was greater than 15 seconds"];
-    Throw[$Failed]
+  diff = (serverInitializeTime - serverStartTime);
+  fifteenSeconds = Quantity[15, "Seconds"];
+  exceeded = (diff > fifteenSeconds);
+
+  Which[
+    TrueQ[exceeded],
+      Print["ERROR: Time to initialize server was greater than 15 seconds"];
+      Throw[$Failed]
+    ,
+    !TrueQ[!exceeded],
+      Print["ERROR: Internal problem with quantities: ", Failure["InternalProblem", <| "exceeded" -> exceeded, "diff" -> diff, "fifteenSeconds" -> fifteenSeconds |>] //InputForm];
+      Throw[$Failed]
   ];
 
   code = ProcessInformation[proc, "ExitCode"];
@@ -955,7 +965,7 @@ Module[{code},
 This reports license errors
 *)
 reportStdOut[proc_] :=
-Module[{stdOut, arr, str, time},
+Module[{stdOut, arr, str, time, diff, exceeded, oneSecond},
   stdOut = ProcessConnection[proc, "StandardOutput"];
 
   time = Now;
@@ -965,8 +975,16 @@ Module[{stdOut, arr, str, time},
     
     arr = Quiet[ReadByteArray[stdOut, EndOfBuffer], {ReadByteArray::openx}];
 
+    diff = (Now - time);
+    oneSecond = Quantity[1, "Seconds"];
+    exceeded = (diff > oneSecond);
+
     Which[
-      (Now - time) > Quantity[1, "Seconds"],
+      TrueQ[exceeded],
+        Break[]
+      ,
+      !TrueQ[!exceeded],
+        Print["ERROR: Internal problem with quantities: ", Failure["InternalProblem", <| "exceeded" -> exceeded, "diff" -> diff, "oneSecond" -> oneSecond |>] //InputForm];
         Break[]
       ,
       arr === {},
@@ -991,7 +1009,7 @@ Module[{stdOut, arr, str, time},
 ]
 
 reportStdErr[proc_] :=
-Module[{stdErr, arr, str, time},
+Module[{stdErr, arr, str, time, diff, exceeded, oneSecond},
   stdErr = ProcessConnection[proc, "StandardError"];
 
   time = Now;
@@ -1001,8 +1019,16 @@ Module[{stdErr, arr, str, time},
 
     arr = Quiet[ReadByteArray[stdErr, EndOfBuffer], {ReadByteArray::openx}];
 
+    diff = (Now - time);
+    oneSecond = Quantity[1, "Seconds"];
+    exceeded = (diff > oneSecond);
+
     Which[
-      (Now - time) > Quantity[1, "Seconds"],
+      TrueQ[exceeded],
+        Break[]
+      ,
+      !TrueQ[!exceeded],
+        Print["ERROR: Internal problem with quantities: ", Failure["InternalProblem", <| "exceeded" -> exceeded, "diff" -> diff, "oneSecond" -> oneSecond |>] //InputForm];
         Break[]
       ,
       arr === {},
