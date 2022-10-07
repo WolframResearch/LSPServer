@@ -138,7 +138,7 @@ set(PACLETINFO_IN_SOURCE
 )
 
 set(GENERATED_WL_PACLET_KERNEL_SOURCES
-	${PROJECT_BINARY_DIR}/generated/wl/Kernel/ReplaceLongNamePUA.wl
+	${PROJECT_BINARY_DIR}/paclet/LSPServer/Kernel/ReplaceLongNamePUA.wl
 )
 
 
@@ -183,7 +183,6 @@ endif()
 
 file(MAKE_DIRECTORY
 	${PROJECT_BINARY_DIR}/paclet/${PACLET}
-	${PROJECT_BINARY_DIR}/generated/wl/Kernel
 	${PROJECT_BINARY_DIR}/pdb-output/
 )
 
@@ -243,22 +242,6 @@ foreach(SRC ${PROCESSED_DATA_FILES})
 	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Resources/Data/${REL})
 endforeach()
 
-#
-# generated Kernel sources
-#
-foreach(SRC ${GENERATED_WL_PACLET_KERNEL_SOURCES})
-	file(RELATIVE_PATH REL ${PROJECT_BINARY_DIR}/generated/wl/Kernel/ ${SRC})
-	add_custom_command(
-		OUTPUT
-			${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL}
-		COMMAND
-			${CMAKE_COMMAND} -E copy ${SRC} ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL}
-		DEPENDS
-			${SRC}
-	)
-	list(APPEND COPIED_WL_PACLET_SOURCES ${PROJECT_BINARY_DIR}/paclet/${PACLET}/Kernel/${REL})
-endforeach()
-
 
 
 #
@@ -270,7 +253,7 @@ endforeach()
 #
 add_custom_command(
 	OUTPUT
-		${PROJECT_BINARY_DIR}/generated/wl/Kernel/ReplaceLongNamePUA.wl
+		${PROJECT_BINARY_DIR}/paclet/LSPServer/Kernel/ReplaceLongNamePUA.wl
 	COMMAND
 		${CMAKE_COMMAND} -DSCRIPT=${PROJECT_SOURCE_DIR}/${PACLET}/Generate/ReplaceLongNamePUA.wl -DSRCDIR=${PROJECT_SOURCE_DIR} -DBUILDDIR=${PROJECT_BINARY_DIR} -DWOLFRAMKERNEL=${WOLFRAMKERNEL} -DKERNEL_TIMEOUT=${KERNEL_TIMEOUT} -P ${PROJECT_SOURCE_DIR}/cmake/WolframScript.cmake
 	COMMAND
@@ -415,6 +398,7 @@ endif(ENABLE_WARNINGS)
 set(PACLET_SOURCES
 	${REPLACED_PACLETINFO}
 	${COPIED_WL_PACLET_SOURCES}
+	${GENERATED_WL_PACLET_KERNEL_SOURCES}
 	lspserver-lib
 )
 
