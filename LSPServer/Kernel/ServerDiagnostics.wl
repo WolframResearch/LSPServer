@@ -148,6 +148,11 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
   *)
   $timeoutTask = SessionSubmit[ScheduledTask[$timeoutExpr, {Quantity[30, "Seconds"], 1}]];
 
+  If[FailureQ[$timeoutTask],
+    Print["ERROR: Internal problem with SessionSubmit: ", $timeoutTask];
+    Throw[$timeoutTask]
+  ];
+  
   $timeoutExpr := ($timeout = True; KillProcess[proc]);
   
   Print["Waiting maximum of 30 seconds for any hangs."];
@@ -400,6 +405,11 @@ Module[{command, runPosition, run, startServerString, startServer,
   *)
   $timeoutTask = SessionSubmit[ScheduledTask[$timeoutExpr, {Quantity[30, "Seconds"], 1}]];
 
+  If[FailureQ[$timeoutTask],
+    Print["ERROR: Internal problem with SessionSubmit: ", $timeoutTask];
+    Throw[$timeoutTask]
+  ];
+  
   $timeoutExpr := ($timeout = True; KillProcess[proc]);
 
   Print["Waiting maximum of 30 seconds for any hangs."];
