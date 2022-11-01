@@ -16,16 +16,18 @@ Needs["CodeParser`Utils`"]
 $SemanticTokenTypes = <|
   "variable" -> 0,
   "parameter" -> 1,
-  "function" -> 2
+  "function" -> 2,
+  "constant" -> 3
 |>
 
 $SemanticTokenModifiers = <|
   "Module" -> 0,
   "Block" -> 1,
-  "shadowed" -> 2,
-  "unused" -> 3,
-  "error" -> 4,
-  "definition" -> 5
+  "With" -> 2,
+  "shadowed" -> 3,
+  "unused" -> 4,
+  "error" -> 5,
+  "definition" -> 6
 |>
 
 
@@ -144,6 +146,9 @@ Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
             {___, "Module" | "Block" | "DynamicModule" | "Internal`InheritedBlock"},
               "variable"
             ,
+            {___, "With"},
+              "constant"
+            ,
             {___, "Defined"},
               "function"
             ,
@@ -157,6 +162,7 @@ Module[{id, params, doc, uri, entry, semanticTokens, scopingData, transformed,
               {
                 "Module" | "DynamicModule" -> "Module",
                 "Block" | "Internal`InheritedBlock" -> "Block",
+                "With" -> "With",
                 _ :> Sequence @@ {}
               }
               ,
