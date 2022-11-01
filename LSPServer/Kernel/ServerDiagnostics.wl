@@ -268,7 +268,18 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
 
   Print["Exiting was successful."];
 
-  TaskRemove[$timeoutTask];
+  Print["Removing timeout task."];
+  res = TaskRemove[$timeoutTask];
+
+  If[FailureQ[res],
+    Print["ERROR: Removing timeout task failed 1."];
+  ];
+
+  If[!MatchQ[res, _TaskObject],
+    Print["ERROR: Removing timeout task failed 2."];
+  ];
+
+  $timeoutTask =.;
   
   code = ProcessInformation[proc, "ExitCode"];
 
@@ -419,14 +430,13 @@ Module[{command, runPosition, run, startServerString, startServer,
   initialize
   *)
   assoc = <| "method" -> "initialize", "id" -> 1, "params" -> <|
-      "initializationOptions" -> <||>,
-      "capabilities" -> <|
-        "textDocument" -> <|
-          "codeAction" -> <||>
-        |>
+    "initializationOptions" -> <||>,
+    "capabilities" -> <|
+      "textDocument" -> <|
+        "codeAction" -> <||>
       |>
     |>
-  |>;
+  |> |>;
   bytes = ExportByteArray[assoc, "JSON"];
   len = Length[bytes];
 
@@ -714,7 +724,18 @@ Module[{command, runPosition, run, startServerString, startServer,
 
   Print["exit message was successful."];
 
-  TaskRemove[$timeoutTask];
+  Print["Removing timeout task."];
+  res = TaskRemove[$timeoutTask];
+
+  If[FailureQ[res],
+    Print["ERROR: Removing timeout task failed 1."];
+  ];
+
+  If[!MatchQ[res, _TaskObject],
+    Print["ERROR: Removing timeout task failed 2."];
+  ];
+
+  $timeoutTask =.;
 
   Print["INFO: Time to initialize server: ", (serverInitializeTime - serverStartTime)];
 
@@ -930,7 +951,7 @@ Module[{id, kernelVersionStr, commandLine, directory,
 
 exitHard[proc_, msg_] :=
 Catch[
-Module[{code},
+Module[{code, res},
 
   If[$timeout,
     Print["INFO: Process timed out after 30 seconds."];
@@ -944,7 +965,18 @@ Module[{code},
     Throw[Null]
   ];
 
-  TaskRemove[$timeoutTask];
+  Print["Removing timeout task."];
+  res = TaskRemove[$timeoutTask];
+
+  If[FailureQ[res],
+    Print["ERROR: Removing timeout task failed 1."];
+  ];
+
+  If[!MatchQ[res, _TaskObject],
+    Print["ERROR: Removing timeout task failed 2."];
+  ];
+
+  $timeoutTask =.;
 
   Print[msg];
 
