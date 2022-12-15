@@ -37,6 +37,8 @@ $Debug2
 
 $Debug3
 
+$LogLevel = 1
+
 $DebugBracketMatcher
 
 
@@ -299,6 +301,8 @@ Module[{contents},
 
   contents = contentsIn;
 
+  log2[1, "Newly arrived message (before expansion):> ", InputForm[contents], "\n"];
+
   If[!MatchQ[contents, {_?AssociationQ ...}],
     log["\n\n"];
     log["Internal assert 1 failed: list of Associations: ", contents];
@@ -316,6 +320,9 @@ Module[{contents},
   contents = expandContents[contents];
 
   $ContentQueue = $ContentQueue ~Join~ contents;
+
+  log2[2, "Newly arrived message (after expansion):> ", InputForm[contents], "\n"];
+  log2[2, "$ContentQueue with new contents :> ", InputForm[#["method"]& /@ $ContentQueue], "\n"];
 
   If[$Debug2,
     log["appending to $ContentQueue"];

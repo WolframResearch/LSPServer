@@ -174,6 +174,7 @@ Module[{str, bytes, res},
   *)
   Do[ (* content *)
 
+    log2[1, "Message to client :> ", InputForm[content], "\n"];
     str = Developer`WriteRawJSONString[content];
 
     If[FailureQ[str],
@@ -319,6 +320,8 @@ Module[{content, contents},
     ];
 
     contents = LSPEvaluate[content];
+
+    log2[5, "LSP evaluated message = Content to the client :> ", InputForm[contents], "\n"];
 
     (* write out evaluated results to the client *)
     writeLSPResult["StdIO", sock, contents];
