@@ -174,13 +174,13 @@ Module[{str, bytes, res},
   *)
   Do[ (* content *)
 
-    log2[1, "Message to client :> ", InputForm[content], "\n"];
+    log[1, "Message to client :> ", InputForm[content], "\n"];
     str = Developer`WriteRawJSONString[content];
 
     If[FailureQ[str],
-      log["\n\n"];
-      log["Could not convert to JSON: ", content];
-      log["\n\n"];
+      log[3, "\n\n"];
+      log[3, "Could not convert to JSON: ", content];
+      log[3, "\n\n"];
 
       exitHard[]
     ];
@@ -313,15 +313,14 @@ Module[{content, contents},
     content = $ContentQueue[[1]];
     $ContentQueue = Rest[$ContentQueue];
 
-    If[$Debug2,
-      log["taking first from $ContentQueue: ", #["method"]&[content]];
-      log["rest of $ContentQueue (up to 20): ", Take[#["method"]& /@ $ContentQueue, UpTo[20]]];
-      log["..."]
-    ];
+    log[4, "taking first from $ContentQueue: ", #["method"]&[content]];
+    log[4, "rest of $ContentQueue (up to 20): ", Take[#["method"]& /@ $ContentQueue, UpTo[20]]];
+    log[4, "..."];
+    
 
     contents = LSPEvaluate[content];
 
-    log2[5, "LSP evaluated message = Content to the client :> ", InputForm[contents], "\n"];
+    log2[4, "LSP evaluated message = Content to the client :> ", InputForm[contents], "\n"];
 
     (* write out evaluated results to the client *)
     writeLSPResult["StdIO", sock, contents];

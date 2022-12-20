@@ -9,10 +9,6 @@ merge
 stringLineTake
 
 log
-log2
-
-logFull
-logFull2
 
 lintToDiagnostics
 
@@ -85,21 +81,13 @@ Module[{newlines, split},
 
 timeString[] := DateString[{"Hour24", ":", "Minute", ":", "SecondExact", " "}]
 
-
-log[args___] :=
+SetAttributes[log, HoldRest]
+log[level_Integer, args___] /; $LogLevel >= level:=
 Block[{$ContextPath = {"CodeParser`", "CodeInspector`", "System`"}},
   Write[$Messages, timeString[] //OutputForm, Sequence @@ (OutputForm /@ {args})]
 ]
 
-SetAttributes[log2, HoldRest]
-log2[level_Integer, args___] /; $LogLevel >= level := log[args]
-
-logFull[args___] :=
-Block[{$ContextPath = {"CodeParser`", "CodeInspector`", "System`"}},
-  Write[$Messages, timeString[] //OutputForm, Sequence @@ {args}]
-]
-logFull2[level_Integer, args___] /; $LogLevel >= level := logFull[args]
-
+log[arg_String] := log[1, arg];
 
 lintToDiagnostics[InspectionObject[tag_, message_, severity_, data_]] :=
 Catch[

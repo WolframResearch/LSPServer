@@ -14,11 +14,11 @@ Needs["CodeParser`Utils`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/hover"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/hover: enter expand"]
-  ];
+  
+  log[1, "textDocument/hover: enter expand"];
+
   
   id = content["id"];
   params = content["params"];
@@ -46,12 +46,17 @@ Module[{params, id, doc, uri},
     Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
       "textDocument/concreteParse",
       "textDocument/aggregateParse",
       "textDocument/abstractParse",
       "textDocument/hoverFencepost"
-  }
+  };
+
+  log[1, "textDocument/hover: Exit"];
+
+  res
+
 ]]
   
 handleContent[content:KeyValuePattern["method" -> "textDocument/hoverFencepost"]] :=
@@ -59,9 +64,9 @@ Catch[
 Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char, pre, ast, cstTabs, syms, toks, nums,
   res},
 
-  If[$Debug2,
-    log["textDocument/hoverFencepost: enter"]
-  ];
+  
+  log[1, "textDocument/hoverFencepost: enter"];
+
 
   id = content["id"];
 
@@ -176,9 +181,9 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
         {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
     ];
 
-  If[$Debug2,
-    log["hover: exiting"]
-  ];
+  
+  log[1, "hover hoverFencepost: Exit"];
+  
 
   res
 ]]

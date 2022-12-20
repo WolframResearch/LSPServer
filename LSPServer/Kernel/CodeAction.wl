@@ -12,11 +12,11 @@ Needs["CodeParser`Utils`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/codeAction"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/codeAction: enter expand"]
-  ];
+  
+  log[1, "textDocument/codeAction: enter expand"];
+  
 
   id = content["id"];
   params = content["params"];
@@ -44,7 +44,7 @@ Module[{params, id, doc, uri},
     Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/suppressedRegions",
     "textDocument/runConcreteDiagnostics",
@@ -53,7 +53,11 @@ Module[{params, id, doc, uri},
     "textDocument/abstractParse",
     "textDocument/runAbstractDiagnostics",
     "textDocument/codeActionFencepost"
-  }
+  };
+
+  log[1, "textDocument/codeAction: Exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/codeActionFencepost"]] :=
@@ -62,9 +66,9 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
   shadowing, insertionText, cursor, entry, text, cst, agg, ast, cstLints, aggLints, astLints},
   
-  If[$Debug2,
-    log["textDocument/codeActionFencepost: enter"]
-  ];
+  
+  log[1, "textDocument/codeActionFencepost: Enter"];
+  
 
   id = content["id"];
 
@@ -339,7 +343,11 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     {lint, lints}
   ];
 
-  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>}
+  res = {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>};
+
+  log[1, "textDocument/codeActionFencepost: Exit"];
+
+  res
 ]]
 
 End[]

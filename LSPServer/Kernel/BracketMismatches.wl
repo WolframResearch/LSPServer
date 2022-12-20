@@ -23,11 +23,11 @@ Needs["CodeParser`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismatches"], pos_] :=
 Catch[
-Module[{params, doc, uri},
+Module[{params, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/runBracketMismatches: enter expand"]
-  ];
+  
+  log[1, "textDocument/runBracketMismatches: Enter expand"];
+  
   
   params = content["params"];
   doc = params["textDocument"];
@@ -42,20 +42,22 @@ Module[{params, doc, uri},
     Throw[{}]
   ];
 
-  <| "method" -> #, "params" -> params |>& /@ {
+  res = <| "method" -> #, "params" -> params |>& /@ {
     "textDocument/concreteTabsParse",
     "textDocument/aggregateTabsParse",
     "textDocument/runBracketMismatchesFencepost"
-  }
+  };
+
+  log[1, "textDocument/runBracketMismatches: Exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismatchesFencepost"]] :=
 Catch[
 Module[{params, doc, uri, entry, text, mismatches, aggTabs},
   
-  If[$Debug2,
-    log["textDocument/runBracketMismatchesFencepost: enter"]
-  ];
+  log[1, "textDocument/runBracketMismatchesFencepost: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -108,6 +110,8 @@ Module[{params, doc, uri, entry, text, mismatches, aggTabs},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/runBracketMismatchesFencepost: Exit"];
+
   {}
 ]]
 
@@ -117,9 +121,9 @@ Catch[
 Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badChunkLineNums,
   badChunkLines, badChunk, data, res},
   
-  If[$Debug2,
-    log["textDocument/suggestBracketEdits: enter"]
-  ];
+  
+  log[1, "textDocument/suggestBracketEdits: Enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -205,6 +209,8 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/suggestBracketEdits: Exit"];
+
   {}
 ]]
 
@@ -213,9 +219,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearBracketMism
 Catch[
 Module[{params, doc, uri, entry},
 
-  If[$Debug2,
-    log["textDocument/clearBracketMismatches: enter"]
-  ];
+  log[1, "textDocument/clearBracketMismatches: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -242,6 +246,8 @@ Module[{params, doc, uri, entry},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/clearBracketMismatches: Exit"];
+
   {}
 ]]
 
@@ -251,11 +257,9 @@ Catch[
 Module[{params, doc, uri, lines, entry, text, actions, textLines, action, suggestions, confidenceMap, badChunkLineNums,
   badChunkLines, originalColumnCount, rank, chunkOffset, line1, line2, line3, line4,
   line1Map, line2Map, line3Map, line4Map,
-  data},
+  data, res},
   
-  If[$Debug2,
-    log["textDocument/publishBracketMismatches: enter"]
-  ];
+  log[1, "textDocument/publishBracketMismatches: Enter"];
   
   params = content["params"];
   doc = params["textDocument"];
@@ -406,11 +410,15 @@ Module[{params, doc, uri, lines, entry, text, actions, textLines, action, sugges
     log["textDocument/publishBracketMismatches: exit"]
   ];
 
-  {<| "jsonrpc" -> "2.0",
+  res = {<| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishHTMLSnippet",
       "params" -> <| "uri" -> uri,
                       "lines" -> lines,
-                      "actions" -> actions |> |>}
+                      "actions" -> actions |> |>};
+
+  log[1, "textDocument/publishBracketMismatches: Exit"];
+
+  res
 ]]
 
 

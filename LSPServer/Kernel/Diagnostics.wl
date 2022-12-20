@@ -13,11 +13,9 @@ Needs["CodeParser`Scoping`"] (* for scopingDataObject *)
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/runDiagnostics"], pos_] :=
 Catch[
-Module[{params, doc, uri},
+Module[{params, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/runDiagnostics: enter expand"]
-  ];
+  log[1, "textDocument/runDiagnostics: enter expand"];
   
   params = content["params"];
   doc = params["textDocument"];
@@ -32,7 +30,7 @@ Module[{params, doc, uri},
     Throw[{}]
   ];
 
-  <| "method" -> #, "params" -> params |>& /@ {
+  res = <| "method" -> #, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/suppressedRegions",
     "textDocument/runConcreteDiagnostics",
@@ -42,16 +40,18 @@ Module[{params, doc, uri},
     "textDocument/runAbstractDiagnostics",
     "textDocument/runScopingData", (* implemented in SemanticTokens.wl *)
     "textDocument/runScopingDiagnostics"
-  }
+  };
+
+  log[1, "textDocument/runDiagnostics: Exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/suppressedRegions"]] :=
 Catch[
 Module[{params, doc, uri, entry, cst, suppressedRegions},
 
-  If[$Debug2,
-    log["textDocument/suppressedRegions: enter"]
-  ];
+  log[1, "textDocument/suppressedRegions: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -98,6 +98,8 @@ Module[{params, doc, uri, entry, cst, suppressedRegions},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/suppressedRegions: Exit"];
+
   {}
 ]]
 
@@ -105,9 +107,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
 Catch[
 Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
 
-  If[$Debug2,
-    log["textDocument/runConcreteDiagnostics: enter"]
-  ];
+  log[1, "textDocument/runConcreteDiagnostics: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -167,6 +167,8 @@ Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/runConcreteDiagnostics: Exit"];
+
   {}
 ]]
 
@@ -174,9 +176,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAggregateDiag
 Catch[
 Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
-  If[$Debug2,
-    log["textDocument/runAggregateDiagnostics: enter"]
-  ];
+  log[1, "textDocument/runAggregateDiagnostics: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -230,6 +230,8 @@ Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/runAggregateDiagnostics: Exit"];
+
   {}
 ]]
 
@@ -237,9 +239,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
 Catch[
 Module[{params, doc, uri, entry, ast, cst, astLints, suppressedRegions},
 
-  If[$Debug2,
-    log["textDocument/runAbstractDiagnostics: enter"]
-  ];
+  log[1, "textDocument/runAbstractDiagnostics: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -304,6 +304,8 @@ Module[{params, doc, uri, entry, ast, cst, astLints, suppressedRegions},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/runAbstractDiagnostics: Exit"];
+
   {}
 ]]
 
@@ -311,9 +313,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
 Catch[
 Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppressedRegions, isActive},
 
-  If[$Debug2,
-    log["textDocument/runScopingDiagnostics: enter"]
-  ];
+  log["textDocument/runScopingDiagnostics: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -403,6 +403,8 @@ Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppr
 
   $OpenFilesMap[uri] = entry;
 
+  log["textDocument/runScopingDiagnostics: Exit"];
+
   {}
 ]]
 
@@ -411,9 +413,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearDiagnostics
 Catch[
 Module[{params, doc, uri, entry},
 
-  If[$Debug2,
-    log["textDocument/clearDiagnostics: enter"]
-  ];
+  log["textDocument/clearDiagnostics: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -444,17 +444,17 @@ Module[{params, doc, uri, entry},
 
   $OpenFilesMap[uri] = entry;
 
+  log["textDocument/clearDiagnostics: Exit"];
+
   {}
 ]]
 
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/publishDiagnostics"]] :=
 Catch[
-Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints, astLints, scopingLints, diagnostics},
+Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints, astLints, scopingLints, diagnostics, res},
 
-  If[$Debug2,
-    log["textDocument/publishDiagnostics: enter"]
-  ];
+  log[1, "textDocument/publishDiagnostics: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -543,10 +543,14 @@ Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints,
 
   diagnostics = Flatten[diagnostics];
 
-  {<| "jsonrpc" -> "2.0",
+  res = {<| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishDiagnostics",
       "params" -> <| "uri" -> uri,
-                      "diagnostics" -> diagnostics |> |>}
+                      "diagnostics" -> diagnostics |> |>};
+
+  log[1, "textDocument/publishDiagnostics: Exit"];
+
+  res
 ]]
 
 
