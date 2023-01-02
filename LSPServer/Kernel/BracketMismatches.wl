@@ -26,7 +26,7 @@ Catch[
 Module[{params, doc, uri, res},
 
   
-  log[1, "textDocument/runBracketMismatches: Enter expand"];
+  log[1, "textDocument/runBracketMismatches: enter expand"];
   
   
   params = content["params"];
@@ -35,9 +35,7 @@ Module[{params, doc, uri, res},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -48,7 +46,7 @@ Module[{params, doc, uri, res},
     "textDocument/runBracketMismatchesFencepost"
   };
 
-  log[1, "textDocument/runBracketMismatches: Exit"];
+  log[1, "textDocument/runBracketMismatches: exit"];
 
   res
 ]]
@@ -57,7 +55,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runBracketMismat
 Catch[
 Module[{params, doc, uri, entry, text, mismatches, aggTabs},
   
-  log[1, "textDocument/runBracketMismatchesFencepost: Enter"];
+  log[1, "textDocument/runBracketMismatchesFencepost: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -65,9 +63,7 @@ Module[{params, doc, uri, entry, text, mismatches, aggTabs},
   
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -91,20 +87,14 @@ Module[{params, doc, uri, entry, text, mismatches, aggTabs},
   Using $BracketMatcher here
   *)
 
-  If[$Debug2,
-    log["before CodeInspectBracketMismatchesAgg"]
-  ];
+  log[2, "before CodeInspectBracketMismatchesAgg"];
 
   mismatches = CodeInspectBracketMismatchesAgg[aggTabs];
 
-  If[$Debug2,
-    log["after CodeInspectBracketMismatchesAgg"]
-  ];
+  log[2, "after CodeInspectBracketMismatchesAgg"];
 
-  If[$Debug2,
-    log["mismatches: ", stringLineTake[StringTake[ToString[mismatches], UpTo[1000]], UpTo[20]]];
-    log["...\n"]
-  ];
+  log[2, "mismatches: ", stringLineTake[StringTake[ToString[mismatches], UpTo[1000]], UpTo[20]]];
+  log[2, "...\n"];
 
   entry["BracketMismatches"] = mismatches;
 
@@ -122,7 +112,7 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
   badChunkLines, badChunk, data, res},
   
   
-  log[1, "textDocument/suggestBracketEdits: Enter"];
+  log[1, "textDocument/suggestBracketEdits: enter"];
   
 
   params = content["params"];
@@ -131,9 +121,7 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
   
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -156,9 +144,7 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
 
   textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
 
-  If[$Debug2,
-    log["mismatches: ", mismatches]
-  ];
+  log[2, "mismatches: ", mismatches];
 
   data =
     Function[{mismatch},
@@ -167,10 +153,8 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
       badChunkLines = Take[textLines, badChunkLineNums];
       badChunk = StringJoin[Riffle[badChunkLines, "\n"]];
 
-      If[$Debug2,
-        log["before ML4Code`SuggestBracketEdits"];
-        log["badChunk: ", badChunk]
-      ];
+      log[2, "before ML4Code`SuggestBracketEdits"];
+      log[2, "badChunk: ", badChunk];
 
       (*
       A message DataStructure`EmptyQ::shdw may be emitted the first time this is evaluated
@@ -192,14 +176,10 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
           ,
           $timeOut
         ];
-        If[$Debug2,
-          log["res: ", res]
-        ];
+        log[2, "res: ", res];
         suggestions = res /. {$timeOut -> {}, $Failed -> {}};
 
-      If[$Debug2,
-        log["after ML4Code`SuggestBracketEdits"]
-      ];
+      log[2, "after ML4Code`SuggestBracketEdits"];
 
       {badChunkLineNums, badChunkLines, suggestions}
 
@@ -209,7 +189,7 @@ Module[{params, doc, uri, entry, text, mismatches, textLines, suggestions, badCh
 
   $OpenFilesMap[uri] = entry;
 
-  log[1, "textDocument/suggestBracketEdits: Exit"];
+  log[1, "textDocument/suggestBracketEdits: exit"];
 
   {}
 ]]
@@ -219,7 +199,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearBracketMism
 Catch[
 Module[{params, doc, uri, entry},
 
-  log[1, "textDocument/clearBracketMismatches: Enter"];
+  log[1, "textDocument/clearBracketMismatches: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -227,9 +207,7 @@ Module[{params, doc, uri, entry},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -246,7 +224,7 @@ Module[{params, doc, uri, entry},
 
   $OpenFilesMap[uri] = entry;
 
-  log[1, "textDocument/clearBracketMismatches: Exit"];
+  log[1, "textDocument/clearBracketMismatches: exit"];
 
   {}
 ]]
@@ -259,7 +237,7 @@ Module[{params, doc, uri, lines, entry, text, actions, textLines, action, sugges
   line1Map, line2Map, line3Map, line4Map,
   data, res},
   
-  log[1, "textDocument/publishBracketMismatches: Enter"];
+  log[1, "textDocument/publishBracketMismatches: enter"];
   
   params = content["params"];
   doc = params["textDocument"];
@@ -267,9 +245,7 @@ Module[{params, doc, uri, lines, entry, text, actions, textLines, action, sugges
   
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -345,11 +321,9 @@ Module[{params, doc, uri, lines, entry, text, actions, textLines, action, sugges
       chunkOffset = badChunkLineNums[[1]] - 1;
       originalColumnCount = StringLength[textLines[[suggestion[[1, 3, 1]] + chunkOffset]]];
 
-      If[$Debug2,
-        log["rank: ", rank];
-        log["chunkOffset: ", chunkOffset];
-        log["originalColumnCount: ", originalColumnCount]
-      ];
+      log[2, "rank: ", rank];
+      log[2, "chunkOffset: ", chunkOffset];
+      log[2, "originalColumnCount: ", originalColumnCount];
 
       {line1, line2, line3, line4, action} = suggestionToLinesAndAction[suggestion, chunkOffset, originalColumnCount, rank];
       If[TrueQ[$DebugBracketMatcher],
@@ -405,10 +379,7 @@ Module[{params, doc, uri, lines, entry, text, actions, textLines, action, sugges
     lines = KeyValueMap[<| "line" -> #1, "content" -> #2[[1]], "characterCount" -> #2[[2]] |>&, lines]
   ];
 
-  If[$Debug2,
-    log["lines: ", lines];
-    log["textDocument/publishBracketMismatches: exit"]
-  ];
+  log[2, "lines: ", lines];
 
   res = {<| "jsonrpc" -> "2.0",
       "method" -> "textDocument/publishHTMLSnippet",
