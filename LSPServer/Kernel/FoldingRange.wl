@@ -25,11 +25,9 @@ $FoldingRangeKind = <|
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/foldingRange"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/foldingRange: enter expand"]
-  ];
+  log[1, "textDocument/foldingRange: enter expand"];
 
   id = content["id"];
   params = content["params"];
@@ -38,9 +36,7 @@ Module[{params, id, doc, uri},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "method" -> "textDocument/foldingRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
@@ -50,20 +46,22 @@ Module[{params, id, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/foldingRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/aggregateParse",
     "textDocument/abstractParse",
     "textDocument/documentNodeList",
     "textDocument/foldingRangeFencepost"
-  }
+  };
+
+  log[1, "textDocument/foldingRange: exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/foldingRangeFencepost"]] :=
@@ -71,9 +69,7 @@ Catch[
 Module[{id, params, doc, uri, cst, entry, foldingRange,
   flatBag, comments, sorted, toInsert, completed, nodeList},
 
-  If[$Debug2,
-    log["textDocument/foldingRangeFencepost: enter"]
-  ];
+  log[1, "textDocument/foldingRangeFencepost: enter"];
 
   id = content["id"];
 
@@ -81,9 +77,7 @@ Module[{id, params, doc, uri, cst, entry, foldingRange,
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -94,9 +88,7 @@ Module[{id, params, doc, uri, cst, entry, foldingRange,
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -114,6 +106,8 @@ Module[{id, params, doc, uri, cst, entry, foldingRange,
   ];
 
   foldingRange = Flatten[walkOutline /@ nodeList];
+
+  log[1, "textDocument/foldingRangeFencepost: exit"];
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> foldingRange |>}
 ]]
