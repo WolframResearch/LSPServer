@@ -59,11 +59,9 @@ $SymbolKind = <|
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/documentSymbol"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/documentSymbol: enter expand"]
-  ];
+  log[1, "textDocument/documentSymbol: enter expand"];
 
   id = content["id"];
   params = content["params"];
@@ -72,9 +70,7 @@ Module[{params, id, doc, uri},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "method" -> "textDocument/documentSymbolFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
@@ -84,20 +80,22 @@ Module[{params, id, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/documentSymbolFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/aggregateParse",
     "textDocument/abstractParse",
     "textDocument/documentNodeList",
     "textDocument/documentSymbolFencepost"
-  }
+  };
+
+  log[1, "textDocument/documentSymbol: exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/documentNodeList"]] :=
@@ -105,9 +103,7 @@ Catch[
 Module[{id, params, doc, uri, cst, ast, entry, flatBag, comments,
   sorted, toInsert, completed, nodeList, lastLine},
 
-  If[$Debug2,
-    log["textDocument/documentNodeList: enter"]
-  ];
+  log[1, "textDocument/documentNodeList: enter"];
 
   id = content["id"];
 
@@ -115,9 +111,7 @@ Module[{id, params, doc, uri, cst, ast, entry, flatBag, comments,
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -128,9 +122,7 @@ Module[{id, params, doc, uri, cst, ast, entry, flatBag, comments,
 
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -182,6 +174,8 @@ Module[{id, params, doc, uri, cst, ast, entry, flatBag, comments,
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/documentNodeList: exit"];
+
   {}
 ]]
 
@@ -190,9 +184,7 @@ Catch[
 Module[{id, params, doc, uri, entry, symbolInfo, documentSymbols,
   nodeList},
 
-  If[$Debug2,
-    log["textDocument/documentSymbolFencepost: enter"]
-  ];
+  log[1, "textDocument/documentSymbolFencepost: enter"];
 
   id = content["id"];
 
@@ -200,9 +192,7 @@ Module[{id, params, doc, uri, entry, symbolInfo, documentSymbols,
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -213,9 +203,7 @@ Module[{id, params, doc, uri, entry, symbolInfo, documentSymbols,
 
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -236,15 +224,13 @@ Module[{id, params, doc, uri, entry, symbolInfo, documentSymbols,
   
   documentSymbols = Flatten[walkOutline /@ nodeList];
 
-  If[$Debug2,
-    log["documentSymbols (up to 20): ", Replace[Take[documentSymbols, UpTo[20]], {
-        (*
-        Do not print the internals
-        *)
-        KeyValuePattern["name" -> name_] :> <| "name" -> name, "\[Ellipsis]" -> "\[Ellipsis]" |>
-      }, {1}
-    ]]
-  ];
+  log[2, "documentSymbols (up to 20): ", Replace[Take[documentSymbols, UpTo[20]], {
+      (*
+      Do not print the internals
+      *)
+      KeyValuePattern["name" -> name_] :> <| "name" -> name, "\[Ellipsis]" -> "\[Ellipsis]" |>
+    }, {1}
+  ]];
 
   If[$HierarchicalDocumentSymbolSupport,
     {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> documentSymbols |>}
