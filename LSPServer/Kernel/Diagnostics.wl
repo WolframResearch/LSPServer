@@ -23,9 +23,7 @@ Module[{params, doc, uri, res},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -42,7 +40,7 @@ Module[{params, doc, uri, res},
     "textDocument/runScopingDiagnostics"
   };
 
-  log[1, "textDocument/runDiagnostics: Exit"];
+  log[1, "textDocument/runDiagnostics: exit"];
 
   res
 ]]
@@ -51,7 +49,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/suppressedRegion
 Catch[
 Module[{params, doc, uri, entry, cst, suppressedRegions},
 
-  log[1, "textDocument/suppressedRegions: Enter"];
+  log[1, "textDocument/suppressedRegions: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -59,9 +57,7 @@ Module[{params, doc, uri, entry, cst, suppressedRegions},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -80,25 +76,17 @@ Module[{params, doc, uri, entry, cst, suppressedRegions},
   
   cst = entry["CST"];
 
-  If[$Debug2,
-    log["before SuppressedRegions"];
-  ];
+  log[2, "before SuppressedRegions"];
 
   suppressedRegions = SuppressedRegions[cst];
 
-  If[$Debug2,
-    log["after SuppressedRegions"]
-  ];
-
-  If[$Debug2,
-    log["suppressedRegions: ", suppressedRegions]
-  ];
+  log["after SuppressedRegions"];
   
   entry["SuppressedRegions"] = suppressedRegions;
 
   $OpenFilesMap[uri] = entry;
 
-  log[1, "textDocument/suppressedRegions: Exit"];
+  log[1, "textDocument/suppressedRegions: exit"];
 
   {}
 ]]
@@ -107,7 +95,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runConcreteDiagn
 Catch[
 Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
 
-  log[1, "textDocument/runConcreteDiagnostics: Enter"];
+  log[1, "textDocument/runConcreteDiagnostics: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -115,9 +103,7 @@ Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -144,30 +130,24 @@ Module[{params, doc, uri, entry, cst, cstLints, suppressedRegions},
     entry["SuppressedRegions"] = suppressedRegions;
   ];
 
-  If[$Debug2,
-    log["before CodeInspectCST"]
-  ];
+  log[2, "before CodeInspectCST"];
 
   cstLints = CodeInspectCST[cst, "AggregateRules" -> <||>, "AbstractRules" -> <||>, "SuppressedRegions" -> suppressedRegions];
 
-  If[$Debug2,
-    log["after CodeInspectCST"]
-  ];
+  log[2, "after CodeInspectCST"];
 
   If[!MatchQ[cstLints, _List],
     log["cstLints: NOT A LIST!!!"];
     Throw[{}]
   ];
 
-  If[$Debug2,
-    log["cstLints: ", #["Tag"]& /@ cstLints]
-  ];
+  log[2, "cstLints: ", #["Tag"]& /@ cstLints];
 
   entry["CSTLints"] = cstLints;
 
   $OpenFilesMap[uri] = entry;
 
-  log[1, "textDocument/runConcreteDiagnostics: Exit"];
+  log[1, "textDocument/runConcreteDiagnostics: exit"];
 
   {}
 ]]
@@ -184,9 +164,7 @@ Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -207,24 +185,18 @@ Module[{params, doc, uri, entry, agg, aggLints, suppressedRegions},
 
   suppressedRegions = entry["SuppressedRegions"];
 
-  If[$Debug2,
-    log["before CodeInspectAgg"]
-  ];
+  log[2, "before CodeInspectAgg"];
 
   aggLints = CodeInspectAgg[agg, "AbstractRules" -> <||>, "SuppressedRegions" -> suppressedRegions];
 
-  If[$Debug2,
-    log["after CodeInspectAgg"]
-  ];
+  log[2, "after CodeInspectAgg"];
 
   If[!MatchQ[aggLints, _List],
-    log["aggLints: NOT A LIST!!!"];
+    log[2, "aggLints: NOT A LIST!!!"];
     Throw[{}]
   ];
 
-  If[$Debug2,
-    log["aggLints: ", #["Tag"]& /@ aggLints]
-  ];
+  log[2, "aggLints: ", #["Tag"]& /@ aggLints];
 
   entry["AggLints"] = aggLints;
 
@@ -239,7 +211,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runAbstractDiagn
 Catch[
 Module[{params, doc, uri, entry, ast, cst, astLints, suppressedRegions},
 
-  log[1, "textDocument/runAbstractDiagnostics: Enter"];
+  log[1, "textDocument/runAbstractDiagnostics: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -247,9 +219,7 @@ Module[{params, doc, uri, entry, ast, cst, astLints, suppressedRegions},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -281,30 +251,24 @@ Module[{params, doc, uri, entry, ast, cst, astLints, suppressedRegions},
   ];
   
 
-  If[$Debug2,
-    log["before CodeInspectAST"]
-  ];
+  log[2, "before CodeInspectAST"];
 
   astLints = CodeInspectAST[ast, "SuppressedRegions" -> suppressedRegions];
 
-  If[$Debug2,
-    log["after CodeInspectAST"]
-  ];
+  log[2, "after CodeInspectAST"];
 
   If[!MatchQ[astLints, _List],
-    log["astLints: NOT A LIST!!!"];
+    log[2, "astLints: NOT A LIST!!!"];
     Throw[{}]
   ];
 
-  If[$Debug2,
-    log["astLints: ", #["Tag"]& /@ astLints]
-  ];
+  log[2, "astLints: ", #["Tag"]& /@ astLints];
 
   entry["ASTLints"] = astLints;
 
   $OpenFilesMap[uri] = entry;
 
-  log[1, "textDocument/runAbstractDiagnostics: Exit"];
+  log[1, "textDocument/runAbstractDiagnostics: exit"];
 
   {}
 ]]
@@ -313,7 +277,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/runScopingDiagno
 Catch[
 Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppressedRegions, isActive},
 
-  log["textDocument/runScopingDiagnostics: Enter"];
+  log[1, "textDocument/runScopingDiagnostics: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -321,9 +285,7 @@ Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppr
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -342,9 +304,7 @@ Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppr
 
   scopingData = entry["ScopingData"];
 
-  If[$Debug2,
-    log["scopingData (up to 20): ", Take[scopingData, UpTo[20]]]
-  ];
+  log[2, "scopingData (up to 20): ", Take[scopingData, UpTo[20]]];
 
   (*
   Filter those that have non-empty modifiers
@@ -395,15 +355,13 @@ Module[{params, doc, uri, entry, cst, scopingLints, scopingData, filtered, suppr
           InspectionObject["UnusedVariable", _, "Scoping", _]]
   ];
 
-  If[$Debug2,
-    log["scopingLints: ", #["Tag"]& /@ scopingLints]
-  ];
+  log[2, "scopingLints: ", #["Tag"]& /@ scopingLints];
 
   entry["ScopingLints"] = scopingLints;
 
   $OpenFilesMap[uri] = entry;
 
-  log["textDocument/runScopingDiagnostics: Exit"];
+  log[1, "textDocument/runScopingDiagnostics: exit"];
 
   {}
 ]]
@@ -413,7 +371,7 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/clearDiagnostics
 Catch[
 Module[{params, doc, uri, entry},
 
-  log["textDocument/clearDiagnostics: Enter"];
+  log[1, "textDocument/clearDiagnostics: enter"];
 
   params = content["params"];
   doc = params["textDocument"];
@@ -421,9 +379,7 @@ Module[{params, doc, uri, entry},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -444,7 +400,7 @@ Module[{params, doc, uri, entry},
 
   $OpenFilesMap[uri] = entry;
 
-  log["textDocument/clearDiagnostics: Exit"];
+  log[1, "textDocument/clearDiagnostics: exit"];
 
   {}
 ]]
@@ -462,9 +418,7 @@ Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints,
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -503,9 +457,7 @@ Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints,
 
   lints = cstLints ~Join~ aggLints ~Join~ astLints ~Join~ scopingLints;
 
-  If[$Debug2,
-    log["lints: ", #["Tag"]& /@ lints]
-  ];
+  log[2, "lints: ", #["Tag"]& /@ lints];
 
 
   lintsWithConfidence = Cases[lints, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
@@ -535,9 +487,7 @@ Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints,
 
   lints = Take[lints, UpTo[CodeInspector`Summarize`$DefaultLintLimit]];
 
-  If[$Debug2,
-    log["lints: ", #["Tag"]& /@ lints]
-  ];
+  log[2, "lints: ", #["Tag"]& /@ lints];
 
   diagnostics = lintToDiagnostics /@ lints;
 
@@ -548,7 +498,7 @@ Module[{params, doc, uri, entry, lints, lintsWithConfidence, cstLints, aggLints,
       "params" -> <| "uri" -> uri,
                       "diagnostics" -> diagnostics |> |>};
 
-  log[1, "textDocument/publishDiagnostics: Exit"];
+  log[1, "textDocument/publishDiagnostics: exit"];
 
   res
 ]]
