@@ -14,9 +14,7 @@ Catch[
 Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit, options, tabSize, insertSpaces,
   indentationString, entry, text},
 
-  If[$Debug2,
-    log["textDocument/formatting: enter"]
-  ];
+  log[1, "textDocument/formatting: enter"];
 
   id = content["id"];
 
@@ -24,9 +22,7 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -37,9 +33,7 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -56,15 +50,11 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
 
   text = entry["Text"];
 
-  If[$Debug2,
-    log["before CodeConcreteParse"]
-  ];
+  log[2, "before CodeConcreteParse"];
 
   cst = CodeConcreteParse[text, "TabWidth" -> tabSize];
 
-  If[$Debug2,
-    log["after CodeConcreteParse"]
-  ];
+  log[2, "after CodeConcreteParse"];
 
   startLineCol = cst[[2, 1, 3, Key[Source], 1]];
   endLineCol = cst[[2, -1, 3, Key[Source], 2]];
@@ -91,6 +81,8 @@ Module[{params, doc, uri, id, cst, formatted, startLineCol, endLineCol, textEdit
                               "end" ->   <| "line" -> endLineCol[[1]], "character" -> endLineCol[[2]] |> |>,
                 "newText" -> formatted |>;
 
+  log[1, "textDocument/formatting: exit"];
+
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
 
@@ -100,9 +92,7 @@ Catch[
 Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize,
   insertSpaces, rangeSource, lines, range, indentationString},
 
-  If[$Debug2,
-    log["textDocument/rangeFormatting: enter"]
-  ];
+  log[1, "textDocument/rangeFormatting: enter"];
 
   id = content["id"];
 
@@ -110,9 +100,7 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["$CancelMap: ", $CancelMap]
-    ];
+    log[2, "$CancelMap: ", $CancelMap];
     
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -123,9 +111,7 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -183,6 +169,8 @@ Module[{params, doc, uri, id, formatted, textEdit, entry, text, options, tabSize
 
   textEdit = <| "range" -> range,
                 "newText" -> formatted |>;
+
+  log[1, "textDocument/rangeFormatting: exit"];
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> { textEdit } |>}
 ]]
