@@ -10,11 +10,9 @@ Needs["CodeParser`Utils`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/selectionRange"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/selectionRange: enter expand"]
-  ];
+  log[1, "textDocument/selectionRange: enter expand"];
 
   id = content["id"];
   params = content["params"];
@@ -23,10 +21,8 @@ Module[{params, id, doc, uri},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
-    
+    log[2, "canceled"];
+  
     Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
@@ -35,17 +31,19 @@ Module[{params, id, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/selectionRangeFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/selectionRangeFencepost"
-  }
+  };
+
+  log[1, "textDocument/selectionRange: exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/selectionRangeFencepost"]] :=
@@ -53,9 +51,7 @@ Catch[
 Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, firstCaseSrc, firstCasePos,
   posChain, rangeify, selectionRanges},
 
-  If[$Debug2,
-    log["textDocument/selectionRangeFencepost: enter"]
-  ];
+  log[1, "textDocument/selectionRangeFencepost: enter"];
 
   id = content["id"];
 
@@ -63,10 +59,8 @@ Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, f
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
-    
+    log[2, "canceled"];
+  
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
   
@@ -76,9 +70,7 @@ Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, f
 
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -118,9 +110,7 @@ Module[{id, params, doc, uri, entry, cst, positions, cursor, cases, firstCase, f
 
     posChain = Rest[posChain];
 
-    If[$Debug2,
-      log["posChain: ", posChain]
-    ];
+    log[2, "posChain: ", posChain];
 
     rangeify[pos_] := <|
       "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
