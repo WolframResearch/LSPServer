@@ -27,10 +27,8 @@ Module[{params, id, doc, uri, res},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
-    
+    log[2, "canceled"];
+  
     Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
@@ -39,9 +37,7 @@ Module[{params, id, doc, uri, res},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/hoverFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
@@ -53,7 +49,7 @@ Module[{params, id, doc, uri, res},
       "textDocument/hoverFencepost"
   };
 
-  log[1, "textDocument/hover: Exit"];
+  log[1, "textDocument/hover: exit"];
 
   res
 
@@ -74,10 +70,8 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
-    
+    log[2, "canceled"];
+  
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
   
@@ -87,9 +81,7 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
 
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -106,9 +98,7 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
   char+=1;
 
 
-  If[$Debug2,
-    log["hover: before parse"]
-  ];
+  log[2, "hover: before parse"];
 
   entry = Lookup[$OpenFilesMap, uri, Null];
   
@@ -132,10 +122,8 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
     $OpenFilesMap[uri] = entry
   ];
 
-  If[$Debug2,
-    log["hover: after parse"]
-  ];
- 
+  log[2, "hover: after parse"];
+
   If[StringContainsQ[text, "\t"],
     (*
     Adjust the hover position to accommodate tab stops
@@ -148,17 +136,13 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
   ];
 
 
-  If[$Debug2,
-    log["hover: before finding position"]
-  ];
+  log[2, "hover: before finding position"];
 
   toks = Cases[cstTabs,
   LeafNode[_, _,
     KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {line, char}]]], Infinity];
 
-  If[$Debug2,
-    log["hover: after finding position"]
-  ];
+  log[2, "hover: after finding position"];
 
   strs = Cases[toks, LeafNode[String, _, _], Infinity];
 
@@ -182,7 +166,7 @@ Module[{id, params, doc, uri, position, entry, text, textLines, strs, line, char
     ];
 
   
-  log[1, "hover hoverFencepost: Exit"];
+  log[1, "hover hoverFencepost: exit"];
   
 
   res
@@ -454,10 +438,8 @@ Module[{tokenSymbol, functionSource,
     6
   ]; 
 
-  If[$Debug2,
-    log["requiredUsage from handleUserSymbols: "]; 
-    log[requiredUsage];
-  ];
+  log[2, "requiredUsage from handleUserSymbols: "]; 
+  log[2, requiredUsage];
 
 
   (* 
