@@ -895,9 +895,7 @@ Module[{id, kernelVersionStr, commandLine, directory,
   lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
   codeFormatterBuildDate},
 
-  If[$Debug2,
-    log["diagnostics: enter"]
-  ];
+  log[1, "diagnostics: enter"];
 
   id = content["id"];
 
@@ -942,6 +940,8 @@ Module[{id, kernelVersionStr, commandLine, directory,
     "codeInspectorBuildDate" -> codeInspectorBuildDate,
     "codeFormatterBuildDate" -> codeFormatterBuildDate
   |>;
+
+  log[1, "diagnostics: exit"];
 
   {<| "jsonrpc" -> "2.0",
       "id" -> id,
