@@ -29,9 +29,9 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
 
   If[!ByteArrayQ[dataByteArray],
 
-    log["\n\n"];
-    log["invalid ByteArray: ", dataByteArray];
-    log["\n\n"];
+    log[1, "\n\n"];
+    log[1, "invalid ByteArray: ", dataByteArray];
+    log[1, "\n\n"];
 
     exitHard[]
   ];
@@ -56,11 +56,9 @@ Module[{dataString, finalMsg, contentsIn, content, contents},
     content = $ContentQueue[[1]];
     $ContentQueue = Rest[$ContentQueue];
 
-    If[$Debug2,
-      log["taking first from $ContentQueue: ", #["method"]&[content]];
-      log["rest of $ContentQueue (up to 20): ", Take[#["method"]& /@ $ContentQueue, UpTo[20]]];
-      log["..."]
-    ];
+    log[2, "taking first from $ContentQueue: ", #["method"]&[content]];
+    log[2, "rest of $ContentQueue (up to 20): ", Take[#["method"]& /@ $ContentQueue, UpTo[20]]];
+    log[2, "..."];
 
     contents = LSPEvaluate[content];
 
