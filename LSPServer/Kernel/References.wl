@@ -10,11 +10,9 @@ Needs["CodeParser`Utils`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/references"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/references: enter expand"]
-  ];
+  log[1, "textDocument/references: enter expand"];
 
   id = content["id"];
   params = content["params"];
@@ -23,10 +21,8 @@ Module[{params, id, doc, uri},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
-    
+    log[2, "canceled"];
+  
     Throw[{<| "method" -> "textDocument/referencesFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
@@ -35,26 +31,26 @@ Module[{params, id, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/referencesFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/referencesFencepost"
-  }
+  };
+
+  log[1, "textDocument/references: exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/referencesFencepost"]] :=
 Catch[
 Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entry, locations},
   
-  If[$Debug2,
-    log["textDocument/referencesFencepost: enter"]
-  ];
+  log[1, "textDocument/referencesFencepost: enter"];
 
   id = content["id"];
 
@@ -62,10 +58,8 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["$CancelMap: ", $CancelMap]
-    ];
-    
+    log[2, "$CancelMap: ", $CancelMap];
+  
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
   
@@ -75,9 +69,7 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
 
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -129,6 +121,8 @@ Module[{id, params, doc, uri, cst, pos, line, char, cases, sym, name, srcs, entr
         "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |>
       |>
     |>&[Map[Max[#, 0]&, src-1, {2}]]] /@ srcs;
+  
+  log[1, "textDocument/referencesFencepost: exit"];
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> locations |>}
 ]]
