@@ -70,11 +70,9 @@ Module[{bytes,
     Throw[Null]
   ];
 
-  If[$Debug2,
-      log["\n\n"];
-      log["messages in queue: ", queueSize];
-      log["\n\n"]
-  ];
+  log[2, "\n\n"];
+  log[2, "messages in queue: ", queueSize];
+  log[2, "\n\n"];
 
   bytessIn = {};
   Do[
@@ -114,11 +112,9 @@ Module[{bytes,
       exitHard[]
     ];
 
-    If[$Debug2,
-      log["C-->S " <> ToString[Length[bytesIn]] <> " bytes"];
-      log["C-->S " <> stringLineTake[FromCharacterCode[Normal[Take[bytesIn, UpTo[1000]]]], UpTo[20]]];
-      log["...\n"]
-    ];
+    log[2, "C-->S " <> ToString[Length[bytesIn]] <> " bytes"];
+    log[2, "C-->S " <> stringLineTake[FromCharacterCode[Normal[Take[bytesIn, UpTo[1000]]]], UpTo[20]]];
+    log[2, "...\n"];
 
     content = Developer`ReadRawJSONString[ByteArrayToString[bytesIn]];
 
@@ -200,10 +196,8 @@ Module[{str, bytes, res},
     Write the headers
     *)
     Do[ (* line *)
-      If[$Debug2,
-        log[""];
-        log["C<--S  ", line]
-      ];
+      log[2, ""];
+      log[2, "C<--S  ", line];
 
       res = WriteLineToStdOut[line];
       If[res =!= 0,
@@ -219,10 +213,8 @@ Module[{str, bytes, res},
     (*
     Write the body
     *)
-    If[$Debug2,
-      log["C<--S  ", stringLineTake[FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], UpTo[20]]];
-      log["...\n"]
-    ];
+    log[2, "C<--S  ", stringLineTake[FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], UpTo[20]]];
+    log[2, "...\n"];
 
     res = WriteBytesToStdOut[bytes];
     If[res =!= 0,
@@ -281,9 +273,9 @@ Module[{errStr, ferror, eof},
       errStr = "UNKNOWN ERROR: " <> ToString[err]
   ];
 
-  log["\n\n"];
-  log["StdIO Error: ", errStr];
-  log["\n\n"];
+  log[1, "\n\n"];
+  log[1, "StdIO Error: ", errStr];
+  log[1, "\n\n"];
 
   eof
 ]
@@ -313,14 +305,14 @@ Module[{content, contents},
     content = $ContentQueue[[1]];
     $ContentQueue = Rest[$ContentQueue];
 
-    log[4, "taking first from $ContentQueue: ", #["method"]&[content]];
-    log[4, "rest of $ContentQueue (up to 20): ", Take[#["method"]& /@ $ContentQueue, UpTo[20]]];
-    log[4, "..."];
+    log[2, "taking first from $ContentQueue: ", #["method"]&[content]];
+    log[2, "rest of $ContentQueue (up to 20): ", Take[#["method"]& /@ $ContentQueue, UpTo[20]]];
+    log[2, "..."];
     
 
     contents = LSPEvaluate[content];
 
-    log2[4, "LSP evaluated message = Content to the client :> ", InputForm[contents], "\n"];
+    log[2, "LSP evaluated message = Content to the client :> ", InputForm[contents], "\n"];
 
     (* write out evaluated results to the client *)
     writeLSPResult["StdIO", sock, contents];
