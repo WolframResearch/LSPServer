@@ -301,8 +301,9 @@ Module[{contents},
 
   contents = contentsIn;
 
-  log[1, "$ContentQueue (before expansion):> ", InputForm[#["method"]& /@ $ContentQueue], "\n"];
-  log[1, "Newly arrived message (before expansion):> ", InputForm[#["method"]& /@ contents], "\n"];
+  log[1, "**************************************** Message Cycle ****************************************** \n"];
+  log[1, "$ContentQueue Methods(before expansion):> ", InputForm[#["method"]& /@ $ContentQueue]];
+  log[1, "New message (before expansion):> ", InputForm[#["method"]& /@ contents]];
 
   If[!MatchQ[contents, {_?AssociationQ ...}],
     log[0, "\n\n"];
@@ -322,8 +323,8 @@ Module[{contents},
 
   $ContentQueue = $ContentQueue ~Join~ contents;
 
-  log[2, "Newly arrived message (after expansion) :> ", InputForm[#["method"]& /@ contents], "\n"];
-  log[2, "$ContentQueue with new contents (after expansion) :> ", InputForm[#["method"]& /@ $ContentQueue], "\n"];
+  log[1, "$ContentQueue methods (after expansion & joining new content) :> ", InputForm[#["method"]& /@ $ContentQueue]];
+  log[3, "$ContentQueue (after expansion & joining new content):> ", InputForm[$ContentQueue], "\n"];
 
 
   c = Cases[$ContentQueue, KeyValuePattern["method" -> "textDocument/completion"]];
@@ -622,8 +623,8 @@ Module[{cancels, params, id},
     ], cancels];
 
   
-    log[1, "after preScanForCancels"];
-    log[1, "$CancelMap: ", $CancelMap];
+    log[2, "after preScanForCancels"];
+    log[2, "$CancelMap: ", $CancelMap];
   
 ]
 

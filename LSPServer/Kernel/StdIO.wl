@@ -83,9 +83,9 @@ Module[{bytes,
 
       UnlockQueue[];
 
-      log["\n\n"];
-      log["FrontMessage size was 0; shutting down"];
-      log["\n\n"];
+      log[0, "\n\n"];
+      log[0, "FrontMessage size was 0; shutting down"];
+      log[0, "\n\n"];
 
       exitHard[];
     ];
@@ -105,9 +105,9 @@ Module[{bytes,
   contentsIn = {};
   Do[
     If[FailureQ[bytesIn],
-      log["\n\n"];
-      log["invalid bytes from stdin: ", bytesIn];
-      log["\n\n"];
+      log[0, "\n\n"];
+      log[0, "invalid bytes from stdin: ", bytesIn];
+      log[0, "\n\n"];
       
       exitHard[]
     ];
@@ -165,18 +165,20 @@ writeLSPResult["StdIO", sock_, contents_] := writeLSPResult["StdIO", contents]
 writeLSPResult["StdIO", contents_] :=
 Module[{str, bytes, res},
 
+  (* log[1, "Message to client :> ", InputForm[contents]]; *)
+
   (*
   write out each content as a byte array
   *)
   Do[ (* content *)
 
-    log[1, "Message to client :> ", InputForm[content], "\n"];
+    
     str = Developer`WriteRawJSONString[content];
 
     If[FailureQ[str],
-      log[3, "\n\n"];
-      log[3, "Could not convert to JSON: ", content];
-      log[3, "\n\n"];
+      log[0, "\n\n"];
+      log[0, "Could not convert to JSON: ", content];
+      log[0, "\n\n"];
 
       exitHard[]
     ];
@@ -185,9 +187,9 @@ Module[{str, bytes, res},
 
     If[!ByteArrayQ[bytes],
 
-      log["\n\n"];
-      log["invalid bytes: ", bytes];
-      log["\n\n"];
+      log[0, "\n\n"];
+      log[0, "invalid bytes: ", bytes];
+      log[0, "\n\n"];
 
       exitHard[]
     ];
@@ -213,8 +215,8 @@ Module[{str, bytes, res},
     (*
     Write the body
     *)
-    log[2, "C<--S  ", stringLineTake[FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], UpTo[20]]];
-    log[2, "...\n"];
+    log[1, "C<--S  ", stringLineTake[FromCharacterCode[Normal[Take[bytes, UpTo[1000]]]], UpTo[20]]];
+    log[1, "...\n"];
 
     res = WriteBytesToStdOut[bytes];
     If[res =!= 0,
@@ -222,7 +224,10 @@ Module[{str, bytes, res},
       logStdIOErr[res];
 
       exitHard[]
-    ]
+    ];
+
+    log[1, ""];
+    log[1, "====================================== Message Cycle Exit ======================================= \n"];
     ,
     {content, contents} 
   ] (* Do content *)
@@ -292,7 +297,7 @@ Module[{content, contents},
   *)
 
   While[True,
-
+    
     TryQueue["StdIO"];
 
     ProcessScheduledJobs[];
@@ -312,7 +317,7 @@ Module[{content, contents},
 
     contents = LSPEvaluate[content];
 
-    log[2, "LSP evaluated message = Content to the client :> ", InputForm[contents], "\n"];
+    log[1, "LSP evaluated message :> ", InputForm[StringTake[Developer`WriteRawJSONString[contents], UpTo[200]]], "\n"];
 
     (* write out evaluated results to the client *)
     writeLSPResult["StdIO", sock, contents];
