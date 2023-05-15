@@ -25,7 +25,7 @@ if(RETRY_ON_FAILURE)
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -pacletLayoutDir ${PACLET_LAYOUT_DIR} -paclet ${PACLET}
+    ${WOLFRAMKERNEL} -pacletreadonly -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -pacletLayoutDir ${PACLET_LAYOUT_DIR} -paclet ${PACLET}
   TIMEOUT
     ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
@@ -37,7 +37,7 @@ message(WARNING "First try: Bad exit code from script: ${SCRIPT_RESULT}; retryin
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -retry -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -pacletLayoutDir ${PACLET_LAYOUT_DIR} -paclet ${PACLET}
+    ${WOLFRAMKERNEL} -pacletreadonly -retry -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -pacletLayoutDir ${PACLET_LAYOUT_DIR} -paclet ${PACLET}
   TIMEOUT
     ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
@@ -60,7 +60,7 @@ else(RETRY_ON_FAILURE)
 
 execute_process(
   COMMAND
-    ${WOLFRAMKERNEL} -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -pacletLayoutDir ${PACLET_LAYOUT_DIR} -paclet ${PACLET}
+    ${WOLFRAMKERNEL} -pacletreadonly -script ${SCRIPT} -srcDir ${SRCDIR} -buildDir ${BUILDDIR} -pacletLayoutDir ${PACLET_LAYOUT_DIR} -paclet ${PACLET}
   TIMEOUT
     ${KERNEL_TIMEOUT}
   RESULT_VARIABLE
