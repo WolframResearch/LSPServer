@@ -11,9 +11,16 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 Needs["CodeParser`Scoping`"]
 
-
+(* Maximum number of suggested system symbols in completion popup menu *)
 $maxSuggestedFunction = 10;
 
+
+(* 
+	 The kind of the completion item. Based of the kind an icon is chosen by the editor. The 
+   standardized set of available values is defined in LSPServer specification page.
+	  
+   https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#completionItemKind
+*)
 $CompletionItemKind = <|
   "Text" -> 1,
   "Method" -> 2,
