@@ -11,6 +11,7 @@ Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 Needs["CodeParser`Scoping`"]
 
+
 (* Maximum number of suggested system symbols in completion popup menu *)
 $maxSuggestedFunction = 10;
 
@@ -77,8 +78,9 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
   (*
   convert from 0-based to 1-based
   *)
-  line+=1;
-  char+=1;
+  line+=1; (* line number of the cursor position *)
+  char+=1; (* character number of the cursor position from the start of the line *)
+
 
   entry = Lookup[$OpenFilesMap, uri, Null];
   
@@ -86,9 +88,10 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
     Throw[Failure["URINotFound", <| "URI" -> uri, "OpenFilesMapKeys" -> Keys[$OpenFilesMap] |>]]
   ];
 
-
+  (* Full text of the file *)
   text = entry["Text"];
   ast = Lookup[entry, "AST", Null];
+
 
   If[ast === Null,
     ast = Lookup[entry, "PreviousAST", Null]
@@ -97,19 +100,36 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
   cstTabs = Lookup[entry, "CSTTabs", Null];
 
   textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
+
+  (* Text in same line where the cursor is *)
   partialText = textLines[[line]];
+
 
   If[StringContainsQ[text, "\t"],
     pre = StringTake[textLines[[line]], char-1];
+    log["Contains tab, pre :> ", InputForm[pre]];
     char = 1;
     Scan[(If[# == "\t", char = (4 * Quotient[char, 4] + 1) + 4, char++])&, Characters[pre]]
   ];
 
+  (*
+  Using "TabWidth" -> 4 here because the notific
+  ation is rendered down to HTML and tabs need to be expanded in HTML
+  FIXME: Must use the tab width from the editor
+  *)
   cstTabs = CodeConcreteParse[partialText, "TabWidth" -> 4];
 
+  (* 
+  Find the symbol available at the cursor column position char.
+  SourceMemberQ condition takes only the symbol available at char.
+  The line no is 1 as we are using cstTabs of a single line.
+
+  As cstTabs is CST of a line, finding the token symbol upto Infinity level 
+  is not computationally expensive.
+  *)
   tokenSymbol = Cases[cstTabs, 
     LeafNode[Symbol, ts_, 
-      KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {1, char}]]
+      KeyValuePattern[Source -> src_ /; SourceMemberQ[src, {1, char}]] 
     ] :> ts, 
     Infinity
   ];
@@ -137,9 +157,9 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
   userSymbols = Join[userSymbols, scopedLocalVars];
 
 
+  (* Find the user defined symbols that are starting with tokenSymbol *)
   userSymbols = ReplaceAll[
-    (StringCases[#, StartOfString ~~ tokenSymbol ~~ ___]& /@ userSymbols), {
-      {x_} :> x}
+    StringCases[userSymbols, StartOfString ~~ tokenSymbol ~~ ___], {{x_} :> x}
   ];
 
   userSymbols = DeleteCases[userSymbols, {}];
@@ -194,7 +214,10 @@ Module[{symbolUsage},
   ]
 ]
 
-
+(* 
+A sorted list of all the scoped symbols available from the level 
+specified by the cursorPosition upto the last level. 
+*)
 findScopedLocalVarsAST[ast_, cursorPosition_List] := Union[Last /@ ScopingData[ast, SourceMemberQ[#[[3, Key[Source]]], cursorPosition] &]]
 
 
