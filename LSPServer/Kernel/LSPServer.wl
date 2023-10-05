@@ -632,9 +632,15 @@ expandContents[contentsIn_] :=
 Module[{contents, lastContents},
 
   contents = contentsIn;
-
-  (* TODO: Delete this line when PR review is over. *)
-  log["New message (before expansion):> ", InputForm[#["method"]& /@ contents], "\n"];
+  (* 
+  This log can be used to know time to handle a feature.
+  Time taken for a feature (x feature timing) = (feature exit log timing - new message entry timing)
+  As we are changing the message queue to prioritise cumpletion message,
+  it is important to know the completion feature timing.
+  *)
+  If[$Debug2,
+    log["New message (before expansion):> ", InputForm[#["method"]& /@ contents], "\n"]
+  ];
 
   If[$Debug2,
     log["before expandContent"]
