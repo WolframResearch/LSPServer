@@ -37,7 +37,7 @@ $Debug2
 
 $Debug3
 
-$LogLevel = 1
+$LogLevel = 0
 
 $DebugBracketMatcher
 
