@@ -53,11 +53,8 @@ $CompletionItemKind = <|
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/completion"]] :=
 Catch[
-Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, textLines, partialText, pre, scopedLocalVars,
+Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, textLines, textInCurrentLine, scopedLocalVars,
   tokenSymbol, userSymbols, systemSymbols, optionSymbols, userSymbolItems, systemSymbolItems, optionSymbolItems, items},
-
-  (* TODO: Delete this line when PR review is over *)
-  log["textDocument/completion: enter"];
 
   If[$Debug2,
     log["textDocument/completion: enter"]
@@ -102,14 +99,20 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
   textLines = StringSplit[text, {"\r\n", "\n", "\r"}, All];
 
   (* Text in same line where the cursor is *)
-  partialText = textLines[[line]];
+  textInCurrentLine = StringTake[textLines[[line]], char-1];
 
-
+  (* 
+  If the text contains tab, then the cursor column position needs to be adjusted.
+  Depending upon the position of the tab cursor column position goes to the nearest multiple of 4.
+  *)
   If[StringContainsQ[text, "\t"],
-    pre = StringTake[textLines[[line]], char-1];
-    log["Contains tab, pre :> ", InputForm[pre]];
+    (*
+    FIXME: Must use the tab width from the editor
+    *)
+    (* ToDo: Delete this log *)
+    log["Tab handling: textInCurrentLine :> ", InputForm[textInCurrentLine]];
     char = 1;
-    Scan[(If[# == "\t", char = (4 * Quotient[char, 4] + 1) + 4, char++])&, Characters[pre]]
+    Scan[(If[# == "\t", char = 4 * (Quotient[char-1, 4] + 1) + 1, char++])&, Characters[textInCurrentLine]];
   ];
 
   (*
@@ -117,7 +120,7 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
   ation is rendered down to HTML and tabs need to be expanded in HTML
   FIXME: Must use the tab width from the editor
   *)
-  cstTabs = CodeConcreteParse[partialText, "TabWidth" -> 4];
+  cstTabs = CodeConcreteParse[textInCurrentLine, "TabWidth" -> 4];
 
   (* 
   Find the symbol available at the cursor column position char.
@@ -133,7 +136,11 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
     ] :> ts, 
     Infinity
   ];
-
+  
+  If[$Debug2,
+    log["tokenSymbol :> ", InputForm[tokenSymbol]];
+  ];
+  
   scopedLocalVars = findScopedLocalVarsAST[ast, {line, char}];
 
   If[tokenSymbol === {},
@@ -189,9 +196,6 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
   |>& /@ optionSymbols;
 
   items = Join[userSymbolItems, systemSymbolItems, optionSymbolItems];
-
-  (* TODO: Delete this line when PR review is over *)
-  log["textDocument/completion: exit"];
 
   If[$Debug2,
     log["completion: exiting"]
