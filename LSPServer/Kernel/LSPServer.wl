@@ -33,10 +33,13 @@ handleContentAfterShutdown
 
 $Debug
 
-$Debug2
-
 $Debug3
-
+(*  
+level 0: Server start and exit log
+level 1: Content handler entry and exit log to understand the flow of the handlers
+level 2: Log inside a content handler for content handler debugging
+level 3: Further detailed log
+*)
 $LogLevel = 0
 
 $DebugBracketMatcher
