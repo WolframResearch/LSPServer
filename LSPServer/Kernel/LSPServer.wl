@@ -31,9 +31,9 @@ handleContentAfterShutdown
 
 
 
-$Debug
 
 $Debug3
+
 (*  
 level 0: Server start and exit log
 level 1: Content handler entry and exit log to understand the flow of the handlers
@@ -462,9 +462,8 @@ Module[{logFile, logFileStream,
   *)
   $Output = Streams["stderr"];
 
-  $Debug = (logDir != "");
 
-  If[$Debug,
+  If[(logDir != ""),
 
     (
     (* :!CodeAnalysis::BeginBlock:: *)

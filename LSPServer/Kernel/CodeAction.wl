@@ -303,9 +303,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         _,
 
-        If[$Debug,
-          log["UNSUPPORTED COMMAND: ", command]
-        ]
+        log[2, "UNSUPPORTED COMMAND: ", command];
 
       ]
 
