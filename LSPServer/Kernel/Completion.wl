@@ -56,9 +56,9 @@ Catch[
 Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, textLines, textInCurrentLine, scopedLocalVars,
   tokenSymbol, userSymbols, systemSymbols, optionSymbols, userSymbolItems, systemSymbolItems, optionSymbolItems, items},
 
-  If[$Debug2,
-    log["textDocument/completion: enter"]
-  ];
+
+  log[1, "textDocument/completion: enter"];
+
 
   id = content["id"];
 
@@ -109,8 +109,6 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
     (*
     FIXME: Must use the tab width from the editor
     *)
-    (* ToDo: Delete this log *)
-    log["Tab handling: textInCurrentLine :> ", InputForm[textInCurrentLine]];
     char = 1;
     Scan[(If[# == "\t", char = 4 * (Quotient[char-1, 4] + 1) + 1, char++])&, Characters[textInCurrentLine]];
   ];
@@ -137,9 +135,7 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
     Infinity
   ];
   
-  If[$Debug2,
-    log["tokenSymbol :> ", InputForm[tokenSymbol]];
-  ];
+  log[2, "tokenSymbol :> ", InputForm[tokenSymbol]];
   
   scopedLocalVars = findScopedLocalVarsAST[ast, {line, char}];
 
@@ -197,9 +193,8 @@ Module[{id, params, doc, uri, position, line, char, entry, text, ast, cstTabs, t
 
   items = Join[userSymbolItems, systemSymbolItems, optionSymbolItems];
 
-  If[$Debug2,
-    log["completion: exiting"]
-  ];
+
+  log[1, "completion: exiting"];
 
 
   {<| "jsonrpc" -> "2.0", "id" ->id, "result" -> <| "isIncomplete" -> True, "items" -> items |> |>}
