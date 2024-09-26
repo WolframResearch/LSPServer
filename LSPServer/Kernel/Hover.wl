@@ -822,13 +822,7 @@ interpretBox::failed = "unhandled: Linear syntax could not be parsed by ToExpres
 interpretBox[RowBox[children_]] :=
   interpretBox /@ children
 
-(*
-HACK: BeginPackage::usage has typos
 
-TR symbol instead of "TR"
-*)
-(* interpretBox[StyleBox[a_, TR]] :=
-  interpretBox[a] *)
 
 interpretBox[StyleBox[a_, "TI", ___Rule]] :=
   {"*", interpretBox[a], "*"}
@@ -846,6 +840,14 @@ interpretBox[StyleBox[___]] := (
   Message[interpretBox::unhandled, "StyleBox with weird args"];
   "\[UnknownGlyph]"
 )
+
+(* 
+    This a hackfix for bug #412513, which is a typo in the usage message in the BeginPackage function.
+    When bug #412513 is fix, we can remove this hackfix.
+*)
+interpretBox[StyleBox[a_, s_Symbol /; SymbolName[s] == "TR"]] :=
+  interpretBox[ToString @ a]
+  
 
 interpretBox[SubscriptBox[a_, b_]] :=
   interpretBox /@ {a, "_", b}
@@ -945,14 +947,6 @@ interpretBox[s_Symbol] := (
   "\[UnknownGlyph]" *)
   ToString[s]
 )
-
-(*
-HACK: BeginPackage::usage has typos
-*)
-(* interpretBox[i_Integer] := (
-  Message[interpretBox::unhandled, Integer];
-  "\[UnknownGlyph]"
-) *)
 
 (*
 HACK: Riffle::usage has a Cell expression
