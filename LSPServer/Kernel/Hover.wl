@@ -11,7 +11,15 @@ Needs["CodeFormatter`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
-(* Line width after which new line will be inserted for Hover function definition pattern *)
+(* 
+
+  Line width after which new line will be inserted for Hover function definition pattern.
+   
+  The default line width is 78, which unnecessarily breaks the line in Hover function 
+  definition pattern after 78 characters. We find many function definition patterns
+  are usually more than 78 characters. So, we are setting the line width to 200.
+
+*)
 $HoverLineWidth = 200;
 
 
