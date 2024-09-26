@@ -11,6 +11,9 @@ Needs["CodeFormatter`"]
 Needs["CodeParser`"]
 Needs["CodeParser`Utils`"]
 
+(* Line width after which new line will be inserted for Hover function definition pattern *)
+$HoverLineWidth = 200;
+
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/hover"], pos_] :=
 Catch[
@@ -518,7 +521,7 @@ Module[{tokenSymbol, functionSource,
     If[Length[functionCallPatternCST] == 0,
       functionCallPattern = "No function defined."
       ,
-      functionCallPattern = CodeFormatCST /@ functionCallPatternCST;
+      functionCallPattern = CodeFormatCST[#, "LineWidth" -> $HoverLineWidth]& /@ functionCallPatternCST;
       functionCallPattern = DeleteDuplicates[functionCallPattern];
       functionCallPattern = StringRiffle[functionCallPattern, "\n"];
     ];
