@@ -19,6 +19,8 @@ Needs["CodeParser`Utils`"]
   definition pattern after 78 characters. We find many function definition patterns
   are usually more than 78 characters. So, we are setting the line width to 200.
 
+  see bug #449934
+
 *)
 $HoverLineWidth = 200;
 
@@ -847,7 +849,7 @@ interpretBox[StyleBox[___]] := (
 *)
 interpretBox[StyleBox[a_, s_Symbol /; SymbolName[s] == "TR"]] :=
   interpretBox[ToString @ a]
-  
+
 
 interpretBox[SubscriptBox[a_, b_]] :=
   interpretBox /@ {a, "_", b}
