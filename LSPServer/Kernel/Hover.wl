@@ -844,8 +844,8 @@ interpretBox[StyleBox[___]] := (
 )
 
 (* 
-    This a hackfix for bug #412513, which is a typo in the usage message in the BeginPackage function.
-    When bug #412513 is fix, we can remove this hackfix.
+    This a workaround for bug #412513, which is a typo in the usage message in the BeginPackage function.
+    When bug #412513 is fix, we can remove this workaround.
 *)
 interpretBox[StyleBox[a_, s_Symbol /; SymbolName[s] == "TR"]] :=
   interpretBox[ToString @ a]
