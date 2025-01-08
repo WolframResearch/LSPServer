@@ -118,7 +118,8 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
 
   Print[];
   Print["Start Stage 1"];
-  Print["Checking whether bug 410895 is present and work-around is needed..."];
+
+  (* Checking whether bug 410895 is present and work-around is needed... *)
 
   serverKernel = command[[1]];
 
@@ -206,7 +207,7 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
   (*
   $CommandLine
   *)
-  Print["Testing bug 410895..."];
+  (* Testing bug 410895 *)
   res = binaryWrite[proc, "$CommandLine\r\n"];
 
   If[FailureQ[res],
@@ -239,15 +240,15 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
       
   Which[
     StringMatchQ[case, "Test410895[(*\"*)]"],
-      Print["double-quotes are kept; bug 410895 is NOT present; NO work-around needed"];
+      Print["double-quotes are kept; NO work-around needed"];
     ,
     StringMatchQ[case, "Test410895[(**)]"],
-      Print["double-quotes are stripped; bug 410895 IS present; work-around IS needed"];
+      Print["double-quotes are stripped; work-around IS needed"];
 
       $WorkaroundBug410895 = True;
   ];
 
-  Print["Testing bug 410895 was successful."];
+  Print["Double-quotes work-around test was successful."];
 
   (*
   Exit[]
@@ -313,7 +314,7 @@ Module[{command, runPosition, run, startServerString, startServer,
   Print[];
   Print["Start Stage 2"];
   Print["Now running actual diagnostics..."];
-  Print["$WorkaroundBug410895: ", $WorkaroundBug410895];
+  Print["Double-quotes work-around test: ", $WorkaroundBug410895];
 
   If[!MemberQ[command, "-noinit"],
     Print["WARNING: -noinit is not in command"];
