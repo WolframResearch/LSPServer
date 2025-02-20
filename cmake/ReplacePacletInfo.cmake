@@ -13,6 +13,8 @@ string(REGEX REPLACE "BuildWolframLibraryVersion -> [0-9]+" "BuildWolframLibrary
 
 string(REGEX REPLACE "Transport -> \"[a-zA-Z]*\"" "Transport -> \"${TRANSPORT}\"" filedata ${filedata})
 
+string(REGEX REPLACE "PlatformQualifier -> \"[a-zA-Z0-9 :]*\"" "PlatformQualifier -> \"${PlatformQualifier}\"" filedata ${filedata})
+
 if(LOCAL_BUILD)
 
 string(REGEX REPLACE "Version -> \"[0-9\\.]+\"," "Version -> \"${LOCAL_BUILD_VERSION}\"(* local build *)," filedata ${filedata})

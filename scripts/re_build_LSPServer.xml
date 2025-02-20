@@ -43,6 +43,13 @@
 			</default>
 		</switch>
 
+		<condition property='platform_qualifier' value='Lin64'><equals arg1='${system_id}' arg2='Linux-x86-64' /></condition>
+		<condition property='platform_qualifier' value='LinARM'><equals arg1='${system_id}' arg2='Linux-ARM64' /></condition>
+		<condition property='platform_qualifier' value='Win'><equals arg1='${system_id}' arg2='Windows-x86-64' /></condition>
+		<condition property='platform_qualifier' value='OSX'><equals arg1='${system_id}' arg2='MacOSX-x86-64' /></condition>
+		<condition property='platform_qualifier' value='OSX'><equals arg1='${system_id}' arg2='MacOSX-ARM64' /></condition>
+
+
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
@@ -50,6 +57,7 @@
 			<arg line='${CMAKE_OSX_DEPLOYMENT_TARGET_LINE}' />
 			<arg line='-DENABLE_WARNINGS=ON' />
 			<arg line='-DCMAKE_BUILD_TYPE=Release' />
+			<arg line='-DPlatformQualifier=${platform_qualifier}' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/${component}' />
 		</re-cmake-exec>
