@@ -58,6 +58,7 @@
 			<arg line='-DENABLE_WARNINGS=ON' />
 			<arg line='-DCMAKE_BUILD_TYPE=Release' />
 			<arg line='-DPlatformQualifier=${platform_qualifier}' />
+			<arg line='-DSYSTEMID:STRING=${system_id}' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/${component}' />
 		</re-cmake-exec>

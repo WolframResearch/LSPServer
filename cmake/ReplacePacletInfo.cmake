@@ -15,6 +15,13 @@ string(REGEX REPLACE "Transport -> \"[a-zA-Z]*\"" "Transport -> \"${TRANSPORT}\"
 
 string(REGEX REPLACE "PlatformQualifier -> \"[a-zA-Z0-9 :]*\"" "PlatformQualifier -> \"${PlatformQualifier}\"" filedata ${filedata})
 
+if(${SYSTEMID} MATCHES "MacOSX")
+	string(REGEX REPLACE "SystemID -> {}" "SystemID -> {\"MacOSX-x86-64\",\"MacOSX-ARM64\"}" filedata ${filedata})
+else()
+	string(REGEX REPLACE "SystemID -> {}" "SystemID -> {\"${SYSTEMID}\"}" filedata ${filedata})
+endif()
+
+
 if(LOCAL_BUILD)
 
 string(REGEX REPLACE "Version -> \"[0-9\\.]+\"," "Version -> \"${LOCAL_BUILD_VERSION}\"(* local build *)," filedata ${filedata})
