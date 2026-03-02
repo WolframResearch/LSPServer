@@ -10,8 +10,6 @@ stringLineTake
 
 log
 
-logFull
-
 lintToDiagnostics
 
 isStale
@@ -83,17 +81,13 @@ Module[{newlines, split},
 
 timeString[] := DateString[{"Hour24", ":", "Minute", ":", "SecondExact", " "}]
 
-
-log[args___] :=
+SetAttributes[log, HoldRest]
+log[level_Integer, args___] /; $LogLevel >= level:=
 Block[{$ContextPath = {"CodeParser`", "CodeInspector`", "System`"}},
   Write[$Messages, timeString[] //OutputForm, Sequence @@ (OutputForm /@ {args})]
 ]
 
-logFull[args___] :=
-Block[{$ContextPath = {"CodeParser`", "CodeInspector`", "System`"}},
-  Write[$Messages, timeString[] //OutputForm, Sequence @@ {args}]
-]
-
+log[arg_String] := log[1, arg];
 
 lintToDiagnostics[InspectionObject[tag_, message_, severity_, data_]] :=
 Catch[

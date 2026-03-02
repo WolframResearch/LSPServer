@@ -20,6 +20,13 @@ $MinimumRecommendedCodeToolsVersionString = "1.2"
 
 $MinimumRecommendedKernelVersionString = "12.1"
 
+(* 
+  Paclet version mismatch can be skipped if LSP and CodeTools paclet version match with the
+  following versions 
+*)
+$SkipLSPCheckVersionString = "1.11"
+$SkipCodeToolsCheckVersionString = "1.10"
+
 
 Options[RunServerDiagnostic] = {
   ProcessDirectory -> Inherited
@@ -111,7 +118,8 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
 
   Print[];
   Print["Start Stage 1"];
-  Print["Checking whether bug 410895 is present and work-around is needed..."];
+
+  (* Checking whether bug 410895 is present and work-around is needed... *)
 
   serverKernel = command[[1]];
 
@@ -199,7 +207,7 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
   (*
   $CommandLine
   *)
-  Print["Testing bug 410895..."];
+  (* Testing bug 410895 *)
   res = binaryWrite[proc, "$CommandLine\r\n"];
 
   If[FailureQ[res],
@@ -232,15 +240,15 @@ Module[{serverKernel, miniRun, miniCommand, proc, str, res, cases,
       
   Which[
     StringMatchQ[case, "Test410895[(*\"*)]"],
-      Print["double-quotes are kept; bug 410895 is NOT present; NO work-around needed"];
+      Print["double-quotes are kept; NO work-around needed"];
     ,
     StringMatchQ[case, "Test410895[(**)]"],
-      Print["double-quotes are stripped; bug 410895 IS present; work-around IS needed"];
+      Print["double-quotes are stripped; work-around IS needed"];
 
       $WorkaroundBug410895 = True;
   ];
 
-  Print["Testing bug 410895 was successful."];
+  Print["Double-quotes work-around test was successful."];
 
   (*
   Exit[]
@@ -306,7 +314,7 @@ Module[{command, runPosition, run, startServerString, startServer,
   Print[];
   Print["Start Stage 2"];
   Print["Now running actual diagnostics..."];
-  Print["$WorkaroundBug410895: ", $WorkaroundBug410895];
+  Print["Double-quotes work-around test: ", $WorkaroundBug410895];
 
   If[!MemberQ[command, "-noinit"],
     Print["WARNING: -noinit is not in command"];
@@ -820,17 +828,41 @@ Module[{},
       ToString[$MinimumRecommendedCodeToolsVersionString] <> ". Actual CodeFormatter version is: " <> codeFormatterVersionStr];
   ];
 
-  If[lspServerVersionStr ~majorMinorVersionUnequal~ codeParserVersionStr,
-    warningFunc["LSPServer and CodeParser do not have the same major.minor version. LSPServer version: " <>
-      lspServerVersionStr <> ". CodeParser version: " <> codeParserVersionStr];
-  ];
-  If[lspServerVersionStr ~majorMinorVersionUnequal~ codeInspectorVersionStr,
-    warningFunc["LSPServer and CodeInspector do not have the same major.minor version. LSPServer version: " <>
-      lspServerVersionStr <> ". CodeInspector version: " <> codeInspectorVersionStr];
-  ];
-  If[lspServerVersionStr ~majorMinorVersionUnequal~ codeFormatterVersionStr,
-    warningFunc["LSPServer and CodeFormatter do not have the same major.minor version. LSPServer version: " <>
-      lspServerVersionStr <> ". CodeFormatter version: " <> codeFormatterVersionStr];
+  (* 
+      Currently, CodeParser, CodeInspector, and CodeFormatter are at version 1.10 and there is no plan to upgrade
+      these. But LSPServer latest version is 1.11 and under active development.
+
+      So, we need to check for version mismatch between LSPServer and these paclets only if LSP version is less than 
+      $SkipLSPCheckVersionString (1.11).
+  *)
+
+  If[versionGreaterEqual[lspServerVersionStr, $SkipLSPCheckVersionString] &&
+    (
+      majorMinorVersionEqual[codeParserVersionStr, $SkipCodeToolsCheckVersionString] && 
+      majorMinorVersionEqual[codeInspectorVersionStr, $SkipCodeToolsCheckVersionString] && 
+      majorMinorVersionEqual[codeFormatterVersionStr, $SkipCodeToolsCheckVersionString]
+    )
+  ,
+    (* skip the version mismatch test *)
+    Null
+  ,
+  (*else*)
+    (* Check if LSP version matches with other paclets *)
+    (
+      If[lspServerVersionStr ~majorMinorVersionUnequal~ codeParserVersionStr,
+      warningFunc["LSPServer and CodeParser do not have the same major.minor version. LSPServer version: " <>
+        lspServerVersionStr <> ". CodeParser version: " <> codeParserVersionStr];
+      ];
+      If[lspServerVersionStr ~majorMinorVersionUnequal~ codeInspectorVersionStr,
+        warningFunc["LSPServer and CodeInspector do not have the same major.minor version. LSPServer version: " <>
+          lspServerVersionStr <> ". CodeInspector version: " <> codeInspectorVersionStr];
+      ];
+      If[lspServerVersionStr ~majorMinorVersionUnequal~ codeFormatterVersionStr,
+        warningFunc["LSPServer and CodeFormatter do not have the same major.minor version. LSPServer version: " <>
+          lspServerVersionStr <> ". CodeFormatter version: " <> codeFormatterVersionStr];
+      ];
+    )
+
   ];
 
   (*
@@ -895,9 +927,7 @@ Module[{id, kernelVersionStr, commandLine, directory,
   lspServerBuildDate, codeParserBuildDate, codeInspectorBuildDate,
   codeFormatterBuildDate},
 
-  If[$Debug2,
-    log["diagnostics: enter"]
-  ];
+  log[1, "diagnostics: enter"];
 
   id = content["id"];
 
@@ -942,6 +972,8 @@ Module[{id, kernelVersionStr, commandLine, directory,
     "codeInspectorBuildDate" -> codeInspectorBuildDate,
     "codeFormatterBuildDate" -> codeFormatterBuildDate
   |>;
+
+  log[1, "diagnostics: exit"];
 
   {<| "jsonrpc" -> "2.0",
       "id" -> id,
@@ -1243,9 +1275,15 @@ versionLess[a_String, b_String] :=
 versionLess[a_List, b_List] :=
   !versionGreaterEqual[a, b]
 
+versionGreaterEqual[a_String, b_String] :=
+  versionGreaterEqual[convertVersionString[a], convertVersionString[b]]
+
 
 majorMinorVersionUnequal[a_String, b_String] :=
   !versionEqual[convertVersionString[a][[1;;2]], convertVersionString[b][[1;;2]]]
+
+majorMinorVersionEqual[a_String, b_String] :=
+  versionEqual[convertVersionString[a][[1;;2]], convertVersionString[b][[1;;2]]]
 
 
 versionGreaterEqual[{}, {}] := True

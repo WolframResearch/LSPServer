@@ -33,7 +33,7 @@
 
 		<switch value='${system_id}'>
 			<case value='MacOSX-x86-64'>
-				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15' />
+				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0' />
 			</case>
 			<case value='MacOSX-ARM64'>
 				<property name='CMAKE_OSX_DEPLOYMENT_TARGET_LINE' value='-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0' />
@@ -43,6 +43,13 @@
 			</default>
 		</switch>
 
+		<condition property='platform_qualifier' value='Lin64'><equals arg1='${system_id}' arg2='Linux-x86-64' /></condition>
+		<condition property='platform_qualifier' value='LinARM'><equals arg1='${system_id}' arg2='Linux-ARM64' /></condition>
+		<condition property='platform_qualifier' value='Win'><equals arg1='${system_id}' arg2='Windows-x86-64' /></condition>
+		<condition property='platform_qualifier' value='OSX'><equals arg1='${system_id}' arg2='MacOSX-x86-64' /></condition>
+		<condition property='platform_qualifier' value='OSX'><equals arg1='${system_id}' arg2='MacOSX-ARM64' /></condition>
+
+
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='-DWOLFRAMKERNEL=${mathExe}' />
 			<arg line='-DWOLFRAMLIBRARY_INCLUDE_DIR=${checkout_directory}/RuntimeLibrary/${system_id}' />
@@ -50,9 +57,28 @@
 			<arg line='${CMAKE_OSX_DEPLOYMENT_TARGET_LINE}' />
 			<arg line='-DENABLE_WARNINGS=ON' />
 			<arg line='-DCMAKE_BUILD_TYPE=Release' />
+			<arg line='-DPlatformQualifier=${platform_qualifier}' />
+			<arg line='-DSYSTEMID:STRING=${system_id}' />
 			<arg line='-G &quot;${env.CMAKE_GENERATOR}&quot;' />
 			<arg value='${checkout_directory}/${component}' />
 		</re-cmake-exec>
+
+		<re-cmake-exec dir='${build.dir}'>
+			<arg line='--build .' />
+			<arg line='--target lspserver-lib' />
+			<arg line='--verbose' />
+			<arg line='--config Release' />
+		</re-cmake-exec>
+
+		<if>
+			<not><isset property='is.unix'/></not>
+		<then>
+			<sign dir='${build.dir}'>
+				<include name='**/*.dylib' if='is.osx' />
+				<include name='**/*.dll' if='is.windows' />
+			</sign>
+		</then>
+		</if>
 
 		<re-cmake-exec dir='${build.dir}'>
 			<arg line='--build .' />

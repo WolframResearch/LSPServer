@@ -31,11 +31,16 @@ handleContentAfterShutdown
 
 
 
-$Debug
-
-$Debug2
 
 $Debug3
+
+(*  
+level 0: Server start and exit log
+level 1: Content handler entry and exit log to understand the flow of the handlers
+level 2: Log inside a content handler for content handler debugging
+level 3: Further detailed log
+*)
+$LogLevel = 0
 
 $DebugBracketMatcher
 
@@ -120,6 +125,7 @@ If[!FailureQ[$startupMessagesFile],
 Needs["LSPServer`BracketMismatches`"]
 Needs["LSPServer`CodeAction`"]
 Needs["LSPServer`Color`"]
+Needs["LSPServer`Completion`"]
 Needs["LSPServer`Definitions`"]
 Needs["LSPServer`Diagnostics`"]
 Needs["LSPServer`DocumentSymbol`"]
@@ -171,7 +177,7 @@ This uses func := func = def idiom and is fast
 loadAllFuncs[]
 
 
-$DefaultConfidenceLevel = 0.75
+$DefaultConfidenceLevel = 0.50
 
 $CodeActionLiteralSupport = False
 
@@ -281,7 +287,6 @@ entry is an assoc of various key/values such as "Text" -> text and "CST" -> cst
 *)
 $OpenFilesMap = <||>
 
-
 (*
 An assoc of id -> True|False
 *)
@@ -299,10 +304,14 @@ Module[{contents},
 
   contents = contentsIn;
 
+  log[1, "**************************************** Message Cycle ****************************************** \n"];
+  log[1, "$ContentQueue Methods(before expansion):> ", InputForm[#["method"]& /@ $ContentQueue]];
+  log[1, "New message (before expansion):> ", InputForm[#["method"]& /@ contents]];
+
   If[!MatchQ[contents, {_?AssociationQ ...}],
-    log["\n\n"];
-    log["Internal assert 1 failed: list of Associations: ", contents];
-    log["\n\n"];
+    log[0, "\n\n"];
+    log[0, "Internal assert 1 failed: list of Associations: ", contents];
+    log[0, "\n\n"];
 
     exitHard[]
   ];
@@ -317,12 +326,73 @@ Module[{contents},
 
   $ContentQueue = $ContentQueue ~Join~ contents;
 
-  If[$Debug2,
-    log["appending to $ContentQueue"];
-    log["$ContentQueue (up to 20): ", #["method"]& /@ Take[$ContentQueue, UpTo[20]]]
-  ];
+  log[1, "$ContentQueue methods (after expansion & joining new content) :> ", InputForm[#["method"]& /@ $ContentQueue]];
+  log[3, "$ContentQueue (after expansion & joining new content):> ", InputForm[$ContentQueue], "\n"];
 
+
+  c = Cases[$ContentQueue, KeyValuePattern["method" -> "textDocument/completion"]];
+
+  If[Length[c] > 0, 
+    $ContentQueue = rearrangeQueue[$ContentQueue];
+  ];
   
+];
+
+
+rearrangeQueue[queue_] := 
+Module[{didChangeMessage, completionMessage, params, lastComPos, positionDCFP, selectedDCFPmsgs, deletePositions, q, id},
+
+	(* Get all the completion and didChangeFencepost messages *)
+  didChangeMessage = Cases[queue, KeyValuePattern["method" -> "textDocument/didChangeFencepost"]];
+  completionMessage = Cases[queue, KeyValuePattern["method" -> "textDocument/completion"]];
+  positionCompletion = First @ First @ Position[queue, #]& /@ completionMessage;
+  
+  (* Get all the didChangeFencepost messages before the last completion message in the queue *)
+  lastComPos = First @ First @ Position[queue, Last[completionMessage]];
+  positionDCFP = Select[(First @ First @ Position[queue,#]& /@ didChangeMessage), #< lastComPos&];
+  selectedDCFPmsgs = queue[[#]]& /@ positionDCFP;
+  
+  (* using  DeleteElements, requires Mathematica 13.1+ *)
+  (* 
+    q = DeleteElements[queue, completionMessage];
+    q = DeleteElements[q, selectedDCFPmsgs];
+  *)
+
+  (* using Delete for 12.0+ compatibility *)
+  deletePositions = {#} & /@ Sort[Join[positionCompletion, positionDCFP]];
+  q = Delete[queue, deletePositions];
+
+  id = Last[completionMessage]["id"];
+  params = Last[completionMessage]["params"];
+
+  (* 
+    We are not going to evaluate AST and CST inside completion handler to save time.
+    So the changes introduced by the dcfp messages will be reflected in the AST and the CST
+    by evaluating AST and CST just after the completion handle. 
+  *)
+
+  PrependTo[q,  (<| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+    "textDocument/concreteParse",
+    "textDocument/aggregateParse",
+    "textDocument/abstractParse"
+  })];
+
+  (* 
+      Just handle the last completion message in the queue and ignore the earlier
+      ones as only that last one can give the token with most updated text.
+  *)
+
+  PrependTo[q, Last[completionMessage]];
+
+  (* 
+      Rearranged message queue after completion message prioritization contains 
+        1. All the didChangeFencepost messages
+        2. Most recent completion message
+        3. concreteParse, aggregateParse and abstractParse messages
+        4. Rest of the queue
+  *)
+  PrependTo[q, selectedDCFPmsgs] // Flatten
+
 ]
 
 
@@ -392,9 +462,8 @@ Module[{logFile, logFileStream,
   *)
   $Output = Streams["stderr"];
 
-  $Debug = (logDir != "");
 
-  If[$Debug,
+  If[(logDir != ""),
 
     (
     (* :!CodeAnalysis::BeginBlock:: *)
@@ -442,9 +511,9 @@ Module[{logFile, logFileStream,
 
     If[FailureQ[logFileStream],
       
-      log["\n\n"];
-      log["opening log file failed: ", logFileStream];
-      log["\n\n"];
+      log[0, "\n\n"];
+      log[0, "opening log file failed: ", logFileStream];
+      log[0, "\n\n"];
       
       exitHard[]
     ];
@@ -471,30 +540,30 @@ Module[{logFile, logFileStream,
   Off[General::stop];
 
 
-  log["$CommandLine: ", $CommandLine];
-  log["\n\n"];
+  log[0, "$CommandLine: ", $CommandLine];
+  log[0, "\n\n"];
 
-  log["$commProcess: ", $commProcess];
-  log["\n\n"];
+  log[0, "$commProcess: ", $commProcess];
+  log[0, "\n\n"];
 
-  log["$ProcessID: ", $ProcessID];
-  log["\n\n"];
+  log[0, "$ProcessID: ", $ProcessID];
+  log[0, "\n\n"];
 
-  log["$ParentProcessID: ", $ParentProcessID];
-  log["\n\n"];
+  log[0, "$ParentProcessID: ", $ParentProcessID];
+  log[0, "\n\n"];
 
-  log["Directory[]: ", Directory[]];
-  log["\n\n"];
+  log[0, "Directory[]: ", Directory[]];
+  log[0, "\n\n"];
 
 
-  log["Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)"];
-  log["\n\n"];
+  log[0, "Starting server... (If this is the last line you see, then StartServer[] may have been called in an unexpected way and the server is hanging.)"];
+  log[0, "\n\n"];
 
 
   If[$startupMessagesText =!= "",
-    log["\n\n"];
-    log["There were messages when loading LSPServer` package: ", $startupMessagesText];
-    log["\n\n"];
+    log[0, "\n\n"];
+    log[0, "There were messages when loading LSPServer` package: ", $startupMessagesText];
+    log[0, "\n\n"];
     
     exitHard[]
   ];
@@ -508,12 +577,12 @@ Module[{logFile, logFileStream,
   $initializedComm = initializeLSPComm[$commProcess];
 
   If[FailureQ[$initializedComm],
-    log["\n\n"];
+    log[0,"\n\n"];
     (*
     //InputForm to work-around bug 411375
     *)
-    log["Initialization failed: ", $initializedComm //InputForm];
-    log["\n\n"];
+    log[0, "Initialization failed: ", $initializedComm //InputForm];
+    log[0, "\n\n"];
     
     exitHard[]
   ];
@@ -521,9 +590,9 @@ Module[{logFile, logFileStream,
   readEvalWriteCycle = readEvalWriteLoop[$commProcess, $initializedComm];
 
   If[FailureQ[readEvalWriteCycle],
-    log["\n\n"];
-    log["Read-Eval-Write-Loop failed: ", readEvalWriteCycle];
-    log["\n\n"];
+    log[0, "\n\n"];
+    log[0, "Read-Eval-Write-Loop failed: ", readEvalWriteCycle];
+    log[0, "\n\n"];
     
     exitHard[]
   ];
@@ -531,9 +600,9 @@ Module[{logFile, logFileStream,
 ]],(*Module, 1-arg Catch*)
 _,
 (
-  log["\n\n"];
-  log["uncaught Throw: ", #1];
-  log["\n\n"];
+  log[0, "\n\n"];
+  log[0, "uncaught Throw: ", #1];
+  log[0, "\n\n"];
   
   exitHard[]
 
@@ -555,10 +624,10 @@ Module[{cancels, params, id},
       $CancelMap[id] = True
     ], cancels];
 
-  If[$Debug2,
-    log["after preScanForCancels"];
-    log["$CancelMap: ", $CancelMap]
-  ]
+  
+    log[2, "after preScanForCancels"];
+    log[2, "$CancelMap: ", $CancelMap];
+  
 ]
 
 
@@ -570,10 +639,17 @@ expandContents[contentsIn_] :=
 Module[{contents, lastContents},
 
   contents = contentsIn;
-
+  (* 
+  This log can be used to know time to handle a feature.
+  Time taken for a feature (x feature timing) = (feature exit log timing - new message entry timing)
+  As we are changing the message queue to prioritise cumpletion message,
+  it is important to know the completion feature timing.
+  *)
   If[$Debug2,
-    log["before expandContent"]
+    log["New message (before expansion):> ", InputForm[#["method"]& /@ contents], "\n"]
   ];
+
+  log[2, "before expandContent"];
 
   Block[{$PreExpandContentQueue},
 
@@ -583,39 +659,31 @@ Module[{contents, lastContents},
 
     $PreExpandContentQueue = Flatten[MapIndexed[expandContent, $PreExpandContentQueue] /. expandContent[c_, _] :> {c}];
 
-    If[$Debug2,
-      log["$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
-      log["..."]
-    ];
+    log[2, "$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
+    log[2, "..."];
 
     While[$PreExpandContentQueue =!= lastContents,
 
-      If[$Debug2,
-        log["expanded (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
-        log["..."]
-      ];
+      log[2, "expanded (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
+      log[2, "..."];
 
       lastContents = $PreExpandContentQueue;
 
       $PreExpandContentQueue = Flatten[MapIndexed[expandContent, $PreExpandContentQueue] /. expandContent[c_, _] :> {c}];
 
-      If[$Debug2,
-        log["$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
-        log["..."]
-      ]
+      log[2, "$PreExpandContentQueue (up to 20): ", #["method"]& /@ Take[$PreExpandContentQueue, UpTo[20]]];
+      log[2, "..."];
     ];
 
-    If[$Debug2,
-      log["after expandContent"]
-    ];
-
+    log[2, "after expandContent"];
+    
     contents = $PreExpandContentQueue;
   ];
 
   If[!MatchQ[contents, {_?AssociationQ ...}],
-    log["\n\n"];
-    log["Internal assert 2 failed: list of Associations: ", contents];
-    log["\n\n"];
+    log[0, "\n\n"];
+    log[0, "Internal assert 2 failed: list of Associations: ", contents];
+    log[0, "\n\n"];
 
     exitHard[]
   ];
@@ -736,17 +804,17 @@ Module[{contents},
     Do not kill the kernel for this
     *)
 
-    log["\n\n"];
-    log["Internal assert 3 failed: list of Associations: ", contents];
-    log["\n\n"];
+    log[1, "\n\n"];
+    log[1, "Internal assert 3 failed: list of Associations: ", contents];
+    log[1, "\n\n"];
 
     Throw[contents]
   ];
 
   If[!MatchQ[contents, {_?AssociationQ ...}],
-    log["\n\n"];
-    log["Internal assert 4 failed: list of Associations: ", contents];
-    log["\n\n"];
+    log[0, "\n\n"];
+    log[0, "Internal assert 4 failed: list of Associations: ", contents];
+    log[0, "\n\n"];
 
     exitHard[]
   ];
@@ -813,10 +881,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   bracketMatcher, debugBracketMatcher, clientName, semanticTokensProviderValue, semanticTokens, contents,
   documentSymbol, hierarchicalDocumentSymbolSupport},
 
-  If[$Debug2,
-    log["initialize: enter"];
-    log["content: ", content]
-  ];
+  log[1, "initialize: Enter"];
 
   id = content["id"];
   params = content["params"];
@@ -825,9 +890,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
     initializationOptions = params["initializationOptions"];
 
-    If[$Debug2,
-      log["initializationOptions: ", initializationOptions]
-    ];
+    log[2, "initializationOptions: ", initializationOptions];
 
     (*
     initializationOptions may be Null, such as from Jupyter Lab LSP
@@ -866,6 +929,8 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
         $SemanticTokens = semanticTokens
       ];
     ];
+
+  log[1, "initialize: Exit"];
   ];
 
   (*
@@ -883,13 +948,11 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
   ];
 
 
-  If[$Debug2,
-    log["$AllowedImplicitTokens: ", $AllowedImplicitTokens];
-    log["$BracketMatcher: ", $BracketMatcher];
-    log["$DebugBracketMatcher: ", $DebugBracketMatcher];
-    log["$ConfidenceLevel: ", $ConfidenceLevel];
-    log["$SemanticTokens: ", $SemanticTokens]
-  ];
+  log[2, "$AllowedImplicitTokens: ", $AllowedImplicitTokens];
+  log[2, "$BracketMatcher: ", $BracketMatcher];
+  log[2, "$DebugBracketMatcher: ", $DebugBracketMatcher];
+  log[2, "$ConfidenceLevel: ", $ConfidenceLevel];
+  log[2, "$SemanticTokens: ", $SemanticTokens];
 
 
   $ColorProvider = True;
@@ -914,9 +977,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
     ]
   ];
 
-  If[$Debug2,
-    log["$ColorProvider: ", $ColorProvider]
-  ];
+  log[2, "$ColorProvider: ", $ColorProvider];
 
   
   capabilities = params["capabilities"];
@@ -1054,9 +1115,7 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 
   $kernelInitializeTime = Now;
 
-  If[$Debug2,
-    log["time to intialize: ", $kernelInitializeTime - $kernelStartTime]
-  ];
+  log[2, "time to intialize: ", $kernelInitializeTime - $kernelStartTime];
 
   contents = {<| "jsonrpc" -> "2.0", "id" -> id,
     "result" -> <|
@@ -1066,6 +1125,10 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
           "openClose" -> True,
           "save" -> <| "includeText" -> False |>,
           "change" -> $TextDocumentSyncKind["Full"]
+        |>,
+        "completionProvider" -> <|
+          "resolveProvider" -> False, 
+          "triggerCharacters" -> {}
         |>,
         "codeActionProvider" -> codeActionProviderValue,
         "colorProvider" -> $ColorProvider,
@@ -1089,9 +1152,9 @@ Module[{id, params, capabilities, textDocument, codeAction, codeActionLiteralSup
 handleContent[content:KeyValuePattern["method" -> "initialized"]] :=
 Module[{warningMessages},
 
-  If[$Debug2,
-    log["initialized: enter"]
-  ];
+  
+  log[1, "initialized: Enter"];
+
 
   (*
   Some simple thing to warm-up
@@ -1110,11 +1173,9 @@ Module[{warningMessages},
 
   warningMessages = ServerDiagnosticWarningMessages[];
 
-  If[$Debug2,
-    log["warningMessages: ", warningMessages]
-  ];
+  log[2, "warningMessages: ", warningMessages];
 
-  <|
+  res = <|
     "jsonrpc" -> "2.0",
     "method" -> "window/showMessage",
     "params" ->
@@ -1122,7 +1183,11 @@ Module[{warningMessages},
         "type" -> $MessageType["Warning"],
         "message" -> #
       |>
-  |>& /@ warningMessages
+  |>& /@ warningMessages;
+
+  log[1, "initialized: Exit"];
+
+  res
 ]
 
 
@@ -1130,9 +1195,9 @@ handleContent[content:KeyValuePattern["method" -> "shutdown"]] :=
 Catch[
 Module[{id},
 
-  If[$Debug2,
-    log["shutdown: enter"]
-  ];
+  
+  log[1, "shutdown: Enter"];
+  
 
   id = content["id"];
 
@@ -1140,16 +1205,16 @@ Module[{id},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["$CancelMap: ", $CancelMap]
-    ];
-    
+    log[2, "$CancelMap: ", $CancelMap];
+  
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
 
   $OpenFilesMap =.;
 
   $ServerState = "shutdown";
+
+  log[1, "shutdown: Exit"];
 
   {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}
 ]]
@@ -1160,9 +1225,10 @@ Unexpected call to exit
 handleContent[content:KeyValuePattern["method" -> "exit"]] :=
 Module[{},
 
-  If[$Debug2,
-    log["exit: enter"]
-  ];
+  
+  log[1, "exit: Enter"];
+  log[1, "exit: Exit"];
+  
 
   exitSemiGracefully[]
 ]
@@ -1172,10 +1238,9 @@ handleContent[content:KeyValuePattern["method" -> "$/cancelRequest"]] :=
 Catch[
 Module[{params, id},
   
-  If[$Debug2,
-    log["$/cancelRequest: enter"]
-  ];
-
+  
+  log[1, "$/cancelRequest: enter"];
+  
   params = content["params"];
 
   id = params["id"];
@@ -1184,13 +1249,13 @@ Module[{params, id},
     Throw[{}]
   ];
 
-  log["cancel was not handled: ", id];
+  log[2, "cancel was not handled: ", id];
 
   $CancelMap[id] =.;
 
-  If[$Debug2,
-    log["$CancelMap: ", $CancelMap]
-  ];
+  log[2, "$CancelMap: ", $CancelMap];
+
+  log[1, "$/cancelRequest: exit"];
 
   {}
 ]]
@@ -1210,9 +1275,9 @@ error code MethodNotFound (e.g. -32601).
 handleContent[content:KeyValuePattern["method" -> meth_ /; StringMatchQ[meth, "$/" ~~ __]]] :=
 Module[{id},
 
-  If[$Debug2,
-    log[meth <> ": enter"]
-  ];
+  
+  log[1, meth <> ": enter"];
+  
 
   If[KeyExistsQ[content, "id"],
     (*
@@ -1239,9 +1304,9 @@ Module[{id},
 handleContentAfterShutdown[content:KeyValuePattern["method" -> "exit"]] :=
 Module[{},
 
-  If[$Debug2,
-    log["exit after shutdown: enter"]
-  ];
+  log[1, "exit after shutdown: enter"];
+
+  log[1, "exit after shutdown: exit"];
 
   exitGracefully[]
 ]
@@ -1252,9 +1317,9 @@ Called if any requests or notifications come in after shutdown
 handleContentAfterShutdown[content_?AssociationQ] :=
 Module[{id},
 
-  If[$Debug2,
-    log["message after shutdown: enter: ", #["method"]&[content]]
-  ];
+  log[1, "message after shutdown: enter: ", #["method"]&[content]];
+
+  log[1, "message after shutdown: exit: "];
 
   If[KeyExistsQ[content, "id"],
     (*
@@ -1277,28 +1342,28 @@ Module[{id},
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didOpen"], pos_] :=
 Catch[
-Module[{params, doc, uri},
-
-  If[$Debug2,
-    log["textDocument/didOpen: enter expand"]
-  ];
-
+Module[{params, doc, uri, res},
+  
+  log[1, "textDocument/didOpen: enter expand"];
+  
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/didOpenFencepost", "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "params" -> params |>& /@ ({
+  res = <| "method" -> #, "params" -> params |>& /@ ({
       "textDocument/didOpenFencepost"
-    } ~Join~ $didOpenMethods)
+    } ~Join~ $didOpenMethods);
+
+  log[1, "textDocument/didOpen: Exit"];
+
+  res
 ]]
 
 
@@ -1306,9 +1371,9 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/didOpenFencepost
 Catch[
 Module[{params, doc, uri, text, entry},
   
-  If[$Debug2,
-    log["textDocument/didOpenFencepost: enter"]
-  ];
+  
+  log[1, "textDocument/didOpenFencepost: Enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1322,6 +1387,8 @@ Module[{params, doc, uri, text, entry},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/didOpenFencepost: Exit"];
+
   {}
 ]]
 
@@ -1329,20 +1396,16 @@ Module[{params, doc, uri, text, entry},
 handleContent[content:KeyValuePattern["method" -> "textDocument/concreteParse"]] :=
 Catch[
 Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
-
-  If[$Debug2,
-    log["textDocument/concreteParse: enter"]
-  ];
-
+  
+  log[1, "textDocument/concreteParse: Enter"];
+  
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -1361,14 +1424,10 @@ Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
 
   text = entry["Text"];
 
-  If[$Debug2,
-    log["text: ", stringLineTake[StringTake[ToString[text, InputForm], UpTo[1000]], UpTo[20]]];
-    log["...\n"]
-  ];
+  log[2, "text: ", stringLineTake[StringTake[ToString[text, InputForm], UpTo[1000]], UpTo[20]]];
+  log[2, "...\n"];
   
-  If[$Debug2,
-    log["before CodeConcreteParse"]
-  ];
+  log[2, "before CodeConcreteParse"];
 
   fileName = normalizeURI[uri];
 
@@ -1379,9 +1438,7 @@ Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
 
   cst = CodeConcreteParse[text, "FileFormat" -> fileFormat];
 
-  If[$Debug2,
-    log["after CodeConcreteParse"]
-  ];
+  log[2, "after CodeConcreteParse"];
 
   If[FailureQ[cst],
 
@@ -1411,6 +1468,8 @@ Module[{params, doc, uri, cst, text, entry, fileName, fileFormat},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/concreteParse: Exit"];
+
   {}
 ]]
 
@@ -1419,9 +1478,9 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/concreteTabsPars
 Catch[
 Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
 
-  If[$Debug2,
-    log["textDocument/concreteTabsParse: enter"]
-  ];
+  
+  log[1, "textDocument/concreteTabsParse: enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1429,9 +1488,7 @@ Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -1455,9 +1512,7 @@ Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
   FIXME: Must use the tab width from the editor
   *)
 
-  If[$Debug2,
-    log["before CodeConcreteParse (TabWidth 4)"]
-  ];
+  log[2, "before CodeConcreteParse (TabWidth 4)"];
 
   fileName = normalizeURI[uri];
 
@@ -1468,9 +1523,7 @@ Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
 
   cstTabs = CodeConcreteParse[text, "TabWidth" -> 4, "FileFormat" -> fileFormat];
 
-  If[$Debug2,
-    log["after CodeConcreteParse (TabWidth 4)"]
-  ];
+  log[2, "after CodeConcreteParse (TabWidth 4)"];
 
   If[FailureQ[cstTabs],
 
@@ -1493,6 +1546,8 @@ Module[{params, doc, uri, text, entry, cstTabs, fileName, fileFormat},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/concreteTabsParse: exit"];
+
   {}
 ]]
 
@@ -1501,9 +1556,9 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/aggregateParse"]
 Catch[
 Module[{params, doc, uri, cst, text, entry, agg},
 
-  If[$Debug2,
-    log["textDocument/aggregateParse: enter"]
-  ];
+  
+  log[1, "textDocument/aggregateParse: Enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1511,9 +1566,7 @@ Module[{params, doc, uri, cst, text, entry, agg},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -1534,15 +1587,11 @@ Module[{params, doc, uri, cst, text, entry, agg},
 
   cst = entry["CST"];
   
-  If[$Debug2,
-    log["before Aggregate"]
-  ];
+  log[2, "before Aggregate"];
 
   agg = CodeParser`Abstract`Aggregate[cst];
 
-  If[$Debug2,
-    log["after Aggregate"]
-  ];
+  log[2, "after Aggregate"];
 
   entry["Agg"] = agg;
 
@@ -1555,6 +1604,8 @@ Module[{params, doc, uri, cst, text, entry, agg},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/aggregateParse: Exit"];
+
   {}
 ]]
 
@@ -1563,9 +1614,9 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/aggregateTabsPar
 Catch[
 Module[{params, doc, uri, entry, cstTabs, aggTabs},
 
-  If[$Debug2,
-    log["textDocument/aggregateTabsParse: enter"]
-  ];
+  
+  log[1, "textDocument/aggregateTabsParse: enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1573,9 +1624,7 @@ Module[{params, doc, uri, entry, cstTabs, aggTabs},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -1599,15 +1648,11 @@ Module[{params, doc, uri, entry, cstTabs, aggTabs},
   FIXME: Must use the tab width from the editor
   *)
 
-  If[$Debug2,
-    log["before Aggregate"]
-  ];
+  log[2, "before Aggregate"];
 
   aggTabs = CodeParser`Abstract`Aggregate[cstTabs];
 
-  If[$Debug2,
-    log["after Aggregate"]
-  ];
+  log[2, "after Aggregate"];
 
   If[FailureQ[aggTabs],
     Throw[aggTabs]
@@ -1617,16 +1662,18 @@ Module[{params, doc, uri, entry, cstTabs, aggTabs},
 
   $OpenFilesMap[uri] = entry;
 
+  log[1, "textDocument/aggregateTabsParse: exit"];
+
   {}
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/abstractParse"]] :=
 Catch[
-Module[{params, doc, uri, entry, agg, ast},
+Module[{params, doc, uri, entry, agg, ast, userSymbols},
 
-  If[$Debug2,
-    log["textDocument/abstractParse: enter"]
-  ];
+  
+  log[1, "textDocument/abstractParse: enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1634,9 +1681,7 @@ Module[{params, doc, uri, entry, agg, ast},
 
   If[isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -1655,32 +1700,48 @@ Module[{params, doc, uri, entry, agg, ast},
 
   agg = entry["Agg"];
   
-  If[$Debug2,
-    log["before Abstract"]
-  ];
+  log[2, "before Abstract"];
 
   ast = CodeParser`Abstract`Abstract[agg];
 
-  If[$Debug2,
-    log["after Abstract"]
-  ];
+  userSymbols = findAllUserSymbols[ast];
+
+  log[2, "after Abstract"];
 
   entry["AST"] = ast;
+  entry["PreviousAST"] = ast;
+
+  entry["UserSymbols"] = userSymbols;
+  entry["PreviousUserSymbols"] = userSymbols;
 
   $OpenFilesMap[uri] = entry;
+
+  log[1, "textDocument/abstractParse: exit"];
 
   {}
 ]]
 
 
+findAllUserSymbols[ast_] := DeleteDuplicates[
+  Cases[ast, 
+    {
+      CallNode[
+        LeafNode[Symbol, "SetDelayed" | "Set", <||>],
+        {CallNode[LeafNode[Symbol, sym_, _], _, _], rhs : _} |
+        {LeafNode[Symbol, sym_, _], rhs : _}, 
+      _], 
+    _} :> sym,
+  8] (* Same depth used in finding function call pattern in Hover feature *)
+]
+
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didClose"], pos_] :=
 Catch[
-Module[{params, doc, uri},
+Module[{params, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/didClose: enter expand"]
-  ];
+  
+  log[1, "textDocument/didClose: enter expand"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1688,30 +1749,34 @@ Module[{params, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/didCloseFencepost", "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "params" -> params |>& /@ ({
+  res = <| "method" -> #, "params" -> params |>& /@ ({
       "textDocument/didCloseFencepost"
-    } ~Join~ $didCloseMethods)
+    } ~Join~ $didCloseMethods);
+
+  log[1, "textDocument/didClose: exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didCloseFencepost"]] :=
 Module[{params, doc, uri},
 
-  If[$Debug2,
-    log["textDocument/didCloseFencepost: enter"]
-  ];
+  
+  log[1, "textDocument/didCloseFencepost: Enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
 
   $OpenFilesMap[uri] =.;
+
+  log[1, "textDocument/didCloseFencepost: Exit"];
 
   {}
 ]
@@ -1722,9 +1787,9 @@ expandContent[content:KeyValuePattern["method" -> "textDocument/didSave"], pos_]
 Catch[
 Module[{params, doc, uri},
 
-  If[$Debug2,
-    log["textDocument/didSave: enter expand"]
-  ];
+  
+  log[1, "textDocument/didSave: Enter"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1732,24 +1797,28 @@ Module[{params, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/didSaveFencepost", "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "params" -> params |>& /@ ({
+  res = <| "method" -> #, "params" -> params |>& /@ ({
       "textDocument/didSaveFencepost"
-    } ~Join~ $didSaveMethods)
+    } ~Join~ $didSaveMethods);
+
+  log[1, "textDocument/didSave: Exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/didSaveFencepost"]] :=
 Module[{},
 
-  If[$Debug2,
-    log["textDocument/didSaveFencepost: enter"]
-  ];
+  
+    log[1, "textDocument/didSaveFencepost: Enter"];
+
+    log[1, "textDocument/didSaveFencepost: Exit"];
+  
 
   {}
 ]
@@ -1758,11 +1827,11 @@ Module[{},
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/didChange"], pos_] :=
 Catch[
-Module[{params, doc, uri},
+Module[{params, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/didChange: enter expand"]
-  ];
+  
+  log[1, "textDocument/didChange: enter expand"];
+  
 
   params = content["params"];
   doc = params["textDocument"];
@@ -1770,16 +1839,19 @@ Module[{params, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/didChangeFencepost", "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "params" -> params |>& /@ ({
+  res = <| "method" -> #, "params" -> params |>& /@ ({
       "textDocument/didChangeFencepost"
-    } ~Join~ $didChangeMethods)
+    } ~Join~ $didChangeMethods);
+
+  log[1, "textDocument/didChange: Exit"];
+
+  res
+
 ]]
 
 
@@ -1787,19 +1859,18 @@ handleContent[content:KeyValuePattern["method" -> "textDocument/didChangeFencepo
 Catch[
 Module[{params, doc, uri, text, lastChange, entry, changes},
   
-  If[$Debug2,
-    log["textDocument/didChangeFencepost: enter"]
-  ];
+  
+  log[1, "textDocument/didChangeFencepost: Enter"];
 
   params = content["params"];
   doc = params["textDocument"];
   uri = doc["uri"];
-  
+
+  entry = Lookup[$OpenFilesMap, uri, Null];
+
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{}]
   ];
@@ -1813,22 +1884,38 @@ Module[{params, doc, uri, text, lastChange, entry, changes},
 
   text = lastChange["text"];
 
+  (* 
+      We do not want to keep entry["AST"] here. As the text is changed, AST needs to be re-evaluated.
+
+      But for fast response to the Completion messages, we can use the backdated AST. 
+      
+      If there are multiple didChangeFencepost messages in the queue, 
+          "PreviousAST" -> entry["AST"]
+      would break because from the second message onwards, entry["AST"] would be Missing.
+      
+      So it's better to assign newly evaluated AST to entry["PreviousAST"] and use it as long as new AST is is not re-evaluated.
+  *)
+
   entry = <|
     "Text" -> text,
     "LastChange" -> Now,
-    "ScheduledJobs" -> $didChangeScheduledJobs
+    "ScheduledJobs" -> $didChangeScheduledJobs,
+    "PreviousAST" -> entry["PreviousAST"],
+    "PreviousUserSymbols" -> entry["PreviousUserSymbols"]
   |>;
 
   $OpenFilesMap[uri] = entry;
+
+  log[1, "textDocument/didChangeFencepost: Exit"];
 
   {}
 ]]
 
 
 exitGracefully[] := (
-  log["\n\n"];
-  log["KERNEL IS EXITING GRACEFULLY"];
-  log["\n\n"];
+  log[0, "\n\n"];
+  log[0, "KERNEL IS EXITING GRACEFULLY"];
+  log[0, "\n\n"];
   shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];
   (
@@ -1840,21 +1927,21 @@ exitGracefully[] := (
 )
 
 exitSemiGracefully[] := (
-  log["Language Server kernel did not shutdown properly."];
-  log[""];
-  log["This is the command that was used:"];
-  log[$CommandLine];
-  log[""];
-  log["To help diagnose the problem, run this in a notebook:\n" <>
+  log[0, "Language Server kernel did not shutdown properly."];
+  log[0, ""];
+  log[0, "This is the command that was used:"];
+  log[0, $CommandLine];
+  log[0, ""];
+  log[0, "To help diagnose the problem, run this in a notebook:\n" <>
   "Needs[\"LSPServer`\"]\n" <>
   "LSPServer`RunServerDiagnostic[{" <>
     StringJoin[Riffle[("\"" <> # <> "\"")& /@ StringReplace[$CommandLine, "\"" -> "\\\""], ", "]] <>
     "}]"];
-  log[""];
-  log["Fix any problems then restart and try again."];
-  log["\n\n"];
-  log["KERNEL IS EXITING SEMI-GRACEFULLY"];
-  log["\n\n"];
+  log[0, ""];
+  log[0, "Fix any problems then restart and try again."];
+  log[0, "\n\n"];
+  log[0, "KERNEL IS EXITING SEMI-GRACEFULLY"];
+  log[0, "\n\n"];
   shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];
   (
@@ -1866,21 +1953,21 @@ exitSemiGracefully[] := (
 )
 
 exitHard[] := (
-  log["Language Server kernel did not shutdown properly."];
-  log[""];
-  log["This is the command that was used:"];
-  log[$CommandLine];
-  log[""];
-  log["To help diagnose the problem, run this in a notebook:\n" <>
+  log[0, "Language Server kernel did not shutdown properly."];
+  log[0, ""];
+  log[0, "This is the command that was used:"];
+  log[0, $CommandLine];
+  log[0, ""];
+  log[0, "To help diagnose the problem, run this in a notebook:\n" <>
   "Needs[\"LSPServer`\"]\n" <>
   "LSPServer`RunServerDiagnostic[{" <>
     StringJoin[Riffle[("\"" <> # <> "\"")& /@ StringReplace[$CommandLine, "\"" -> "\\\""], ", "]] <>
     "}]"];
-  log[""];
-  log["Fix any problems then restart and try again."];
-  log["\n\n"];
-  log["KERNEL IS EXITING HARD"];
-  log["\n\n"];
+  log[0, ""];
+  log[0, "Fix any problems then restart and try again."];
+  log[0, "\n\n"];
+  log[0, "KERNEL IS EXITING HARD"];
+  log[0, "\n\n"];
   shutdownLSPComm[$commProcess, $initializedComm];
   Pause[1];
   (

@@ -12,11 +12,11 @@ Needs["CodeParser`Utils`"]
 
 expandContent[content:KeyValuePattern["method" -> "textDocument/codeAction"], pos_] :=
 Catch[
-Module[{params, id, doc, uri},
+Module[{params, id, doc, uri, res},
 
-  If[$Debug2,
-    log["textDocument/codeAction: enter expand"]
-  ];
+  
+  log[1, "textDocument/codeAction: enter expand"];
+  
 
   id = content["id"];
   params = content["params"];
@@ -25,9 +25,7 @@ Module[{params, id, doc, uri},
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
@@ -37,14 +35,12 @@ Module[{params, id, doc, uri},
 
   If[isStale[$PreExpandContentQueue[[pos[[1]]+1;;]], uri],
   
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "method" -> "textDocument/codeActionFencepost", "id" -> id, "params" -> params, "stale" -> True |>}]
   ];
 
-  <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
+  res = <| "method" -> #, "id" -> id, "params" -> params |>& /@ {
     "textDocument/concreteParse",
     "textDocument/suppressedRegions",
     "textDocument/runConcreteDiagnostics",
@@ -53,7 +49,11 @@ Module[{params, id, doc, uri},
     "textDocument/abstractParse",
     "textDocument/runAbstractDiagnostics",
     "textDocument/codeActionFencepost"
-  }
+  };
+
+  log[1, "textDocument/codeAction: exit"];
+
+  res
 ]]
 
 handleContent[content:KeyValuePattern["method" -> "textDocument/codeActionFencepost"]] :=
@@ -62,9 +62,9 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   command, label, actionData, actionSrc, replacementNode, insertionNode, replacementText, lintsWithConfidence,
   shadowing, insertionText, cursor, entry, text, cst, agg, ast, cstLints, aggLints, astLints},
   
-  If[$Debug2,
-    log["textDocument/codeActionFencepost: enter"]
-  ];
+  
+  log[1, "textDocument/codeActionFencepost: enter"];
+  
 
   id = content["id"];
 
@@ -72,9 +72,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
     $CancelMap[id] =.;
 
-    If[$Debug2,
-      log["canceled"]
-    ];
+    log[2, "canceled"];
     
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -85,9 +83,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   If[Lookup[content, "stale", False] || isStale[$ContentQueue, uri],
     
-    If[$Debug2,
-      log["stale"]
-    ];
+    log[2, "stale"];
 
     Throw[{<| "jsonrpc" -> "2.0", "id" -> id, "result" -> Null |>}]
   ];
@@ -100,9 +96,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
   (* convert from 0-based to 1-based *)
   cursor+=1;
 
-  If[$Debug2,
-    log["cursor: ", ToString[cursor]]
-  ];
+  log[2, "cursor: ", ToString[cursor]];
 
   entry = Lookup[$OpenFilesMap, uri, Null];
   
@@ -125,10 +119,8 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
   lints = cstLints ~Join~ aggLints ~Join~ astLints;
 
-  If[$Debug2,
-    log["lints: ", stringLineTake[StringTake[ToString[lints, InputForm], UpTo[1000]], UpTo[20]]];
-    log["...\n"]
-  ];
+  log[2, "lints: ", stringLineTake[StringTake[ToString[lints, InputForm], UpTo[1000]], UpTo[20]]];
+  log[2, "...\n"];
 
   lintsWithConfidence = Cases[lints, InspectionObject[_, _, _, KeyValuePattern[ConfidenceLevel -> _]]];
 
@@ -168,27 +160,21 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
     diagnostics = lintToDiagnostics[lint];
 
-    If[$Debug2,
-      log["diagnostics (up to 20): ", ToString[Take[diagnostics, UpTo[20]]]]
-    ];
+    log[2, "diagnostics (up to 20): ", ToString[Take[diagnostics, UpTo[20]]]];
 
     (*
     Need to filter the actions that match the cursor
     *)
     actions = Cases[lint, CodeAction[_, _, _], Infinity];
 
-    If[$Debug2,
-      log["actions (up to 20): ", ToString[Take[actions, UpTo[20]]]]
-    ];
+    log[2, "actions (up to 20): ", ToString[Take[actions, UpTo[20]]]];
 
     (*
     Need to filter the actions that match the cursor
     *)
     actions = Cases[actions, CodeAction[_, _, KeyValuePattern[Source -> src_ /; SourceMemberIntersectingQ[src, cursor]]]];
 
-    If[$Debug2,
-      log["actions (up to 20): ", ToString[Take[actions, UpTo[20]]]]
-    ];
+    log[2, "actions (up to 20): ", ToString[Take[actions, UpTo[20]]]];
 
     Do[
 
@@ -207,9 +193,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         insertionNode = actionData["InsertionNode"];
 
-        If[$Debug2,
-          log["insertionNode: ", ToString[insertionNode]]
-        ];
+        log[2, "insertionNode: ", ToString[insertionNode]];
 
         (*
         For inserting, don't use the [start, end) range, only use [start, start)
@@ -231,9 +215,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         insertionText = actionData["InsertionText"];
 
-        If[$Debug2,
-          log["insertionText: ", ToString[insertionText]];
-        ];
+        log[2, "insertionText: ", ToString[insertionText]];
 
         (*
         For inserting, don't use the [start, end) range, only use [start, start)
@@ -270,9 +252,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         replacementNode = actionData["ReplacementNode"];
 
-        If[$Debug2,
-          log["replacementNode: ", ToString[replacementNode]]
-        ];
+        log[2, "replacementNode: ", ToString[replacementNode]];
 
         edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
                                                             "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
@@ -291,9 +271,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         replacementText = actionData["ReplacementText"];
 
-        If[$Debug2,
-          log["replacementText: ", ToString[replacementText]]
-        ];
+        log[2, "replacementText: ", ToString[replacementText]];
 
         edit = (<| "changes"-> <| uri -> { <| "range" -> <| "start" -> <| "line" -> #[[1, 1]], "character" -> #[[1, 2]] |>,
                                                             "end" -> <| "line" -> #[[2, 1]], "character" -> #[[2, 2]] |> |>,
@@ -325,9 +303,7 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
 
         _,
 
-        If[$Debug,
-          log["UNSUPPORTED COMMAND: ", command]
-        ]
+        log[2, "UNSUPPORTED COMMAND: ", command];
 
       ]
 
@@ -339,7 +315,11 @@ Module[{id, params, doc, uri, actions, range, lints, lspAction, lspActions, edit
     {lint, lints}
   ];
 
-  {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>}
+  res = {<| "jsonrpc" -> "2.0", "id" -> id, "result" -> lspActions |>};
+
+  log[1, "textDocument/codeActionFencepost: exit"];
+
+  res
 ]]
 
 End[]
